@@ -1,0 +1,7 @@
+# Adds namespace to all resources.
+namespace: harbor-sync-system
+
+bases:
+- ../crd
+- ../rbac
+- ../manager

@@ -1,0 +1,7 @@
+version: "2"
+domain: harborsync.k8s.io
+repo: github.com/moolen/harbor-sync
+resources:
+- group: crd
+  version: v1
+  kind: HarborSyncConfig
