@@ -10,7 +10,7 @@ spec:
   names:
     kind: HarborSyncConfig
     plural: harborsyncconfigs
-  scope: ""
+  scope: Cluster
   validation:
     openAPIV3Schema:
       description: HarborSyncConfig is the Schema for the harborsyncconfigs API

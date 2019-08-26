@@ -108,6 +108,7 @@ type RobotAccountCredential struct {
 }
 
 // +kubebuilder:object:root=true
+// +kubebuilder:resource:scope=Cluster
 
 // HarborSyncConfig is the Schema for the harborsyncconfigs API
 type HarborSyncConfig struct {
