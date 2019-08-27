@@ -7,67 +7,44 @@ import (
 	crdv1 "github.com/moolen/harbor-sync/api/v1"
 	"github.com/moolen/harbor-sync/pkg/harbor"
 	"k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	harborfake "github.com/moolen/harbor-sync/pkg/harbor/fake"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
 var _ = Describe("Mapping", func() {
 
+	BeforeEach(func() {
+		ensureNamespace(k8sClient, "team-a")
+		ensureNamespace(k8sClient, "team-b")
+		ensureNamespace(k8sClient, "kube-system")
+	})
+
+	AfterEach(func() {
+		deleteNamespace(k8sClient, "team-a")
+		deleteNamespace(k8sClient, "team-b")
+		deleteNamespace(k8sClient, "kube-system")
+
+		deleteHarborSyncConfig(k8sClient, "my-cfg")
+	})
+
 	Describe("Match", func() {
+
 		It("should create secrets in namespace", func(done Done) {
-			var cl client.Client
-			log := zap.Logger(true)
-			scheme := runtime.NewScheme()
+			var err error
+			log := zap.Logger(false)
 			mapping := crdv1.ProjectMapping{
 				Type:      crdv1.MatchMappingType,
 				Namespace: "team-.*",
 				Secret:    "platform-pull-token",
 			}
-			syncConfig := crdv1.HarborSyncConfig{
-				ObjectMeta: metav1.ObjectMeta{Name: "my-cfg", Namespace: "1"},
-				Spec: crdv1.HarborSyncConfigSpec{
-					ProjectSelector: []crdv1.ProjectSelector{
-						{
-							Type:               crdv1.RegexMatching,
-							ProjectName:        "platform-team",
-							RobotAccountSuffix: "sync-bot",
-							Mapping: []crdv1.ProjectMapping{
-								mapping,
-							},
-						},
-					},
-				},
-			}
+			ensureHarborSyncConfigWithParams(k8sClient, "my-cfg", "platform-team", mapping)
 			fakeHarbor := harborfake.Client{}
-			crdv1.AddToScheme(scheme)
-			v1.AddToScheme(scheme)
-			nsTeamA := v1.Namespace{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "team-a",
-				},
-			}
-			nsTeamB := v1.Namespace{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "team-b",
-				},
-			}
-			nsTeamSystem := v1.Namespace{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "kube-system",
-				},
-			}
-			cl = fake.NewFakeClientWithScheme(scheme, &syncConfig, &nsTeamA, &nsTeamB, &nsTeamSystem)
-
 			hscr := HarborSyncConfigReconciler{
-				cl,
+				k8sClient,
 				log,
 				fakeHarbor,
 			}
@@ -88,11 +65,11 @@ var _ = Describe("Mapping", func() {
 			teamASecret := v1.Secret{}
 			teamBSecret := v1.Secret{}
 			SystemSecret := v1.Secret{}
-			err := cl.Get(context.Background(), types.NamespacedName{Namespace: "team-a", Name: "platform-pull-token"}, &teamASecret)
+			err = k8sClient.Get(context.Background(), types.NamespacedName{Namespace: "team-a", Name: "platform-pull-token"}, &teamASecret)
 			Expect(err).ToNot(HaveOccurred())
-			err = cl.Get(context.Background(), types.NamespacedName{Namespace: "team-b", Name: "platform-pull-token"}, &teamBSecret)
+			err = k8sClient.Get(context.Background(), types.NamespacedName{Namespace: "team-b", Name: "platform-pull-token"}, &teamBSecret)
 			Expect(err).ToNot(HaveOccurred())
-			err = cl.Get(context.Background(), types.NamespacedName{Namespace: "kube-system", Name: "platform-pull-token"}, &teamBSecret)
+			err = k8sClient.Get(context.Background(), types.NamespacedName{Namespace: "kube-system", Name: "platform-pull-token"}, &teamBSecret)
 			Expect(err).To(HaveOccurred())
 
 			Expect(string(teamASecret.Data[v1.DockerConfigJsonKey])).To(Equal(`{"auths":{"":{"username":"robot$sync-bot","password":"my-token","auth":"cm9ib3Qkc3luYy1ib3Q6bXktdG9rZW4="}}}`))
@@ -105,46 +82,18 @@ var _ = Describe("Mapping", func() {
 
 	Describe("Translate", func() {
 		It("should create secrets in namespace", func(done Done) {
-			var cl client.Client
-			log := zap.Logger(true)
-			scheme := runtime.NewScheme()
+			var err error
+			log := zap.Logger(false)
 			mapping := crdv1.ProjectMapping{
 				Type:      crdv1.MatchMappingType,
 				Namespace: "team-$1",
 				Secret:    "team-$1-pull-token",
 			}
-			syncConfig := crdv1.HarborSyncConfig{
-				ObjectMeta: metav1.ObjectMeta{Name: "my-cfg", Namespace: "1"},
-				Spec: crdv1.HarborSyncConfigSpec{
-					ProjectSelector: []crdv1.ProjectSelector{
-						{
-							Type:               crdv1.RegexMatching,
-							ProjectName:        "team-(.*)",
-							RobotAccountSuffix: "sync-bot",
-							Mapping: []crdv1.ProjectMapping{
-								mapping,
-							},
-						},
-					},
-				},
-			}
+			ensureHarborSyncConfigWithParams(k8sClient, "my-cfg", "team-(.*)", mapping)
 			fakeHarbor := harborfake.Client{}
-			crdv1.AddToScheme(scheme)
-			v1.AddToScheme(scheme)
-			nsTeamA := v1.Namespace{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "team-a",
-				},
-			}
-			nsTeamB := v1.Namespace{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "team-b",
-				},
-			}
-			cl = fake.NewFakeClientWithScheme(scheme, &syncConfig, &nsTeamA, &nsTeamB)
 
 			hscr := HarborSyncConfigReconciler{
-				cl,
+				k8sClient,
 				log,
 				fakeHarbor,
 			}
@@ -164,9 +113,9 @@ var _ = Describe("Mapping", func() {
 
 			teamASecret := v1.Secret{}
 			teamBSecret := v1.Secret{}
-			err := cl.Get(context.Background(), types.NamespacedName{Namespace: "team-a", Name: "team-a-pull-token"}, &teamASecret)
+			err = k8sClient.Get(context.Background(), types.NamespacedName{Namespace: "team-a", Name: "team-a-pull-token"}, &teamASecret)
 			Expect(err).ToNot(HaveOccurred())
-			err = cl.Get(context.Background(), types.NamespacedName{Namespace: "team-b", Name: "team--b-pull-token"}, &teamBSecret)
+			err = k8sClient.Get(context.Background(), types.NamespacedName{Namespace: "team-b", Name: "team--b-pull-token"}, &teamBSecret)
 			Expect(err).To(HaveOccurred())
 
 			Expect(string(teamASecret.Data[v1.DockerConfigJsonKey])).To(Equal(`{"auths":{"":{"username":"robot$sync-bot","password":"my-token","auth":"cm9ib3Qkc3luYy1ib3Q6bXktdG9rZW4="}}}`))
