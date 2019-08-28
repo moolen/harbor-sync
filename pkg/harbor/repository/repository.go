@@ -112,9 +112,6 @@ func (r *Repository) Sync() <-chan struct{} {
 				c <- struct{}{}
 			}
 
-			// TODO: add check for token expiration
-			//       or maybe force rotation from main?
-
 			r.Log.V(1).Info("end sync")
 			<-time.After(r.PollInterval)
 		}
