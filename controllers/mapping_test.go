@@ -31,24 +31,23 @@ var _ = Describe("Mapping", func() {
 		deleteHarborSyncConfig(k8sClient, "my-cfg")
 	})
 
-	Describe("Match", func() {
+	fakeHarbor := harborfake.Client{}
+	log := zap.Logger(false)
+	hscr := HarborSyncConfigReconciler{
+		k8sClient,
+		log,
+		fakeHarbor,
+	}
 
+	Describe("Match", func() {
 		It("should create secrets in namespace", func(done Done) {
 			var err error
-			log := zap.Logger(false)
 			mapping := crdv1.ProjectMapping{
 				Type:      crdv1.MatchMappingType,
 				Namespace: "team-.*",
 				Secret:    "platform-pull-token",
 			}
 			ensureHarborSyncConfigWithParams(k8sClient, "my-cfg", "platform-team", mapping)
-			fakeHarbor := harborfake.Client{}
-			hscr := HarborSyncConfigReconciler{
-				k8sClient,
-				log,
-				fakeHarbor,
-			}
-
 			hscr.mapByMatching(
 				mapping,
 				regexp.MustCompile("platform-team"),
@@ -83,20 +82,12 @@ var _ = Describe("Mapping", func() {
 	Describe("Translate", func() {
 		It("should create secrets in namespace", func(done Done) {
 			var err error
-			log := zap.Logger(false)
 			mapping := crdv1.ProjectMapping{
 				Type:      crdv1.MatchMappingType,
 				Namespace: "team-$1",
 				Secret:    "team-$1-pull-token",
 			}
 			ensureHarborSyncConfigWithParams(k8sClient, "my-cfg", "team-(.*)", mapping)
-			fakeHarbor := harborfake.Client{}
-
-			hscr := HarborSyncConfigReconciler{
-				k8sClient,
-				log,
-				fakeHarbor,
-			}
 
 			hscr.mapByTranslating(
 				mapping,
