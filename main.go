@@ -23,7 +23,7 @@ import (
 
 	"github.com/hashicorp/go-version"
 	crdv1 "github.com/moolen/harbor-sync/api/v1"
-	"github.com/moolen/harbor-sync/controllers"
+	"github.com/moolen/harbor-sync/pkg/controllers"
 	"github.com/moolen/harbor-sync/pkg/harbor"
 	"github.com/moolen/harbor-sync/pkg/harbor/repository"
 	"k8s.io/apimachinery/pkg/runtime"

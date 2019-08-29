@@ -102,21 +102,9 @@ E.g. pull tokens for the `platform-team` project should be distributed into all 
 This is not yet *designed* or even implemented.
 This controller should fire a webhook if a robot account expires and is being recreated. One could potentially integrate other secret storage systems such AWS Secrets Manager or HashiCorp Vault.
 
+### Contributions
 
-## Development
-
-
-```sh
-# install kubebuilder
-$ vagrant up
-
-$ export HARBOR_API_ENDPOINT=http://172.28.128.XXX.xip.io.
-$ export HARBOR_USERNAME="admin"
-$ export HARBOR_PASSWORD="Harbor12345"
-$ export GO111MODULE=on
-
-$ minikube start
-$ make generate
-$ make install
-$ make run
-```
+Pull requests are welcome!
+* Read [CONTRIBUTING.md](./CONTRIBUTING.md) and check out [help wanted](https://github.com/moolen/harbor-sync/labels/help%20wanted) issues.
+* Please submit github issues for feature requests, bugs or documentation problems
+* Questions/comments and support can be posted as [github issue](https://github.com/moolen/harbor-sync/issues).

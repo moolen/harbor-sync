@@ -18,14 +18,12 @@ package controllers
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"regexp"
+	"time"
 
 	"github.com/go-logr/logr"
-	"k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -46,6 +44,7 @@ type HarborSyncConfigReconciler struct {
 // +kubebuilder:rbac:groups=crd.harborsync.k8s.io,resources=harborsyncconfigs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=crd.harborsync.k8s.io,resources=harborsyncconfigs/status,verbs=get;update;patch
 
+// Reconcile reconciles the desired state in the cluster
 func (r *HarborSyncConfigReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()
 	log := r.Log.WithValues("harborsyncconfig", req.NamespacedName)
@@ -92,11 +91,11 @@ func (r *HarborSyncConfigReconciler) Reconcile(req ctrl.Request) (ctrl.Result, e
 				matchingProjects = append(matchingProjects, project)
 			}
 		}
-
+		log.Info("found matching projects", "matching_projects", len(matchingProjects), "all_projects", len(allProjects))
 		// check if projects have a specific robot account
 		// create it if not
 		for _, project := range matchingProjects {
-			skip, projectCredential := reconcileRobotAccounts(r.Harbor, log, &syncConfig, project, selector)
+			skip, projectCredential := reconcileRobotAccounts(r.Harbor, log, syncConfig.Status.RobotCredentials, project, selector.RobotAccountSuffix)
 			if skip {
 				continue
 			}
@@ -118,54 +117,16 @@ func (r *HarborSyncConfigReconciler) Reconcile(req ctrl.Request) (ctrl.Result, e
 	err := r.Update(context.Background(), &syncConfig)
 	if err != nil {
 		log.Error(err, "could not update syncConfig status field", "sync_config_name", syncConfig.Name)
+		return ctrl.Result{Requeue: true, RequeueAfter: time.Second * 15}, nil
 	}
 	return ctrl.Result{}, nil
 }
 
+// SetupWithManager setup the controller with the manager and the event input channel
+// the input chan is used to trigger recon based on external events (harbor API resources changed, forced sync)
 func (r *HarborSyncConfigReconciler) SetupWithManager(mgr ctrl.Manager, input <-chan event.GenericEvent) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&crdv1.HarborSyncConfig{}).
 		Watches(&source.Channel{Source: input}, &handler.EnqueueRequestForObject{}).
 		Complete(r)
-}
-
-func makeSecret(namespace, name string, baseURL string, credentials crdv1.RobotAccountCredential) v1.Secret {
-	auth := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", credentials.Name, credentials.Token)))
-	configJSON := fmt.Sprintf(`{"auths":{"%s":{"username":"%s","password":"%s","auth":"%s"}}}`, baseURL, credentials.Name, credentials.Token, auth)
-	return v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: namespace,
-			Name:      name,
-		},
-		Type: v1.SecretTypeDockerConfigJson,
-		Data: map[string][]byte{
-			v1.DockerConfigJsonKey: []byte(configJSON),
-		},
-	}
-}
-
-func (r *HarborSyncConfigReconciler) upsertSecret(secret v1.Secret) {
-	err := r.Create(context.Background(), &secret)
-	if apierrs.IsAlreadyExists(err) {
-		err = r.Update(context.TODO(), &secret)
-		if err != nil {
-			r.Log.Error(err, "could not update secret", "proposed_namespace", secret.ObjectMeta.Namespace, "proposed_secret", secret.ObjectMeta.Name)
-			return
-		}
-		r.Log.Info("updated secret", "proposed_namespace", secret.ObjectMeta.Namespace, "proposed_secret", secret.ObjectMeta.Name)
-		return
-	}
-	if err != nil {
-		r.Log.Error(err, "could not create secret", "proposed_namespace", secret.ObjectMeta.Namespace, "proposed_secret", secret.ObjectMeta.Name)
-		return
-	}
-	r.Log.Info("created secret", "proposed_namespace", secret.ObjectMeta.Namespace, "proposed_secret", secret.ObjectMeta.Name)
-	return
-}
-
-func ignoreNotFound(err error) error {
-	if apierrs.IsNotFound(err) {
-		return nil
-	}
-	return err
 }

@@ -1,3 +1,19 @@
+/*
+Copyright 2019 The Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package controllers
 
 import (
@@ -32,7 +48,7 @@ func (r *HarborSyncConfigReconciler) mapByMatching(mapping crdv1.ProjectMapping,
 		if nsMatcher.MatchString(ns.Name) {
 			proposedSecret := matcher.ReplaceAllString(project.Name, mapping.Secret)
 			secret := makeSecret(ns.Name, proposedSecret, r.Harbor.BaseURL(), credential)
-			r.upsertSecret(secret)
+			upsertSecret(r, r.Log, secret)
 		}
 	}
 }
@@ -54,5 +70,5 @@ func (r *HarborSyncConfigReconciler) mapByTranslating(mapping crdv1.ProjectMappi
 	proposedSecret := matcher.ReplaceAllString(project.Name, mapping.Secret)
 	r.Log.Info("proposing secret", "project_name", project.Name, "proposed_namespace", proposedNamespace, "proposed_secret", proposedSecret)
 	secret := makeSecret(proposedNamespace, proposedSecret, r.Harbor.BaseURL(), credential)
-	r.upsertSecret(secret)
+	upsertSecret(r, r.Log, secret)
 }

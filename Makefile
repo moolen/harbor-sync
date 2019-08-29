@@ -17,9 +17,14 @@ all: manager
 test: generate fmt vet manifests
 	go test ./... -coverprofile cover.out
 
+# Run tests in container
+test-docker:
+	docker build -t test:latest -f ./Dockerfile.test .
+	docker run -v $$PWD:/app test:latest test
+
 # Build manager binary
 manager: generate fmt vet
-	go build -o bin/manager main.go
+	go build -o bin/manager ./main.go
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
 run: generate fmt vet manifests
@@ -36,7 +41,7 @@ deploy: manifests
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: controller-gen
-	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role paths="./..." output:crd:artifacts:config=config/crd/bases
 
 # Run go fmt against code
 fmt:

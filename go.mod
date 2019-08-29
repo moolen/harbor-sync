@@ -4,13 +4,10 @@ go 1.12
 
 require (
 	github.com/go-logr/logr v0.1.0
-	github.com/gobuffalo/envy v1.6.15 // indirect
 	github.com/hashicorp/go-version v1.2.0
-	github.com/markbates/inflect v1.0.4 // indirect
 	github.com/mitchellh/hashstructure v1.0.0
 	github.com/onsi/ginkgo v1.8.0
 	github.com/onsi/gomega v1.5.0
-	github.com/rogpeppe/go-internal v1.2.2 // indirect
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	k8s.io/api v0.0.0-20190409021203-6e4e0e4f393b
 	k8s.io/apimachinery v0.0.0-20190404173353-6a84e37a896d
