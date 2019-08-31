@@ -54,14 +54,14 @@ var _ = Describe("Controller", func() {
 			harborClient.CreateRobotAccountFunc = func(name string, project harbor.Project) (*harbor.CreateRobotResponse, error) {
 				return createdAccount, nil
 			}
-			statusCredentials := make(map[string]crdv1.RobotAccountCredentials)
-			skip, credentials := reconcileRobotAccounts(harborClient, log, statusCredentials, harborProject, cfg.Spec.ProjectSelector[0].RobotAccountSuffix)
+			cfg.Status.RobotCredentials = make(map[string]crdv1.RobotAccountCredentials)
+			skip, credentials := reconcileRobotAccounts(harborClient, log, &cfg, harborProject, cfg.Spec.ProjectSelector[0].RobotAccountSuffix)
 			Expect(skip).To(BeFalse())
 			Expect(*credentials).To(Equal(crdv1.RobotAccountCredential{
 				Name:  createdAccount.Name,
 				Token: createdAccount.Token,
 			}))
-			Expect(statusCredentials["foo"]).To(Equal(crdv1.RobotAccountCredentials{
+			Expect(cfg.Status.RobotCredentials["foo"]).To(Equal(crdv1.RobotAccountCredentials{
 				crdv1.RobotAccountCredential{
 					Name:  createdAccount.Name,
 					Token: createdAccount.Token,

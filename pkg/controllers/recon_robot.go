@@ -27,7 +27,7 @@ import (
 
 const robotPrefix = "robot$"
 
-func reconcileRobotAccounts(harborAPI harbor.API, log logr.Logger, statusCredentials map[string]crdv1.RobotAccountCredentials, project harbor.Project, accountSuffix string) (bool, *crdv1.RobotAccountCredential) {
+func reconcileRobotAccounts(harborAPI harbor.API, log logr.Logger, syncConfig *crdv1.HarborSyncConfig, project harbor.Project, accountSuffix string) (bool, *crdv1.RobotAccountCredential) {
 	robots, err := harborAPI.GetRobotAccounts(project)
 	if err != nil {
 		log.Error(err, "could not get robot accounts from harbor")
@@ -41,7 +41,7 @@ func reconcileRobotAccounts(harborAPI harbor.API, log logr.Logger, statusCredent
 			log.V(1).Info("robot account already exists", "project_name", project.Name, "robot_account", robot.Name)
 
 			// case: robot account exists in harbor, but we do not have the credentials: re-create!
-			if statusCredentials == nil {
+			if syncConfig.Status.RobotCredentials == nil {
 				log.Info(fmt.Sprintf("sync config status.credentials does not exist, deleting robot account"))
 				err = harborAPI.DeleteRobotAccount(project, robot.ID)
 				if err != nil {
@@ -73,10 +73,10 @@ func reconcileRobotAccounts(harborAPI harbor.API, log logr.Logger, statusCredent
 			}
 
 			// good case: we have the credentials. do not re-create
-			creds := statusCredentials[project.Name]
+			creds := syncConfig.Status.RobotCredentials[project.Name]
 			for _, cred := range creds {
 				if cred.Name == addPrefix(accountSuffix) {
-					log.Info("found credentials in status.credentials. will not delete robot account")
+					log.V(1).Info("found credentials in status.credentials. will not delete robot account")
 					return false, &cred
 				}
 			}
@@ -98,21 +98,21 @@ func reconcileRobotAccounts(harborAPI harbor.API, log logr.Logger, statusCredent
 		return true, nil
 	}
 	// store secret in status field
-	if statusCredentials == nil {
-		statusCredentials = make(map[string]crdv1.RobotAccountCredentials)
+	if syncConfig.Status.RobotCredentials == nil {
+		syncConfig.Status.RobotCredentials = make(map[string]crdv1.RobotAccountCredentials)
 	}
-	if statusCredentials[project.Name] == nil {
-		statusCredentials[project.Name] = crdv1.RobotAccountCredentials{}
+	if syncConfig.Status.RobotCredentials[project.Name] == nil {
+		syncConfig.Status.RobotCredentials[project.Name] = crdv1.RobotAccountCredentials{}
 	}
 	log.Info("updating status field", "project_name", project.Name)
 
 	// check if old token exists: update it or append it to list
 	found := false
 	var credential crdv1.RobotAccountCredential
-	creds := statusCredentials[project.Name]
+	creds := syncConfig.Status.RobotCredentials[project.Name]
 	for i, cred := range creds {
 		if cred.Name == addPrefix(accountSuffix) {
-			log.Info("found credentials in status.credentials. updating token")
+			log.V(1).Info("found credentials in status.credentials. updating token")
 			creds[i].Token = res.Token
 			found = true
 			credential = creds[i]
@@ -127,7 +127,7 @@ func reconcileRobotAccounts(harborAPI harbor.API, log logr.Logger, statusCredent
 		creds = append(creds, credential)
 	}
 
-	statusCredentials[project.Name] = creds
+	syncConfig.Status.RobotCredentials[project.Name] = creds
 	return false, &credential
 }
 

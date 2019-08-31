@@ -53,7 +53,7 @@ func upsertSecret(cl client.Client, log logr.Logger, secret v1.Secret) {
 			log.Error(err, "could not update secret", "proposed_namespace", secret.ObjectMeta.Namespace, "proposed_secret", secret.ObjectMeta.Name)
 			return
 		}
-		log.Info("updated secret", "proposed_namespace", secret.ObjectMeta.Namespace, "proposed_secret", secret.ObjectMeta.Name)
+		log.V(1).Info("updated secret", "proposed_namespace", secret.ObjectMeta.Namespace, "proposed_secret", secret.ObjectMeta.Name)
 		return
 	}
 	if err != nil {

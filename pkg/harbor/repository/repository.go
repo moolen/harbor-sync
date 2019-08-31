@@ -57,6 +57,7 @@ func New(client harbor.API, logger Logr.Logger, interval time.Duration) (*Reposi
 	}, nil
 }
 
+// BaseURL returns the harbor base url
 func (r *Repository) BaseURL() string {
 	return r.Client.BaseURL()
 }
@@ -80,7 +81,6 @@ func (r *Repository) Update() error {
 		}
 		r.Log.V(1).Info("listing robot accounts", "found_robot_accouns", len(robotAccounts), "project_name", project.Name)
 		r.RobotsCache.Set(project.Name, robotAccounts)
-
 	}
 	r.UpdateHash()
 	return nil

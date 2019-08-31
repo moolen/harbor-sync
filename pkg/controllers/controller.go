@@ -52,7 +52,7 @@ func (r *HarborSyncConfigReconciler) Reconcile(req ctrl.Request) (ctrl.Result, e
 	var syncConfig crdv1.HarborSyncConfig
 	if err := r.Get(ctx, req.NamespacedName, &syncConfig); err != nil {
 		if apierrs.IsNotFound(err) {
-			log.Info("ignoring object delete")
+			log.V(1).Info("ignoring object delete")
 			return ctrl.Result{}, nil
 		}
 		log.Error(err, "unable to fetch sync config")
@@ -66,7 +66,6 @@ func (r *HarborSyncConfigReconciler) Reconcile(req ctrl.Request) (ctrl.Result, e
 	//   - reconcile robot account
 	//   - populate secret in specified namespace
 	for _, selector := range syncConfig.Spec.ProjectSelector {
-		log.Info("iterating", "type", selector.Type, "project_name", selector.ProjectName)
 		var err error
 		var matchingProjects []harbor.Project
 		var matcher *regexp.Regexp
@@ -87,15 +86,16 @@ func (r *HarborSyncConfigReconciler) Reconcile(req ctrl.Request) (ctrl.Result, e
 		}
 		for _, project := range allProjects {
 			if matcher.MatchString(project.Name) {
-				log.Info("project match", "type", selector.Type, "project_name", project.Name)
+				log.V(1).Info("project match", "type", selector.Type, "project_name", project.Name)
 				matchingProjects = append(matchingProjects, project)
 			}
 		}
-		log.Info("found matching projects", "matching_projects", len(matchingProjects), "all_projects", len(allProjects))
+		log.V(1).Info("found matching projects", "matching_projects", len(matchingProjects), "all_projects", len(allProjects))
+
 		// check if projects have a specific robot account
 		// create it if not
 		for _, project := range matchingProjects {
-			skip, projectCredential := reconcileRobotAccounts(r.Harbor, log, syncConfig.Status.RobotCredentials, project, selector.RobotAccountSuffix)
+			skip, projectCredential := reconcileRobotAccounts(r.Harbor, log.WithName("reconcile_robots"), &syncConfig, project, selector.RobotAccountSuffix)
 			if skip {
 				continue
 			}

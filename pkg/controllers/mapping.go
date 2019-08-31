@@ -59,7 +59,7 @@ func (r *HarborSyncConfigReconciler) mapByTranslating(mapping crdv1.ProjectMappi
 	proposedNamespace := matcher.ReplaceAllString(project.Name, mapping.Namespace)
 	err := r.Get(context.Background(), types.NamespacedName{Name: proposedNamespace}, &ns)
 	if apierrs.IsNotFound(err) {
-		r.Log.Info("ignoring proposed namespace", "project_name", project.Name, "proposed_namespace", proposedNamespace)
+		r.Log.V(1).Info("ignoring proposed namespace", "project_name", project.Name, "proposed_namespace", proposedNamespace)
 		return
 	} else if err != nil {
 		r.Log.Error(err, "error fetching namespace", "proposed_namespace", proposedNamespace)
@@ -68,7 +68,7 @@ func (r *HarborSyncConfigReconciler) mapByTranslating(mapping crdv1.ProjectMappi
 
 	// propose a secret name for this project
 	proposedSecret := matcher.ReplaceAllString(project.Name, mapping.Secret)
-	r.Log.Info("proposing secret", "project_name", project.Name, "proposed_namespace", proposedNamespace, "proposed_secret", proposedSecret)
+	r.Log.V(2).Info("proposing secret", "project_name", project.Name, "proposed_namespace", proposedNamespace, "proposed_secret", proposedSecret)
 	secret := makeSecret(proposedNamespace, proposedSecret, r.Harbor.BaseURL(), credential)
 	upsertSecret(r, r.Log, secret)
 }

@@ -21,6 +21,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/go-logr/glogr"
+	"github.com/golang/glog"
 	"github.com/hashicorp/go-version"
 	crdv1 "github.com/moolen/harbor-sync/api/v1"
 	"github.com/moolen/harbor-sync/pkg/controllers"
@@ -30,7 +32,6 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -56,12 +57,16 @@ func main() {
 	flag.DurationVar(&forceSyncInterval, "force-sync-interval", time.Minute*10, "force reconciliation interval")
 	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
 		"Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.")
+	flag.Set("logtostderr", "true")
 	flag.Parse()
 
 	harborAPIEndpoint := os.Getenv("HARBOR_API_ENDPOINT")
 	harborUsername := os.Getenv("HARBOR_USERNAME")
 	harborPassword := os.Getenv("HARBOR_PASSWORD")
-	ctrl.SetLogger(zap.Logger(true))
+
+	log := glogr.New().WithName("controller")
+	ctrl.SetLogger(log)
+	defer glog.Flush()
 
 	harborClient, err := harbor.New(harborAPIEndpoint, harborUsername, harborPassword)
 	if err != nil {
@@ -85,7 +90,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	harborRepo, err := repository.New(harborClient, ctrl.Log.WithName("controllers").WithName("HarborRepository"), harborPollInterval)
+	harborRepo, err := repository.New(harborClient, ctrl.Log.WithName("repository"), harborPollInterval)
 	if err != nil {
 		setupLog.Error(err, "unable to create harbor repository")
 		os.Exit(1)
@@ -112,15 +117,15 @@ func main() {
 
 	harborProjectChanges := harborRepo.Sync()
 	syncChannels := []<-chan struct{}{forceSyncChan, harborProjectChanges}
-	adapter := controllers.NewAdapter(mgr.GetClient(), ctrl.Log.WithName("controllers").WithName("HarborSyncAdapter"), syncChannels)
+	adapter := controllers.NewAdapter(mgr.GetClient(), ctrl.Log.WithName("adapter"), syncChannels)
 	syncCfgChanges := adapter.Run()
 
 	if err = (&controllers.HarborSyncConfigReconciler{
 		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("HarborSyncConfig"),
+		Log:    ctrl.Log.WithName("reconciler"),
 		Harbor: harborRepo,
 	}).SetupWithManager(mgr, syncCfgChanges); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "HarborSyncConfig")
+		setupLog.Error(err, "unable to create controller")
 		os.Exit(1)
 	}
 
