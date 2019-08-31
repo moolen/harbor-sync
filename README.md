@@ -1,9 +1,7 @@
 # Harbor Sync
 [![Actions Status](https://github.com/moolen/harbor-sync/workflows/test/badge.svg)](https://github.com/moolen/harbor-sync/actions)
 
-You shouldn't care about renewing robot accounts or copying credentials from harbor to kubernetes.
-This controller manages harbor robot accounts and synchronizes them with your cluster. They will be re-created if they expire and synced into the respective namespaces.
-In addition, this controller can integrate other APIs using webhooks.
+Harbor Sync allows you to synchronize your Harbor robot accounts with your kubernetes cluster.
 
 ## How it works
 This project extends the Kubernetes API by adding a Custom Resource `HarborSyncConfig` and a controller that implements a reconciliation loop. This loop takes care of creating and refreshing robot account tokens aswell as distributing the tokens into your namespaces as secrets.
