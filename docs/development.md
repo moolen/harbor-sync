@@ -49,5 +49,5 @@ If you have installed kubebuilder you can run the tests directly on your host ma
 
 ```bash
 # run testsuite in docker container (so you don't need to install kubebuilder)
-$ make test-docker
+$ make docker-test
 ```

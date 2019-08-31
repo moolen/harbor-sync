@@ -9,7 +9,7 @@ Did you read the contributing and development guides?
  * https://github.com/moolen/harbor-sync/blob/master/docs/development.md
 
 Do the tests pass locally?
- * run: <make test-docker> to be sure that all tests pass
+ * run: <make docker-test> to be sure that all tests pass
 
 If this is a PR is a new feature please provide details and documentation about how to use it.
 

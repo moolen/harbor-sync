@@ -1,6 +1,6 @@
 
-# Image URL to use all building/pushing image targets
-IMG ?= docker.io/moolen/harbor-sync:latest
+version ?= test
+IMG ?= quay.io/moolen/harbor-sync:${version}
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true"
 
@@ -16,11 +16,6 @@ all: manager
 # Run tests
 test: generate fmt vet manifests
 	go test ./... -coverprofile cover.out
-
-# Run tests in container
-test-docker:
-	docker build -t test:latest -f ./Dockerfile.test .
-	docker run -v $$PWD:/app test:latest test
 
 # Build manager binary
 manager: generate fmt vet
@@ -54,6 +49,11 @@ vet:
 # Generate code
 generate: controller-gen
 	$(CONTROLLER_GEN) object:headerFile=./hack/boilerplate.go.txt paths="./..."
+
+# Run tests in container
+docker-test:
+	docker build -t test:latest -f Dockerfile.test .
+	docker run -v $$PWD:/app test:latest test
 
 # Build the docker image
 docker-build: test

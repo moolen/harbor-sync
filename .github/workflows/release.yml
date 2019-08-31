@@ -1,0 +1,48 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+
+  release:
+
+    name: Release
+    runs-on: ubuntu-18.04
+    steps:
+
+    - name: Set up Go 1.12
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.12
+
+    - name: Install kubebuilder
+      run: |
+        os=$(go env GOOS)
+        arch=$(go env GOARCH)
+        curl -sL https://go.kubebuilder.io/dl/2.0.0/${os}/${arch} | tar -xz -C /tmp/
+        sudo mv /tmp/kubebuilder_2.0.0_${os}_${arch} /usr/local/kubebuilder
+        export PATH=$PATH:/usr/local/kubebuilder/bin
+
+    - name: Install make
+      run: sudo apt-get install -y make
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v1
+
+    - name: Test
+      run: make test
+
+    - name: Build
+      run: make docker-build version=$(git tag --points-at)
+
+    - name: Login to GitHub Docker Registry
+      run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin quay.io
+      env:
+        DOCKER_USERNAME: ${{ secrets.QUAY_USERNAME }}
+        DOCKER_PASSWORD: ${{ secrets.QUAY_PASSWORD }}
+
+    - name: Push
+      run: make docker-push version=$(git tag --points-at)

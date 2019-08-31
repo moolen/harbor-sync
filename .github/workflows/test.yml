@@ -1,8 +1,12 @@
-name: Go
-on: [push]
+name: Test Pull Request
+
+on:
+  pull_request: {}
+
 jobs:
 
   test:
+
     name: Test
     runs-on: ubuntu-18.04
     steps:
@@ -12,6 +16,7 @@ jobs:
       with:
         go-version: 1.12
       id: go
+
     - name: Install kubebuilder
       run: |
         os=$(go env GOOS)
@@ -19,6 +24,7 @@ jobs:
         curl -sL https://go.kubebuilder.io/dl/2.0.0/${os}/${arch} | tar -xz -C /tmp/
         sudo mv /tmp/kubebuilder_2.0.0_${os}_${arch} /usr/local/kubebuilder
         export PATH=$PATH:/usr/local/kubebuilder/bin
+
     - name: Install make
       run: sudo apt-get install -y make
 
