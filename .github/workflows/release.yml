@@ -39,6 +39,9 @@ jobs:
     - name: Check out code into the Go module directory
       uses: actions/checkout@v1
 
+    - name: Check generated files
+      run: make check-gen-files
+
     - name: release
       run: npx semantic-release
       env:

@@ -13,7 +13,7 @@ endif
 all: controller
 
 # Run tests
-test: generate fmt vet manifests check-gen-files
+test: generate fmt vet manifests
 	go test ./... -coverprofile cover.out
 
 docs: hugo-bin
@@ -81,7 +81,7 @@ docker-push:
 
 docker-release: docker-build docker-push
 
-release: check-gen-files controller docker-release
+release: quick-install controller docker-release
 	tar cvzf bin/harbor-sync-controller.tar.gz bin/harbor-sync-controller
 
 hugo-bin:
