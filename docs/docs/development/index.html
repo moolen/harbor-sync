@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="/book.min.6c7317d2e8552a0ac3ea8fd4ba500c3dfb1cc9c74e7afd73eee6d729751fad30.css" integrity="sha256-bHMX0uhVKgrD6o/UulAMPfscycdOev1z7ubXKXUfrTA=">
 
 
-<script defer src="/search.min.be62b1eaf7b59f4755139ccbe36af606b16a7f7a827513e81c7a0284e39963af.js" integrity="sha256-vmKx6ve1n0dVE5zL42r2BrFqf3qCdRPoHHoChOOZY68="></script>
+<script defer src="/search.min.ad991cbd049f25fcc21ac3952c5bee2943188fa4dad4aedcd6f64564007908cf.js" integrity="sha256-rZkcvQSfJfzCGsOVLFvuKUMYj6Ta1K7c1vZFZAB5CM8="></script>
 
 
 
@@ -195,6 +195,10 @@ Please keep in mind:</p>
 <li>if you add a feature, please add documentation about the usage and write tests that cover at least the happy path</li>
 </ul>
 
+<h3 id="commit-messages">Commit Messages</h3>
+
+<p>This projects follows the <a href="https://www.conventionalcommits.org/en/v1.0.0-beta.2/#summary">Conventional Commits</a> specification.</p>
+
 <h3 id="reconciliation-loop">Reconciliation loop</h3>
 
 <p>This is pretty straight-forward:</p>
@@ -216,6 +220,10 @@ Please keep in mind:</p>
 * Control Plane: whenever a SyncConfig is created/updated/deleted
 * Harbor Polling: whenever the state in harbor changes (project or robota account is created, updated, deleted)
 * time-based using the configured <code>force-sync-interval</code>: forces reconciliation in a fixed interval to cover cases like namespace creation or robot account expiration</p>
+
+<h3 id="architecture">Architecture</h3>
+
+<p><img src="/harbor-sync-dev.jpg" alt="Architecture" /></p>
 </article>
 
       
@@ -238,7 +246,9 @@ Please keep in mind:</p>
 </ul></li>
 <li><a href="#developing">Developing</a>
 <ul>
+<li><a href="#commit-messages">Commit Messages</a></li>
 <li><a href="#reconciliation-loop">Reconciliation loop</a></li>
+<li><a href="#architecture">Architecture</a></li>
 </ul></li>
 </ul></li>
 </ul>

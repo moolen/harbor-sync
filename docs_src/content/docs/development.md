@@ -48,6 +48,10 @@ Please keep in mind:
 * if you add a feature, please add documentation about the usage and write tests that cover at least the happy path
 
 
+### Commit Messages
+
+This projects follows the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0-beta.2/#summary) specification.
+
 ### Reconciliation loop
 
 This is pretty straight-forward:
@@ -61,3 +65,7 @@ The reconciliation loop is triggered from essentially three sources:
 * Control Plane: whenever a SyncConfig is created/updated/deleted
 * Harbor Polling: whenever the state in harbor changes (project or robota account is created, updated, deleted)
 * time-based using the configured `force-sync-interval`: forces reconciliation in a fixed interval to cover cases like namespace creation or robot account expiration
+
+### Architecture
+
+![Architecture](/harbor-sync-dev.jpg)

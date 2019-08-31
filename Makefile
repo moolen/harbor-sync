@@ -1,7 +1,6 @@
 
 version ?= test
 IMG ?= quay.io/moolen/harbor-sync:${version}
-# Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true"
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
@@ -11,38 +10,45 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
-all: manager
+all: controller
 
 # Run tests
-test: generate fmt vet manifests misspell
+test: generate fmt vet manifests check-gen-files
 	go test ./... -coverprofile cover.out
 
 docs: hugo-bin
-	cd docs_src; hugo --theme book --destination ../docs
+	cd docs_src; $(HUGO) --theme book --destination ../docs
 
-# Build manager binary
-manager: generate fmt vet
-	go build -o bin/manager ./main.go
+# Build harbor-sync-controller binary
+controller: generate fmt vet
+	go build -o bin/harbor-sync-controller ./main.go
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
 run: generate fmt vet manifests
 	go run ./main.go
 
 # Install CRDs into a cluster
-install: manifests
-	kustomize build config/crd | kubectl apply -f -
+install: kubectl-bin manifests
+	kustomize build config/crd | $(KUBECTL) apply -f -
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
-deploy: manifests
+deploy: kubectl-bin manifests
 	cd config/manager && kustomize edit set image controller=${IMG}
-	kustomize build config/default | kubectl apply -f -
+	kustomize build config/default | $(KUBECTL) apply -f -
+
+# Checks if generated files differ
+check-gen-files: docs quick-install
+	git diff --exit-code
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: controller-gen
 	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role paths="./..." output:crd:artifacts:config=config/crd/bases
 
+quick-install: kubectl-bin
+	kubectl kustomize config/default/ > install/kubernetes/quick-install.yaml
+
 misspell:
-	@go get github.com/client9/misspell/cmd/misspell
+	go get github.com/client9/misspell/cmd/misspell
 	misspell \
 		-locale US \
 		-error \
@@ -66,20 +72,35 @@ docker-test:
 	docker run -v $$PWD:/app test:latest test
 
 # Build the docker image
-docker-build: test
+docker-build:
 	docker build . -t ${IMG}
 
 # Push the docker image
 docker-push:
 	docker push ${IMG}
 
+docker-release: docker-build docker-push
+
+release: check-gen-files controller docker-release
+	tar cvzf bin/harbor-sync-controller.tar.gz bin/harbor-sync-controller
+
 hugo-bin:
 ifeq (, $(shell which hugo))
-	curl -sL https://github.com/gohugoio/hugo/releases/download/v0.57.2/hugo_0.57.2_Linux-64bit.tar.gz | tar -xz -C /tmp/
-	cp /tmp/hugo bin/hugo
-HUGO=bin/hugo
+	curl -sL https://github.com/gohugoio/hugo/releases/download/v0.57.2/hugo_extended_0.57.2_Linux-64bit.tar.gz | tar -xz -C /tmp/
+	mkdir bin && cp /tmp/hugo bin/hugo
+HUGO=$(shell pwd)/bin/hugo
 else
 HUGO=$(shell which hugo)
+endif
+
+kubectl-bin:
+ifeq (, $(shell which kubectl))
+	curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.15.0/bin/linux/amd64/kubectl
+	chmod +x ./kubectl
+	mkdir bin && mv kubectl bin/kubectl
+KUBECTL=$(shell pwd)/bin/kubectl
+else
+KUBECTL=$(shell which kubectl)
 endif
 
 # find or download controller-gen

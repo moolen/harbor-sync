@@ -2,8 +2,8 @@ name: Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+    - release
 
 jobs:
 
@@ -18,25 +18,17 @@ jobs:
       with:
         go-version: 1.12
 
-    - name: Install kubebuilder
-      run: |
-        os=$(go env GOOS)
-        arch=$(go env GOARCH)
-        curl -sL https://go.kubebuilder.io/dl/2.0.0/${os}/${arch} | tar -xz -C /tmp/
-        sudo mv /tmp/kubebuilder_2.0.0_${os}_${arch} /usr/local/kubebuilder
-        export PATH=$PATH:/usr/local/kubebuilder/bin
+    - name: setup node
+      uses: actions/setup-node@v1
+      with:
+        node-version: 12
+        registry-url: https://registry.npmjs.org/
+
+    - name: setup release tools
+      run: npm install -g semantic-release@15 @semantic-release/exec
 
     - name: Install make
       run: sudo apt-get install -y make
-
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v1
-
-    - name: Test
-      run: make test
-
-    - name: Build
-      run: make docker-build version=$(git tag --points-at)
 
     - name: Login to Docker Registry
       run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin quay.io
@@ -44,5 +36,10 @@ jobs:
         DOCKER_USERNAME: ${{ secrets.QUAY_USERNAME }}
         DOCKER_PASSWORD: ${{ secrets.QUAY_PASSWORD }}
 
-    - name: Push
-      run: make docker-push version=$(git tag --points-at)
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v1
+
+    - name: release
+      run: npx semantic-release
+      env:
+        GH_TOKEN: ${{secrets.GH_TOKEN}}

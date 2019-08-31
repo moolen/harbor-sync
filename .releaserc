@@ -1,0 +1,16 @@
+{
+  "branch": "release",
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    ["@semantic-release/exec", {
+      "publishCmd": "make release version=${nextRelease.version}"
+    }],
+    ["@semantic-release/github", {
+      "assets": [
+        {"path": "bin/harbor-sync-controller.tar.gz", "label": "Harbor Sync Controller"},
+        {"path": "install/kubernetes/quick-install.yaml", "label": "Quick install manifest"}
+      ]
+    }]
+  ]
+}
