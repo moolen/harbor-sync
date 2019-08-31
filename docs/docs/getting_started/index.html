@@ -7,14 +7,14 @@
 <title>Getting Started | Harbor Sync docs</title>
 
 
-<link rel="stylesheet" href="/book.min.6c7317d2e8552a0ac3ea8fd4ba500c3dfb1cc9c74e7afd73eee6d729751fad30.css" integrity="sha256-bHMX0uhVKgrD6o/UulAMPfscycdOev1z7ubXKXUfrTA=">
+<link rel="stylesheet" href="/harbor-sync/book.min.6c7317d2e8552a0ac3ea8fd4ba500c3dfb1cc9c74e7afd73eee6d729751fad30.css" integrity="sha256-bHMX0uhVKgrD6o/UulAMPfscycdOev1z7ubXKXUfrTA=">
 
 
-<script defer src="/search.min.ad991cbd049f25fcc21ac3952c5bee2943188fa4dad4aedcd6f64564007908cf.js" integrity="sha256-rZkcvQSfJfzCGsOVLFvuKUMYj6Ta1K7c1vZFZAB5CM8="></script>
+<script defer src="/harbor-sync/search.min.a9d4ff569f0cf41946e49e6335d7120a5733f3088b6639c280c97775fe519185.js" integrity="sha256-qdT/Vp8M9BlG5J5jNdcSClcz8wiLZjnCgMl3df5RkYU="></script>
 
 
 
-<link rel="icon" href="/favicon.png" type="image/x-icon">
+<link rel="icon" href="/harbor-sync/favicon.png" type="image/x-icon">
 
 
 <!--
@@ -32,7 +32,7 @@ https://github.com/alex-shpak/hugo-book
     <aside class="book-menu fixed">
       <nav>
 <h2 class="book-brand">
-  <a href="http://moolen.github.com/">Harbor Sync docs</a>
+  <a href="http://moolen.github.io/harbor-sync">Harbor Sync docs</a>
 </h2>
 
 
@@ -65,7 +65,7 @@ https://github.com/alex-shpak/hugo-book
     <li>
       
 
-  <a href="/docs/configuration/" >
+  <a href="/harbor-sync/docs/configuration/" >
       Configuration
   </a>
 
@@ -75,7 +75,7 @@ https://github.com/alex-shpak/hugo-book
     <li>
       
 
-  <a href="/docs/development/" >
+  <a href="/harbor-sync/docs/development/" >
       Development
   </a>
 
@@ -85,7 +85,7 @@ https://github.com/alex-shpak/hugo-book
     <li>
       
 
-  <a href="/docs/getting_started/"  class="active">
+  <a href="/harbor-sync/docs/getting_started/"  class="active">
       Getting Started
   </a>
 
@@ -95,7 +95,7 @@ https://github.com/alex-shpak/hugo-book
     <li>
       
 
-  <a href="/docs/spec/" >
+  <a href="/harbor-sync/docs/spec/" >
       Spec
   </a>
 
@@ -105,7 +105,7 @@ https://github.com/alex-shpak/hugo-book
     <li>
       
 
-  <a href="/docs/usage/" >
+  <a href="/harbor-sync/docs/usage/" >
       Usage
   </a>
 
@@ -145,7 +145,7 @@ https://github.com/alex-shpak/hugo-book
     <div class="book-page">
       <header class="flex align-center justify-between book-header">
   <label for="menu-control">
-    <img src="/svg/menu.svg" alt="Menu" />
+    <img src="/harbor-sync/svg/menu.svg" alt="Menu" />
   </label>
   <strong>Getting Started</strong>
 </header>
@@ -159,7 +159,8 @@ https://github.com/alex-shpak/hugo-book
 
 <p>Harbor Sync Controller synchronizes Harbor with your Kubernetes cluster. It simplifies the management of robot accounts by automating the process of renewal and distribution of access tokens.</p>
 
-<p><img src="/harbor-sync-mapping.jpg" alt="Harbor Sync Controller" /></p>
+<p><img src="http://moolen.github.io/harbor-sync
+/harbor-sync-mapping.jpg" alt="Harbor Sync Controller" /></p>
 
 <h1 id="installation">Installation</h1>
 
@@ -178,7 +179,7 @@ https://github.com/alex-shpak/hugo-book
 <h2 id="deployment">Deployment</h2>
 
 <p>The following command creates a deployment and the necessary RBAC roles for the controller.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ wget https://raw.githubusercontent.com/moolen/harbor-sync/v0.1/install/kubernetes/quick-install.yaml
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ wget https://raw.githubusercontent.com/moolen/harbor-sync/master/install/kubernetes/quick-install.yaml
 
 <span style="color:#75715e"># change environment variables</span>
 $ vim quick-install.yaml

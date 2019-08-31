@@ -3,7 +3,7 @@
 ## What is Harbor Sync Controller?
 Harbor Sync Controller synchronizes Harbor with your Kubernetes cluster. It simplifies the management of robot accounts by automating the process of renewal and distribution of access tokens.
 
-![Harbor Sync Controller](/harbor-sync-mapping.jpg)
+![Harbor Sync Controller]({{< baseurl >}}/harbor-sync-mapping.jpg)
 
 # Installation
 
@@ -22,7 +22,7 @@ The Controller runs in [Kubernetes](https://kubernetes.io) so you need a Kuberne
 The following command creates a deployment and the necessary RBAC roles for the controller.
 
 ```bash
-$ wget https://raw.githubusercontent.com/moolen/harbor-sync/v0.1/install/kubernetes/quick-install.yaml
+$ wget https://raw.githubusercontent.com/moolen/harbor-sync/master/install/kubernetes/quick-install.yaml
 
 # change environment variables
 $ vim quick-install.yaml

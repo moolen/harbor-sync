@@ -3,44 +3,44 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>http://moolen.github.com/docs/configuration/</loc>
+    <loc>http://moolen.github.io/harbor-sync/docs/configuration/</loc>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>http://moolen.github.com/docs/development/</loc>
+    <loc>http://moolen.github.io/harbor-sync/docs/development/</loc>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>http://moolen.github.com/docs/getting_started/</loc>
+    <loc>http://moolen.github.io/harbor-sync/docs/getting_started/</loc>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>http://moolen.github.com/docs/spec/</loc>
+    <loc>http://moolen.github.io/harbor-sync/docs/spec/</loc>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>http://moolen.github.com/docs/usage/</loc>
+    <loc>http://moolen.github.io/harbor-sync/docs/usage/</loc>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>http://moolen.github.com/categories/</loc>
+    <loc>http://moolen.github.io/harbor-sync/categories/</loc>
   </url>
   
   <url>
-    <loc>http://moolen.github.com/docs/</loc>
+    <loc>http://moolen.github.io/harbor-sync/docs/</loc>
   </url>
   
   <url>
-    <loc>http://moolen.github.com/tags/</loc>
+    <loc>http://moolen.github.io/harbor-sync/tags/</loc>
   </url>
   
   <url>
-    <loc>http://moolen.github.com/</loc>
+    <loc>http://moolen.github.io/harbor-sync/</loc>
   </url>
   
 </urlset>

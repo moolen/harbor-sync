@@ -68,4 +68,4 @@ The reconciliation loop is triggered from essentially three sources:
 
 ### Architecture
 
-![Architecture](/harbor-sync-dev.jpg)
+![Architecture]({{< baseurl >}}/harbor-sync-dev.jpg)

@@ -2,14 +2,18 @@
   "branch": "release",
   "plugins": [
     "@semantic-release/commit-analyzer",
-    "@semantic-release/release-notes-generator",
+    ["@semantic-release/release-notes-generator", {
+      "writerOpts": {
+        "headerPartial": "# {{version}}\nImage: `quay.io/moolen/harbor-sync:{{version}}`"
+      }
+    }],
     ["@semantic-release/exec", {
       "publishCmd": "make release version=${nextRelease.version}"
     }],
     ["@semantic-release/github", {
       "assets": [
-        {"path": "bin/harbor-sync-controller.tar.gz", "label": "Harbor Sync Controller"},
-        {"path": "install/kubernetes/quick-install.yaml", "label": "Quick install manifest"}
+        {"path": "bin/harbor-sync-controller.tar.gz", "label": "harbor-sync-controller-linux-x64.tar.gz"},
+        {"path": "install/kubernetes/quick-install.yaml", "label": "quick-install.yaml"}
       ]
     }]
   ]

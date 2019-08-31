@@ -1,4 +1,4 @@
-baseURL = "http://moolen.github.com/"
+baseURL = "http://moolen.github.io/harbor-sync"
 languageCode = "en-us"
 title = "Harbor Sync docs"
 pygmentsCodeFences = true
