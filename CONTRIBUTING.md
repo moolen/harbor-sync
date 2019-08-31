@@ -4,7 +4,7 @@ Before opening a new issue or submitting a new pull request, it's helpful to sea
 
 ## Contributing code
 
-* read the [development guide](docs/development.md)
+* read the [development guide](http://moolen.github.io/harbor-sync/docs/development)
 * fork this repo, do your changes
 * submit a pull request
 

@@ -8,6 +8,9 @@
 bin
 .vagrant
 
+docs_src/public
+docs_src/resources/_gen
+
 # Test binary, build with `go test -c`
 *.test
 

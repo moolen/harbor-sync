@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Usage | Harbor Sync docs</title>
+
+
+<link rel="stylesheet" href="/book.min.6c7317d2e8552a0ac3ea8fd4ba500c3dfb1cc9c74e7afd73eee6d729751fad30.css" integrity="sha256-bHMX0uhVKgrD6o/UulAMPfscycdOev1z7ubXKXUfrTA=">
+
+
+<script defer src="/search.min.be62b1eaf7b59f4755139ccbe36af606b16a7f7a827513e81c7a0284e39963af.js" integrity="sha256-vmKx6ve1n0dVE5zL42r2BrFqf3qCdRPoHHoChOOZY68="></script>
+
+
+
+<link rel="icon" href="/favicon.png" type="image/x-icon">
+
+
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+
+  
+</head>
+
+<body>
+  <input type="checkbox" class="hidden" id="menu-control" />
+  <main class="flex container">
+
+    <aside class="book-menu fixed">
+      <nav>
+<h2 class="book-brand">
+  <a href="http://moolen.github.com/">Harbor Sync docs</a>
+</h2>
+
+
+<div class="book-search">
+  <input type="text" placeholder="Search" id="book-search-input" maxlength="64" readonly />
+  <div class="book-search-spinner spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+
+
+
+
+
+    
+
+  
+  
+
+
+
+
+
+ 
+  
+    
+
+  <ul>
+    
+    
+    <li>
+      
+
+  <a href="/docs/configuration/" >
+      Configuration
+  </a>
+
+
+    </li>
+    
+    <li>
+      
+
+  <a href="/docs/development/" >
+      Development
+  </a>
+
+
+    </li>
+    
+    <li>
+      
+
+  <a href="/docs/getting_started/" >
+      Getting Started
+  </a>
+
+
+    </li>
+    
+    <li>
+      
+
+  <a href="/docs/spec/" >
+      Spec
+  </a>
+
+
+    </li>
+    
+    <li>
+      
+
+  <a href="/docs/usage/"  class="active">
+      Usage
+  </a>
+
+
+    </li>
+    
+  </ul>
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+</nav>
+
+
+<script>
+(function() {
+  var menu = document.querySelector("aside.book-menu nav");
+  addEventListener("beforeunload", function(event) {
+    localStorage.setItem("menu.scrollTop", menu.scrollTop);
+  });
+  menu.scrollTop = localStorage.getItem("menu.scrollTop");
+})();
+</script>
+
+    </aside>
+
+    <div class="book-page">
+      <header class="flex align-center justify-between book-header">
+  <label for="menu-control">
+    <img src="/svg/menu.svg" alt="Menu" />
+  </label>
+  <strong>Usage</strong>
+</header>
+
+      
+<article class="markdown">
+
+<h1 id="usage-examples">Usage examples</h1>
+
+<h2 id="map-projects-by-name">Map projects by name</h2>
+
+<p>Map harbor project to several namespaces. This will create a robot account in <code>my-project</code> <strong>harbor project</strong> and sync the credentials into <code>team-a</code> and <code>team-b</code>&rsquo;s namespace as secret <code>central-project-token</code>.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yml" data-lang="yml">spec:
+  projectSelector:
+  - type: Regex
+    name: <span style="color:#e6db74">&#34;my-project&#34;</span> <span style="color:#75715e"># &lt;--- specify harbor project</span>
+    robotAccountSuffix: <span style="color:#e6db74">&#34;k8s-sync-robot&#34;</span>
+    mapping:
+    - type: Translate
+      namespace: <span style="color:#e6db74">&#34;team-a&#34;</span> <span style="color:#75715e"># &lt;--- target namespace</span>
+      secret: <span style="color:#e6db74">&#34;my-project-pull-token&#34;</span> <span style="color:#75715e"># &lt;--- target secret name</span>
+    - type: Translate
+      namespace: <span style="color:#e6db74">&#34;team-b&#34;</span>
+      secret: <span style="color:#e6db74">&#34;my-project-pull-token&#34;</span></code></pre></div>
+<h2 id="map-projects-using-a-regular-expression">Map projects using a regular expression</h2>
+
+<p>You can specify regular expressions to map a <strong>large number</strong> of projects to namespaces. This maps harbor teams with the prefix <code>team-</code>. E.g. Harbor project <code>team-frontend</code> maps to k8s namespace <code>team-frontend</code>. The secret&rsquo;s name will always be <code>my-pull-token</code>. Non-existent k8s namespaces will be ignored.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">spec:
+  projectSelector:
+  - type: Regex
+    name: <span style="color:#e6db74">&#34;team-(.*)&#34;</span> <span style="color:#75715e"># find harbor projects matching this expression</span>
+    robotAccountSuffix: <span style="color:#e6db74">&#34;k8s-sync-robot&#34;</span>
+    mapping:
+    - type: Translate
+      namespace: <span style="color:#e6db74">&#34;team-$1&#34;</span>    <span style="color:#75715e"># references capturing group from the above projectSelector.name</span>
+      secret: <span style="color:#e6db74">&#34;team-$1-pull-token&#34;</span> <span style="color:#75715e"># also here</span></code></pre></div>
+<h2 id="map-projects-using-regular-expressions-2">Map projects using regular expressions #2</h2>
+
+<p>You have <strong>one</strong> harbor project and want to deploy the pull secrets <strong>into several namespaces</strong> matching a regular expression. E.g. pull tokens for the <code>platform-team</code> project should be distributed into all namespaces matching <code>team-.*</code>.</p>
+
+<p>Use a <code>type: Match</code> on a mapping to say: hey, find namespaces using this <strong>regular expression</strong> at the namespace field rather than re-using the project name using <code>type: Translate</code>.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">spec:
+  projectSelector:
+  - type: Regex
+    name: <span style="color:#e6db74">&#34;platform-team&#34;</span>
+    robotAccountSuffix: <span style="color:#e6db74">&#34;k8s-sync-robot&#34;</span>
+    mapping:
+    - type: Match  <span style="color:#75715e"># treat namespace as regexp</span>
+      namespace: <span style="color:#e6db74">&#34;team-.*&#34;</span> <span style="color:#75715e"># if ns matches this it will receive the secret</span>
+      secret: <span style="color:#e6db74">&#34;platform-pull-token&#34;</span> <span style="color:#75715e"># you can still use the capturing group from projectSelector.Name here</span></code></pre></div>
+<h2 id="mapping-projects">Mapping Projects</h2>
+
+<p>A <code>mapping</code> defines how to lookup namespaces in the cluster. Generally there are two lookup types: <code>Translate</code> and <code>Match</code>.</p>
+
+<h3 id="translate">Translate</h3>
+
+<p><strong>Translate</strong> will take the Harbor project name into account when looking up namespaces. The <code>ProjectSelector.ProjectName</code> can be a regular expression which holds capturing groups. The idea is to inject those capturing groups when finding namespaces.</p>
+
+<p>Example:</p>
+
+<p>Harbor: we have two projects, <code>team-frontend</code> and <code>team-backend</code>. We select them using <code>team-(.*)</code> in the <code>ProjectSelector.ProjectName</code>. And map them to kubernetes namespaces <code>squad-$1</code>. The <code>$1</code> will be replaced with <code>frontend</code> and <code>backend</code> respectively. In the end each namespaces will have <strong>only it&rsquo;s own</strong> secret: <code>team-frontend</code> will only have the secret of Harbor project <code>team-frontend</code>. Namespace <code>team-backend</code> will only have the secret of Harbor project <code>team-backend</code>.</p>
+
+<h3 id="match">Match</h3>
+
+<p><strong>Match</strong> doesn&rsquo;t care about the <code>ProjectSelector.ProjectName</code>. It will just find <strong>namespaces</strong> in the cluster that match the <strong>regular expression</strong>.</p>
+
+<p>Example 1:</p>
+
+<p>Harbor: we have one project, <code>team-platform</code>. By setting the field <code>ProjectMapping.Namespace</code> to <code>team-.*</code> we deploy the robot account secret to namespaces</p>
+
+<p>Example 2:</p>
+
+<p>Harbor: we have two projects, <code>team-platform</code> and <code>team-operations</code>. By setting <code>ProjectMapping.Namespace</code> to <code>team-.*</code> we deploy the robot accounts of both the <code>platform</code> and <code>operations</code> project into the namespace. To avoid naming conflicts on the secrets we set <code>ProjectMapping.Secret</code> to <code>$1-pull-token</code>. The result is: All namespaces matching <code>team-.*</code> will have the secrets <code>platform-pull-token</code> and <code>operations-pull-token</code>.</p>
+</article>
+
+      
+
+      
+    </div>
+
+    
+  
+
+  <aside class="book-toc level-6 fixed">
+    <nav id="TableOfContents">
+<ul>
+<li><a href="#usage-examples">Usage examples</a>
+<ul>
+<li><a href="#map-projects-by-name">Map projects by name</a></li>
+<li><a href="#map-projects-using-a-regular-expression">Map projects using a regular expression</a></li>
+<li><a href="#map-projects-using-regular-expressions-2">Map projects using regular expressions #2</a></li>
+<li><a href="#mapping-projects">Mapping Projects</a>
+<ul>
+<li><a href="#translate">Translate</a></li>
+<li><a href="#match">Match</a></li>
+</ul></li>
+</ul></li>
+</ul>
+</nav>
+  </aside>
+
+
+
+  </main>
+
+  
+  
+</body>
+
+</html>

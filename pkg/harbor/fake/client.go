@@ -20,7 +20,7 @@ import (
 	"github.com/moolen/harbor-sync/pkg/harbor"
 )
 
-// Client implementes harbor.API
+// Client implements harbor.API
 // and offers a Func interface for each method
 type Client struct {
 	BaseURLFunc            func() string

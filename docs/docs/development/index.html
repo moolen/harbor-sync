@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Development | Harbor Sync docs</title>
+
+
+<link rel="stylesheet" href="/book.min.6c7317d2e8552a0ac3ea8fd4ba500c3dfb1cc9c74e7afd73eee6d729751fad30.css" integrity="sha256-bHMX0uhVKgrD6o/UulAMPfscycdOev1z7ubXKXUfrTA=">
+
+
+<script defer src="/search.min.be62b1eaf7b59f4755139ccbe36af606b16a7f7a827513e81c7a0284e39963af.js" integrity="sha256-vmKx6ve1n0dVE5zL42r2BrFqf3qCdRPoHHoChOOZY68="></script>
+
+
+
+<link rel="icon" href="/favicon.png" type="image/x-icon">
+
+
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+
+  
+</head>
+
+<body>
+  <input type="checkbox" class="hidden" id="menu-control" />
+  <main class="flex container">
+
+    <aside class="book-menu fixed">
+      <nav>
+<h2 class="book-brand">
+  <a href="http://moolen.github.com/">Harbor Sync docs</a>
+</h2>
+
+
+<div class="book-search">
+  <input type="text" placeholder="Search" id="book-search-input" maxlength="64" readonly />
+  <div class="book-search-spinner spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+
+
+
+
+
+    
+
+  
+  
+
+
+
+
+
+ 
+  
+    
+
+  <ul>
+    
+    
+    <li>
+      
+
+  <a href="/docs/configuration/" >
+      Configuration
+  </a>
+
+
+    </li>
+    
+    <li>
+      
+
+  <a href="/docs/development/"  class="active">
+      Development
+  </a>
+
+
+    </li>
+    
+    <li>
+      
+
+  <a href="/docs/getting_started/" >
+      Getting Started
+  </a>
+
+
+    </li>
+    
+    <li>
+      
+
+  <a href="/docs/spec/" >
+      Spec
+  </a>
+
+
+    </li>
+    
+    <li>
+      
+
+  <a href="/docs/usage/" >
+      Usage
+  </a>
+
+
+    </li>
+    
+  </ul>
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+</nav>
+
+
+<script>
+(function() {
+  var menu = document.querySelector("aside.book-menu nav");
+  addEventListener("beforeunload", function(event) {
+    localStorage.setItem("menu.scrollTop", menu.scrollTop);
+  });
+  menu.scrollTop = localStorage.getItem("menu.scrollTop");
+})();
+</script>
+
+    </aside>
+
+    <div class="book-page">
+      <header class="flex align-center justify-between book-header">
+  <label for="menu-control">
+    <img src="/svg/menu.svg" alt="Menu" />
+  </label>
+  <strong>Development</strong>
+</header>
+
+      
+<article class="markdown">
+
+<h1 id="development">Development</h1>
+
+<p>This document explains you how to get started with developing harbor-sync. It shows you how to install the prerequisites and how to build, test and run the controller.</p>
+
+<h2 id="get-the-code">Get the code</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ git clone https://github.com/moolen/harbor-sync.git ~/dev/harbor-sync
+$ cd ~/dev/harbor-sync</code></pre></div>
+<h2 id="installing-the-test-environment">Installing the test environment</h2>
+
+<h3 id="prerequisites">Prerequisites:</h3>
+
+<ul>
+<li><a href="https://www.vagrantup.com/docs/installation/">Vagrant</a> must be installed</li>
+<li><a href="https://github.com/kubernetes/minikube/releases">Minikube</a> must be installed</li>
+<li><a href="https://book.kubebuilder.io/quick-start.html#installation">Kubebuilder</a> must be installed</li>
+</ul>
+
+<p>Use the provided <code>Vagrantfile</code> to spin up a harbor instance.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">$ vagrant up</code></pre></div>
+<p>Right now you need to click your way through harbor to create the projects for testing.
+Once the installation is done harbor tells you the ip address for this installation (e.g. <code>http://172.28.128.XXX.xip.io.</code>).</p>
+
+<p>Tell the manager to access this deployment using environment variables:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">$ export HARBOR_API_ENDPOINT<span style="color:#f92672">=</span>http://172.28.128.XXX.xip.io.
+$ export HARBOR_USERNAME<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;admin&#34;</span>
+$ export HARBOR_PASSWORD<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Harbor12345&#34;</span></code></pre></div>
+<p>Next, deploy the CRD and run the controller:</p>
+
+<pre><code>$ make generate # gen crds &amp; manifests
+$ make install # install crds
+$ make run
+</code></pre>
+
+<h2 id="developing">Developing</h2>
+
+<p>Now you&rsquo;re set to do your changes.
+Please keep in mind:</p>
+
+<ul>
+<li>if you add a feature, please add documentation about the usage and write tests that cover at least the happy path</li>
+</ul>
+
+<h3 id="reconciliation-loop">Reconciliation loop</h3>
+
+<p>This is pretty straight-forward:</p>
+
+<ul>
+<li>find harbor projects that match the configured regular expression
+
+<ul>
+<li>reconcile robot accounts: i.e. (re-)create them if they do not exist, are disabled, expired or we do not manage the token</li>
+</ul></li>
+<li>find namespaces using a <code>mapping</code> config
+
+<ul>
+<li>for each namespace: create a secret with type <code>dockerconfigjson</code> with the specified name.</li>
+</ul></li>
+</ul>
+
+<p>The reconciliation loop is triggered from essentially three sources:
+* Control Plane: whenever a SyncConfig is created/updated/deleted
+* Harbor Polling: whenever the state in harbor changes (project or robota account is created, updated, deleted)
+* time-based using the configured <code>force-sync-interval</code>: forces reconciliation in a fixed interval to cover cases like namespace creation or robot account expiration</p>
+</article>
+
+      
+
+      
+    </div>
+
+    
+  
+
+  <aside class="book-toc level-6 fixed">
+    <nav id="TableOfContents">
+<ul>
+<li><a href="#development">Development</a>
+<ul>
+<li><a href="#get-the-code">Get the code</a></li>
+<li><a href="#installing-the-test-environment">Installing the test environment</a>
+<ul>
+<li><a href="#prerequisites">Prerequisites:</a></li>
+</ul></li>
+<li><a href="#developing">Developing</a>
+<ul>
+<li><a href="#reconciliation-loop">Reconciliation loop</a></li>
+</ul></li>
+</ul></li>
+</ul>
+</nav>
+  </aside>
+
+
+
+  </main>
+
+  
+  
+</body>
+
+</html>

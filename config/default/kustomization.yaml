@@ -1,5 +1,4 @@
-# Adds namespace to all resources.
-namespace: harbor-sync-system
+namespace: kube-system
 
 bases:
 - ../crd

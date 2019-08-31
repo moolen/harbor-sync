@@ -6,7 +6,7 @@ Pre-flight checks:
 
 Did you read the contributing and development guides?
  * https://github.com/moolen/harbor-sync/blob/master/CONTRIBUTING.md
- * https://github.com/moolen/harbor-sync/blob/master/docs/development.md
+ * http://moolen.github.io/harbor-sync/docs/development
 
 Do the tests pass locally?
  * run: <make docker-test> to be sure that all tests pass

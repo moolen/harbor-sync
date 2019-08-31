@@ -38,7 +38,7 @@ jobs:
     - name: Build
       run: make docker-build version=$(git tag --points-at)
 
-    - name: Login to GitHub Docker Registry
+    - name: Login to Docker Registry
       run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin quay.io
       env:
         DOCKER_USERNAME: ${{ secrets.QUAY_USERNAME }}

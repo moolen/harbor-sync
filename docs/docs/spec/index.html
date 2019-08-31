@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spec | Harbor Sync docs</title>
+
+
+<link rel="stylesheet" href="/book.min.6c7317d2e8552a0ac3ea8fd4ba500c3dfb1cc9c74e7afd73eee6d729751fad30.css" integrity="sha256-bHMX0uhVKgrD6o/UulAMPfscycdOev1z7ubXKXUfrTA=">
+
+
+<script defer src="/search.min.be62b1eaf7b59f4755139ccbe36af606b16a7f7a827513e81c7a0284e39963af.js" integrity="sha256-vmKx6ve1n0dVE5zL42r2BrFqf3qCdRPoHHoChOOZY68="></script>
+
+
+
+<link rel="icon" href="/favicon.png" type="image/x-icon">
+
+
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+
+  
+</head>
+
+<body>
+  <input type="checkbox" class="hidden" id="menu-control" />
+  <main class="flex container">
+
+    <aside class="book-menu fixed">
+      <nav>
+<h2 class="book-brand">
+  <a href="http://moolen.github.com/">Harbor Sync docs</a>
+</h2>
+
+
+<div class="book-search">
+  <input type="text" placeholder="Search" id="book-search-input" maxlength="64" readonly />
+  <div class="book-search-spinner spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+
+
+
+
+
+    
+
+  
+  
+
+
+
+
+
+ 
+  
+    
+
+  <ul>
+    
+    
+    <li>
+      
+
+  <a href="/docs/configuration/" >
+      Configuration
+  </a>
+
+
+    </li>
+    
+    <li>
+      
+
+  <a href="/docs/development/" >
+      Development
+  </a>
+
+
+    </li>
+    
+    <li>
+      
+
+  <a href="/docs/getting_started/" >
+      Getting Started
+  </a>
+
+
+    </li>
+    
+    <li>
+      
+
+  <a href="/docs/spec/"  class="active">
+      Spec
+  </a>
+
+
+    </li>
+    
+    <li>
+      
+
+  <a href="/docs/usage/" >
+      Usage
+  </a>
+
+
+    </li>
+    
+  </ul>
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+</nav>
+
+
+<script>
+(function() {
+  var menu = document.querySelector("aside.book-menu nav");
+  addEventListener("beforeunload", function(event) {
+    localStorage.setItem("menu.scrollTop", menu.scrollTop);
+  });
+  menu.scrollTop = localStorage.getItem("menu.scrollTop");
+})();
+</script>
+
+    </aside>
+
+    <div class="book-page">
+      <header class="flex align-center justify-between book-header">
+  <label for="menu-control">
+    <img src="/svg/menu.svg" alt="Menu" />
+  </label>
+  <strong>Spec</strong>
+</header>
+
+      
+<article class="markdown">
+
+<h1 id="spec">Spec</h1>
+
+<h2 id="syncconfig">SyncConfig</h2>
+
+<p>This is the root-level type.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">HarborSyncConfig</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">metav1</span>.<span style="color:#a6e22e">TypeMeta</span>   <span style="color:#e6db74">`json:&#34;,inline&#34;`</span>
+	<span style="color:#a6e22e">metav1</span>.<span style="color:#a6e22e">ObjectMeta</span> <span style="color:#e6db74">`json:&#34;metadata,omitempty&#34;`</span>
+
+	<span style="color:#a6e22e">Spec</span>   <span style="color:#a6e22e">HarborSyncConfigSpec</span>   <span style="color:#e6db74">`json:&#34;spec,omitempty&#34;`</span>
+	<span style="color:#a6e22e">Status</span> <span style="color:#a6e22e">HarborSyncConfigStatus</span> <span style="color:#e6db74">`json:&#34;status,omitempty&#34;`</span>
+}</code></pre></div>
+<h3 id="syncconfigspec">SyncConfigSpec</h3>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// HarborSyncConfigSpec defines the desired state of HarborSyncConfig
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">HarborSyncConfigSpec</span> <span style="color:#66d9ef">struct</span> {
+
+	<span style="color:#75715e">// ProjectSelector specifies a list of projects to look up and synchronize
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">ProjectSelector</span> []<span style="color:#a6e22e">ProjectSelector</span> <span style="color:#e6db74">`json:&#34;projectSelector&#34;`</span>
+}</code></pre></div>
+<h3 id="projectselector">ProjectSelector</h3>
+
+<p>ProjectSelector specifies how to find projects in harbor and how to map those to secrets in namespaces.
+The <code>robotAccountSuffix</code> field defines what names the robot accounts have. The robot accounts always have a prefix of <code>robot$</code> - this is behavior is enforced by Harbor and might change in the future.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// ProjectSelector defines how to select harbor projects
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">ProjectSelector</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#75715e">// Specifies how to do matching on a harbor project.
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">// Valid values are:
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">// - &#34;Regex&#34; (default): interpret the project name as regular expression;
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Type</span> <span style="color:#a6e22e">ProjectMatchingType</span> <span style="color:#e6db74">`json:&#34;type&#34;`</span>
+
+	<span style="color:#75715e">// ProjectName specifies the project name
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">ProjectName</span> <span style="color:#66d9ef">string</span> <span style="color:#e6db74">`json:&#34;name&#34;`</span>
+
+	<span style="color:#75715e">// The RobotAccountSuffix specifies the suffix to use when creating a new robot account
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">// +kubebuilder:validation:MinLength=4
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">RobotAccountSuffix</span> <span style="color:#66d9ef">string</span> <span style="color:#e6db74">`json:&#34;robotAccountSuffix&#34;`</span>
+
+	<span style="color:#75715e">// The Mapping contains the mapping from project to a secret in a namespace
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Mapping</span> []<span style="color:#a6e22e">ProjectMapping</span> <span style="color:#e6db74">`json:&#34;mapping&#34;`</span>
+}</code></pre></div>
+<h3 id="projectmapping">ProjectMapping</h3>
+
+<p>ProjectMapping defines how to lookup namespaces in the cluster. Generally there are two lookup types: <code>Translate</code> and <code>Match</code>.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// ProjectMapping defines how projects are mapped to secrets in specific namespaces
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">ProjectMapping</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">Type</span>      <span style="color:#a6e22e">MappingType</span> <span style="color:#e6db74">`json:&#34;type&#34;`</span>
+	<span style="color:#a6e22e">Namespace</span> <span style="color:#66d9ef">string</span>      <span style="color:#e6db74">`json:&#34;namespace&#34;`</span>
+	<span style="color:#a6e22e">Secret</span>    <span style="color:#66d9ef">string</span>      <span style="color:#e6db74">`json:&#34;secret&#34;`</span>
+}
+
+<span style="color:#75715e">// MappingType specifies how to map the project into the namespace/secret
+</span><span style="color:#75715e">// Only one of the following matching types may be specified.
+</span><span style="color:#75715e">// If none of the following types is specified, the default one
+</span><span style="color:#75715e">// is Translate.
+</span><span style="color:#75715e">// +kubebuilder:validation:Enum=Translate;Match
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">MappingType</span> <span style="color:#66d9ef">string</span>
+
+<span style="color:#66d9ef">const</span> (
+	<span style="color:#75715e">// TranslateMappingType interpolates the project expression into the namespace
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">TranslateMappingType</span> <span style="color:#a6e22e">MappingType</span> = <span style="color:#e6db74">&#34;Translate&#34;</span>
+
+	<span style="color:#75715e">// MatchMappingType treats the Namespace as regular expression and injects secrets into
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">// all matching namespaces
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">MatchMappingType</span> <span style="color:#a6e22e">MappingType</span> = <span style="color:#e6db74">&#34;Match&#34;</span>
+)</code></pre></div></article>
+
+      
+
+      
+    </div>
+
+    
+  
+
+  <aside class="book-toc level-6 fixed">
+    <nav id="TableOfContents">
+<ul>
+<li><a href="#spec">Spec</a>
+<ul>
+<li><a href="#syncconfig">SyncConfig</a>
+<ul>
+<li><a href="#syncconfigspec">SyncConfigSpec</a></li>
+<li><a href="#projectselector">ProjectSelector</a></li>
+<li><a href="#projectmapping">ProjectMapping</a></li>
+</ul></li>
+</ul></li>
+</ul>
+</nav>
+  </aside>
+
+
+
+  </main>
+
+  
+  
+</body>
+
+</html>

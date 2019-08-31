@@ -30,6 +30,13 @@ spec:
         args:
         - -harbor-poll-interval=2m
         - -force-sync-interval=5m
+        env:
+          - name: HARBOR_API_ENDPOINT
+            value: http://harbor.example.com
+          - name: HARBOR_USERNAME
+            value: admin
+          - name: HARBOR_PASSWORD
+            value: Harbor12345
         resources:
           limits:
             cpu: 100m

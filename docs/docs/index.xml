@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Docs on Harbor Sync docs</title>
+    <link>http://moolen.github.com/docs/</link>
+    <description>Recent content in Docs on Harbor Sync docs</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    
+	<atom:link href="http://moolen.github.com/docs/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title></title>
+      <link>http://moolen.github.com/docs/configuration/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://moolen.github.com/docs/configuration/</guid>
+      <description>Configuration Environment Variables    ENV DEFAULT DESCRIPTION     HARBOR_API_ENDPOINT - specify the harbor URL   HARBOR_USERNAME - set the username used for authenticating with harbor   HARBOR_PASSWORD - password for harbor authentication    Commandline flags Usage: -harbor-poll-interval duration poll interval to update harbor projects &amp;amp; robot accounts (default 5m) -force-sync-interval force reconciliation interval (default 10m) -kubeconfig string Paths to a kubeconfig.</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>http://moolen.github.com/docs/development/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://moolen.github.com/docs/development/</guid>
+      <description>Development This document explains you how to get started with developing harbor-sync. It shows you how to install the prerequisites and how to build, test and run the controller.
+Get the code $ git clone https://github.com/moolen/harbor-sync.git ~/dev/harbor-sync $ cd ~/dev/harbor-sync Installing the test environment Prerequisites:  Vagrant must be installed Minikube must be installed Kubebuilder must be installed  Use the provided Vagrantfile to spin up a harbor instance.</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>http://moolen.github.com/docs/getting_started/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://moolen.github.com/docs/getting_started/</guid>
+      <description>Getting Started What is Harbor Sync Controller? Harbor Sync Controller synchronizes Harbor with your Kubernetes cluster. It simplifies the management of robot accounts by automating the process of renewal and distribution of access tokens.
+Installation Prerequisites Harbor You need a Harbor deployment and a user with elevated privileges to read all projects and robot accounts: Create a dedicated user with ProjectAdmin permissions. Refer to the official docs about how to set up user authentication and role binding.</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>http://moolen.github.com/docs/spec/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://moolen.github.com/docs/spec/</guid>
+      <description>Spec SyncConfig This is the root-level type.
+type HarborSyncConfig struct { metav1.TypeMeta `json:&amp;#34;,inline&amp;#34;` metav1.ObjectMeta `json:&amp;#34;metadata,omitempty&amp;#34;` Spec HarborSyncConfigSpec `json:&amp;#34;spec,omitempty&amp;#34;` Status HarborSyncConfigStatus `json:&amp;#34;status,omitempty&amp;#34;` } SyncConfigSpec // HarborSyncConfigSpec defines the desired state of HarborSyncConfig type HarborSyncConfigSpec struct { // ProjectSelector specifies a list of projects to look up and synchronize 	ProjectSelector []ProjectSelector `json:&amp;#34;projectSelector&amp;#34;` } ProjectSelector ProjectSelector specifies how to find projects in harbor and how to map those to secrets in namespaces.</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>http://moolen.github.com/docs/usage/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://moolen.github.com/docs/usage/</guid>
+      <description>Usage examples Map projects by name Map harbor project to several namespaces. This will create a robot account in my-project harbor project and sync the credentials into team-a and team-b&amp;rsquo;s namespace as secret central-project-token.
+spec: projectSelector: - type: Regex name: &amp;#34;my-project&amp;#34; # &amp;lt;--- specify harbor project robotAccountSuffix: &amp;#34;k8s-sync-robot&amp;#34; mapping: - type: Translate namespace: &amp;#34;team-a&amp;#34; # &amp;lt;--- target namespace secret: &amp;#34;my-project-pull-token&amp;#34; # &amp;lt;--- target secret name - type: Translate namespace: &amp;#34;team-b&amp;#34; secret: &amp;#34;my-project-pull-token&amp;#34; Map projects using a regular expression You can specify regular expressions to map a large number of projects to namespaces.</description>
+    </item>
+    
+  </channel>
+</rss>

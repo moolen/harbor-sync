@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  
+  <url>
+    <loc>http://moolen.github.com/docs/configuration/</loc>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://moolen.github.com/docs/development/</loc>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://moolen.github.com/docs/getting_started/</loc>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://moolen.github.com/docs/spec/</loc>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://moolen.github.com/docs/usage/</loc>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://moolen.github.com/categories/</loc>
+  </url>
+  
+  <url>
+    <loc>http://moolen.github.com/docs/</loc>
+  </url>
+  
+  <url>
+    <loc>http://moolen.github.com/tags/</loc>
+  </url>
+  
+  <url>
+    <loc>http://moolen.github.com/</loc>
+  </url>
+  
+</urlset>

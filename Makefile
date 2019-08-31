@@ -14,8 +14,11 @@ endif
 all: manager
 
 # Run tests
-test: generate fmt vet manifests
+test: generate fmt vet manifests misspell
 	go test ./... -coverprofile cover.out
+
+docs: hugo-bin
+	cd docs_src; hugo --theme book --destination ../docs
 
 # Build manager binary
 manager: generate fmt vet
@@ -37,6 +40,13 @@ deploy: manifests
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: controller-gen
 	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role paths="./..." output:crd:artifacts:config=config/crd/bases
+
+misspell:
+	@go get github.com/client9/misspell/cmd/misspell
+	misspell \
+		-locale US \
+		-error \
+		api/* pkg/* docs_src/content/* config/* hack/* README.md CONTRIBUTING.md
 
 # Run go fmt against code
 fmt:
@@ -62,6 +72,15 @@ docker-build: test
 # Push the docker image
 docker-push:
 	docker push ${IMG}
+
+hugo-bin:
+ifeq (, $(shell which hugo))
+	curl -sL https://github.com/gohugoio/hugo/releases/download/v0.57.2/hugo_0.57.2_Linux-64bit.tar.gz | tar -xz -C /tmp/
+	cp /tmp/hugo bin/hugo
+HUGO=bin/hugo
+else
+HUGO=$(shell which hugo)
+endif
 
 # find or download controller-gen
 # download controller-gen if necessary

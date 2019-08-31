@@ -1,0 +1,5 @@
+baseURL = "http://moolen.github.com/"
+languageCode = "en-us"
+title = "Harbor Sync docs"
+pygmentsCodeFences = true
+staticDir = ["static"]
