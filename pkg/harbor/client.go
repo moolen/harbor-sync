@@ -23,6 +23,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/tomnomnom/linkheader"
 )
@@ -71,23 +72,45 @@ func (c *Client) BaseURL() string {
 	return c.APIBaseURL.String()
 }
 
-func (c *Client) newRequest(method, url string, body io.Reader) (*http.Request, error) {
-	req, err := http.NewRequest(method, url, body)
+func (c *Client) newRequest(method string, path string, body io.Reader) (*http.Response, error) {
+	u, err := url.ParseRequestURI(path)
+	if err != nil {
+		return nil, err
+	}
+	relURL := c.APIBaseURL.ResolveReference(u)
+	req, err := http.NewRequest(method, relURL.String(), body)
 	if err != nil {
 		return nil, err
 	}
 	req.SetBasicAuth(c.Username, c.Password)
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("User-Agent", c.UserAgent)
-	return req, nil
+
+	if method == http.MethodPost {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	start := time.Now()
+	code := 0
+	defer func() {
+		httpDuration := time.Since(start)
+		harborAPIRequestsHistogram.WithLabelValues(fmt.Sprintf("%d", code), method, u.Path).Observe(httpDuration.Seconds())
+	}()
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	code = resp.StatusCode
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		resp.Body.Close()
+		return nil, fmt.Errorf("unexpected response status: %s", resp.Status)
+	}
+
+	return resp, nil
 }
 
-func (c *Client) pagniatedRequest(url string) ([]byte, string, error) {
-	req, err := c.newRequest("GET", url, nil)
-	if err != nil {
-		return nil, "", err
-	}
-	resp, err := c.HTTPClient.Do(req)
+func (c *Client) paginatedRequest(path string) ([]byte, string, error) {
+	resp, err := c.newRequest("GET", path, nil)
 	if err != nil {
 		return nil, "", err
 	}
