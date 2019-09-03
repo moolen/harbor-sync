@@ -41,6 +41,16 @@ Installation Prerequisites Harbor You need a Harbor deployment and a user with e
     
     <item>
       <title></title>
+      <link>http://moolen.github.io/harbor-sync/docs/metrics/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://moolen.github.io/harbor-sync/docs/metrics/</guid>
+      <description> Metrics Harbor Sync Controller exposes prometheus metrics. You configure the listen address / port via -metrics-addr. The following metrics are available:
+   metric name type labels description     http_request_duration_seconds histogram code,method,path keeps track of the duration API requests towards harbor   harbor_matching_projects gauge config,selector_type,selector_project_name total number of matching projects per HarborSyncConfig    </description>
+    </item>
+    
+    <item>
+      <title></title>
       <link>http://moolen.github.io/harbor-sync/docs/spec/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       

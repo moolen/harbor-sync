@@ -2,10 +2,9 @@
 <html lang="en">
 
 <head>
-	<meta name="generator" content="Hugo 0.57.2" />
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Welcome | Harbor Sync docs</title>
+<title>Metrics | Harbor Sync docs</title>
 
 
 <link rel="stylesheet" href="/harbor-sync/book.min.6c7317d2e8552a0ac3ea8fd4ba500c3dfb1cc9c74e7afd73eee6d729751fad30.css" integrity="sha256-bHMX0uhVKgrD6o/UulAMPfscycdOev1z7ubXKXUfrTA=">
@@ -18,7 +17,6 @@
 <link rel="icon" href="/harbor-sync/favicon.png" type="image/x-icon">
 
 
-<link rel="alternate" type="application/rss+xml" href="http://moolen.github.io/harbor-sync/index.xml" title="Harbor Sync docs" />
 <!--
 Made with Book Theme
 https://github.com/alex-shpak/hugo-book
@@ -97,7 +95,7 @@ https://github.com/alex-shpak/hugo-book
     <li>
       
 
-  <a href="/harbor-sync/docs/metrics/" >
+  <a href="/harbor-sync/docs/metrics/"  class="active">
       Metrics
   </a>
 
@@ -159,19 +157,43 @@ https://github.com/alex-shpak/hugo-book
   <label for="menu-control">
     <img src="/harbor-sync/svg/menu.svg" alt="Menu" />
   </label>
-  <strong>Welcome</strong>
+  <strong>Metrics</strong>
 </header>
 
       
 <article class="markdown">
 
-<h1 id="welcome">Welcome</h1>
+<h1 id="metrics">Metrics</h1>
 
-<p>This is the documentation for the Harbor Sync Controller.</p>
+<p>Harbor Sync Controller exposes prometheus metrics. You configure the listen address / port via <code>-metrics-addr</code>.
+The following metrics are available:</p>
 
-<p>This documentation is split for two audiences: <strong>user</strong> and <strong>developer</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>metric name</th>
+<th>type</th>
+<th>labels</th>
+<th>description</th>
+</tr>
+</thead>
 
-<p>If you&rsquo;re new go ahead with the <a href="http://moolen.github.io/harbor-sync/docs/getting_started/">Getting Started</a> guide.</p>
+<tbody>
+<tr>
+<td><code>http_request_duration_seconds</code></td>
+<td>histogram</td>
+<td><code>code,method,path</code></td>
+<td>keeps track of the duration API requests towards harbor</td>
+</tr>
+
+<tr>
+<td><code>harbor_matching_projects</code></td>
+<td>gauge</td>
+<td><code>config,selector_type,selector_project_name</code></td>
+<td>total number of matching projects per HarborSyncConfig</td>
+</tr>
+</tbody>
+</table>
 </article>
 
       
@@ -185,7 +207,7 @@ https://github.com/alex-shpak/hugo-book
   <aside class="book-toc level-6 fixed">
     <nav id="TableOfContents">
 <ul>
-<li><a href="#welcome">Welcome</a></li>
+<li><a href="#metrics">Metrics</a></li>
 </ul>
 </nav>
   </aside>

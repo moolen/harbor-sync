@@ -19,11 +19,10 @@ package harbor
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
-	"net/url"
 )
 
+// SystemInfoResponse is the harbor response of a /systeminfo call
 type SystemInfoResponse struct {
 	WithNotary                 bool   `json:"with_notary"`
 	WithClair                  bool   `json:"with_clair"`
@@ -40,31 +39,23 @@ type SystemInfoResponse struct {
 	ClairVulnerabilityStatus   bool   `json:"clair_vulnerability_status"`
 }
 
+// ClairVulnerabilityStatus contains the vulnerability details
 type ClairVulnerabilityStatus struct {
 	OverallLastUpdate int                        `json:"overall_last_update"`
 	Details           []ClairVulnerabilityDetail `json:"details"`
 }
 
+// ClairVulnerabilityDetail contains the last update per namespace
 type ClairVulnerabilityDetail struct {
 	Namespace  string `json:"namespace"`
 	LastUpdate int    `json:"last_update"`
 }
 
+// SystemInfo calls /systeminfo and returns the response
 func (c *Client) SystemInfo() (*SystemInfoResponse, error) {
-	infoURL, err := url.ParseRequestURI("/api/systeminfo")
+	resp, err := c.newRequest("GET", "/api/systeminfo", nil)
 	if err != nil {
 		return nil, err
-	}
-	u := c.APIBaseURL.ResolveReference(infoURL)
-	req, err := c.newRequest("GET", u.String(), nil)
-	resp, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("unexpected HTTP response status: %s", resp.Status)
 	}
 
 	defer resp.Body.Close()

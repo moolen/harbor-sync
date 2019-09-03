@@ -91,7 +91,7 @@ func (r *HarborSyncConfigReconciler) Reconcile(req ctrl.Request) (ctrl.Result, e
 			}
 		}
 		log.V(1).Info("found matching projects", "matching_projects", len(matchingProjects), "all_projects", len(allProjects))
-
+		matchingProjectsGauge.WithLabelValues(syncConfig.ObjectMeta.Name, string(selector.Type), selector.ProjectName).Set(float64(len(matchingProjects)))
 		// check if projects have a specific robot account
 		// create it if not
 		for _, project := range matchingProjects {

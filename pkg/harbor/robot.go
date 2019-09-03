@@ -21,9 +21,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net/url"
 )
 
+// Robot is the API response from Harbor
 type Robot struct {
 	ID        int `json:"id"`
 	ProjectID int `json:"project_id"`
@@ -36,32 +36,28 @@ type Robot struct {
 	UpdateTime   string `json:"update_time"`
 }
 
+// CreateRobotRequest is the request payload for creating a robot account
 type CreateRobotRequest struct {
 	Name   string                     `json:"name"`
 	Access []CreateRobotRequestAccess `json:"access"`
 }
-type CreateRobotResponse struct {
-	Name  string `json:"name"`
-	Token string `json:"token"`
-}
 
+// CreateRobotRequestAccess defines the permissions for the robot account
 type CreateRobotRequestAccess struct {
 	Resource string `json:"resource"`
 	Action   string `json:"action"`
 }
 
+// CreateRobotResponse is the API response from a creating a robot
+type CreateRobotResponse struct {
+	Name  string `json:"name"`
+	Token string `json:"token"`
+}
+
+// GetRobotAccounts returns all robot accounts for the given project
 func (c *Client) GetRobotAccounts(project Project) ([]Robot, error) {
 	var robotAccounts []Robot
-	robotsURL, err := url.ParseRequestURI(fmt.Sprintf("/api/projects/%d/robots", project.ID))
-	if err != nil {
-		return nil, err
-	}
-	u := c.APIBaseURL.ResolveReference(robotsURL)
-	req, err := c.newRequest("GET", u.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := c.HTTPClient.Do(req)
+	resp, err := c.newRequest("GET", fmt.Sprintf("/api/projects/%d/robots", project.ID), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -78,14 +74,9 @@ func (c *Client) GetRobotAccounts(project Project) ([]Robot, error) {
 	return robotAccounts, nil
 }
 
+// CreateRobotAccount creates a robot account and return the name and token
 func (c *Client) CreateRobotAccount(name string, project Project) (*CreateRobotResponse, error) {
 	var robotResponse CreateRobotResponse
-	robotsURL, err := url.ParseRequestURI(fmt.Sprintf("/api/projects/%d/robots", project.ID))
-	if err != nil {
-		return nil, err
-	}
-	u := c.APIBaseURL.ResolveReference(robotsURL)
-
 	reqBody, err := json.Marshal(CreateRobotRequest{
 		Name: name,
 		Access: []CreateRobotRequestAccess{
@@ -103,14 +94,9 @@ func (c *Client) CreateRobotAccount(name string, project Project) (*CreateRobotR
 	if err != nil {
 		return nil, err
 	}
-	req, err := c.newRequest("POST", u.String(), bytes.NewReader(reqBody))
+	resp, err := c.newRequest("POST", fmt.Sprintf("/api/projects/%d/robots", project.ID), bytes.NewReader(reqBody))
 	if err != nil {
 		return nil, fmt.Errorf("could not create new http request: %s", err.Error())
-	}
-	req.Header.Set("Content-Type", "application/json")
-	resp, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("could not issue http request: %s", err.Error())
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 201 {
@@ -128,25 +114,12 @@ func (c *Client) CreateRobotAccount(name string, project Project) (*CreateRobotR
 	return &robotResponse, nil
 }
 
+// DeleteRobotAccount deletes the specified robot account
 func (c *Client) DeleteRobotAccount(project Project, robotID int) error {
-	robotsURL, err := url.ParseRequestURI(fmt.Sprintf("/api/projects/%d/robots/%d", project.ID, robotID))
-	if err != nil {
-		return err
-	}
-	u := c.APIBaseURL.ResolveReference(robotsURL)
-	req, err := c.newRequest("DELETE", u.String(), nil)
-	if err != nil {
-		return err
-	}
-	resp, err := c.HTTPClient.Do(req)
+	resp, err := c.newRequest("DELETE", fmt.Sprintf("/api/projects/%d/robots/%d", project.ID, robotID), nil)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
-
-	if resp.StatusCode == 200 {
-		return nil
-	}
-
-	return fmt.Errorf("unexpected status: %s", resp.Status)
+	return nil
 }
