@@ -3,6 +3,7 @@ module github.com/moolen/harbor-sync
 go 1.12
 
 require (
+	github.com/client9/misspell v0.3.4 // indirect
 	github.com/go-logr/glogr v0.1.0
 	github.com/go-logr/logr v0.1.0
 	github.com/gogo/protobuf v1.2.1 // indirect

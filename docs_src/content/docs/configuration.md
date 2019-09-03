@@ -17,6 +17,8 @@ Usage:
         poll interval to update harbor projects & robot accounts (default 5m)
   -force-sync-interval
         force reconciliation interval (default 10m)
+  -v value
+        log level for V logs
   -kubeconfig string
         Paths to a kubeconfig. Only required if out-of-cluster.
   -metrics-addr string

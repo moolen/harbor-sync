@@ -16,7 +16,7 @@
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>http://moolen.github.io/harbor-sync/docs/configuration/</guid>
-      <description>Configuration Environment Variables    ENV DEFAULT DESCRIPTION     HARBOR_API_ENDPOINT - specify the harbor URL   HARBOR_USERNAME - set the username used for authenticating with harbor   HARBOR_PASSWORD - password for harbor authentication    Commandline flags Usage: -harbor-poll-interval duration poll interval to update harbor projects &amp;amp; robot accounts (default 5m) -force-sync-interval force reconciliation interval (default 10m) -kubeconfig string Paths to a kubeconfig.</description>
+      <description>Configuration Environment Variables    ENV DEFAULT DESCRIPTION     HARBOR_API_ENDPOINT - specify the harbor URL   HARBOR_USERNAME - set the username used for authenticating with harbor   HARBOR_PASSWORD - password for harbor authentication    Commandline flags Usage: -harbor-poll-interval duration poll interval to update harbor projects &amp;amp; robot accounts (default 5m) -force-sync-interval force reconciliation interval (default 10m) -v value log level for V logs -kubeconfig string Paths to a kubeconfig.</description>
     </item>
     
     <item>

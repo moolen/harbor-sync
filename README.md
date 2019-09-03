@@ -1,7 +1,7 @@
 # Harbor Sync
 [![Actions Status](https://github.com/moolen/harbor-sync/workflows/Run%20Tests/badge.svg)](https://github.com/moolen/harbor-sync/actions)
 
-Harbor Sync allows you to synchronize your Harbor robot accounts with your kubernetes cluster.
+Harbor Sync allows you to synchronize your Harbor robot accounts with your Kubernetes cluster.
 
 ## How it works
 This project extends the Kubernetes API by adding a Custom Resource `HarborSyncConfig` and a controller that implements a reconciliation loop. This loop takes care of creating and refreshing robot account tokens aswell as distributing the tokens into your namespaces as secrets.
