@@ -18,6 +18,11 @@
   </url>
   
   <url>
+    <loc>http://moolen.github.io/harbor-sync/docs/metrics/</loc>
+    <priority>0</priority>
+  </url>
+  
+  <url>
     <loc>http://moolen.github.io/harbor-sync/docs/spec/</loc>
     <priority>0</priority>
   </url>
