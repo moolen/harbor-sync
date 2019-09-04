@@ -60,7 +60,7 @@ func (a Adapter) loop(c chan event.GenericEvent, input <-chan struct{}) {
 		case <-input:
 			a.Log.V(1).Info("received reconcile event from poller")
 			ctx := context.Background()
-			var cfgs crdv1.HarborSyncConfigList
+			var cfgs crdv1.HarborSyncList
 			err := a.List(ctx, &cfgs)
 			if err != nil {
 				a.Log.Error(err, "error fetching harbor sync config")

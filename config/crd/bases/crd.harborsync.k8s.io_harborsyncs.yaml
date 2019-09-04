@@ -1,0 +1,121 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  creationTimestamp: null
+  name: harborsyncs.crd.harborsync.k8s.io
+spec:
+  group: crd.harborsync.k8s.io
+  names:
+    kind: HarborSync
+    plural: harborsyncs
+  scope: Cluster
+  validation:
+    openAPIV3Schema:
+      description: HarborSync is the Schema for the harborsyncs API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: HarborSyncSpec defines the desired state how should harbor
+            projects map to secrets in namespaces
+          properties:
+            mapping:
+              description: The Mapping contains the mapping from project to a secret
+                in a namespace
+              items:
+                description: ProjectMapping defines how projects are mapped to secrets
+                  in specific namespaces
+                properties:
+                  namespace:
+                    type: string
+                  secret:
+                    type: string
+                  type:
+                    description: MappingType specifies how to map the project into
+                      the namespace/secret Only one of the following matching types
+                      may be specified. If none of the following types is specified,
+                      the default one is Translate.
+                    enum:
+                    - Translate
+                    - Match
+                    type: string
+                required:
+                - namespace
+                - secret
+                - type
+                type: object
+              type: array
+            name:
+              description: ProjectName specifies the project name
+              type: string
+            robotAccountSuffix:
+              description: The RobotAccountSuffix specifies the suffix to use when
+                creating a new robot account
+              minLength: 4
+              type: string
+            type:
+              description: 'Specifies how to do matching on a harbor project. Valid
+                values are: - "Regex" (default): interpret the project name as regular
+                expression;'
+              enum:
+              - Regex
+              type: string
+            webhook:
+              description: Webhook is WIP
+              items:
+                description: WebhookConfig defines how to call a webhook
+                type: object
+              type: array
+          required:
+          - mapping
+          - name
+          - robotAccountSuffix
+          - type
+          type: object
+        status:
+          description: HarborSyncStatus defines the observed state of HarborSync
+          properties:
+            credentials:
+              additionalProperties:
+                description: RobotAccountCredentials holds a list of credentials
+                items:
+                  description: RobotAccountCredential holds the robot account name
+                    & token to access the harbor API
+                  properties:
+                    name:
+                      type: string
+                    token:
+                      type: string
+                  required:
+                  - name
+                  - token
+                  type: object
+                type: array
+              type: object
+          required:
+          - credentials
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

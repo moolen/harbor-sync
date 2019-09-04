@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="/harbor-sync/book.min.6c7317d2e8552a0ac3ea8fd4ba500c3dfb1cc9c74e7afd73eee6d729751fad30.css" integrity="sha256-bHMX0uhVKgrD6o/UulAMPfscycdOev1z7ubXKXUfrTA=">
 
 
-<script defer src="/harbor-sync/search.min.bdd60287ceefc26f746b58d7a635fd5ede7219378e59f4926644b9d3e4db98eb.js" integrity="sha256-vdYCh87vwm90a1jXpjX9Xt5yGTeOWfSSZkS50&#43;TbmOs="></script>
+<script defer src="/harbor-sync/search.min.bb83821c5454cb6e683246ea6d19fc01dae83959ced2de9bf0cd6f58825f2333.js" integrity="sha256-u4OCHFRUy25oMkbqbRn8AdroOVnO0t6b8M1vWIJfIzM="></script>
 
 
 
@@ -168,44 +168,50 @@ https://github.com/alex-shpak/hugo-book
 <h2 id="map-projects-by-name">Map projects by name</h2>
 
 <p>Map harbor project to several namespaces. This will create a robot account in <code>my-project</code> <strong>harbor project</strong> and sync the credentials into <code>team-a</code> and <code>team-b</code>&rsquo;s namespace as secret <code>central-project-token</code>.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yml" data-lang="yml">spec:
-  projectSelector:
-  - type: Regex
-    name: <span style="color:#e6db74">&#34;my-project&#34;</span> <span style="color:#75715e"># &lt;--- specify harbor project</span>
-    robotAccountSuffix: <span style="color:#e6db74">&#34;k8s-sync-robot&#34;</span>
-    mapping:
-    - type: Translate
-      namespace: <span style="color:#e6db74">&#34;team-a&#34;</span> <span style="color:#75715e"># &lt;--- target namespace</span>
-      secret: <span style="color:#e6db74">&#34;my-project-pull-token&#34;</span> <span style="color:#75715e"># &lt;--- target secret name</span>
-    - type: Translate
-      namespace: <span style="color:#e6db74">&#34;team-b&#34;</span>
-      secret: <span style="color:#e6db74">&#34;my-project-pull-token&#34;</span></code></pre></div>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yml" data-lang="yml">kind: HaborSync
+metadata:
+  name: my-project
+spec:
+  type: Regex
+  name: <span style="color:#e6db74">&#34;my-project&#34;</span> <span style="color:#75715e"># &lt;--- specify harbor project</span>
+  robotAccountSuffix: <span style="color:#e6db74">&#34;k8s-sync-robot&#34;</span>
+  mapping:
+  - type: Translate
+    namespace: <span style="color:#e6db74">&#34;team-a&#34;</span> <span style="color:#75715e"># &lt;--- target namespace</span>
+    secret: <span style="color:#e6db74">&#34;my-project-pull-token&#34;</span> <span style="color:#75715e"># &lt;--- target secret name</span>
+  - type: Translate
+    namespace: <span style="color:#e6db74">&#34;team-b&#34;</span>
+    secret: <span style="color:#e6db74">&#34;my-project-pull-token&#34;</span></code></pre></div>
 <h2 id="map-projects-using-a-regular-expression">Map projects using a regular expression</h2>
 
 <p>You can specify regular expressions to map a <strong>large number</strong> of projects to namespaces. This maps harbor teams with the prefix <code>team-</code>. E.g. Harbor project <code>team-frontend</code> maps to k8s namespace <code>team-frontend</code>. The secret&rsquo;s name will always be <code>my-pull-token</code>. Non-existent k8s namespaces will be ignored.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">spec:
-  projectSelector:
-  - type: Regex
-    name: <span style="color:#e6db74">&#34;team-(.*)&#34;</span> <span style="color:#75715e"># find harbor projects matching this expression</span>
-    robotAccountSuffix: <span style="color:#e6db74">&#34;k8s-sync-robot&#34;</span>
-    mapping:
-    - type: Translate
-      namespace: <span style="color:#e6db74">&#34;team-$1&#34;</span>    <span style="color:#75715e"># references capturing group from the above projectSelector.name</span>
-      secret: <span style="color:#e6db74">&#34;team-$1-pull-token&#34;</span> <span style="color:#75715e"># also here</span></code></pre></div>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">kind: HaborSync
+metadata:
+  name: team-projects
+spec:
+  type: Regex
+  name: <span style="color:#e6db74">&#34;team-(.*)&#34;</span> <span style="color:#75715e"># find harbor projects matching this expression</span>
+  robotAccountSuffix: <span style="color:#e6db74">&#34;k8s-sync-robot&#34;</span>
+  mapping:
+  - type: Translate
+    namespace: <span style="color:#e6db74">&#34;team-$1&#34;</span>    <span style="color:#75715e"># references capturing group from the above projectSelector.name</span>
+    secret: <span style="color:#e6db74">&#34;team-$1-pull-token&#34;</span> <span style="color:#75715e"># also here</span></code></pre></div>
 <h2 id="map-projects-using-regular-expressions-2">Map projects using regular expressions #2</h2>
 
 <p>You have <strong>one</strong> harbor project and want to deploy the pull secrets <strong>into several namespaces</strong> matching a regular expression. E.g. pull tokens for the <code>platform-team</code> project should be distributed into all namespaces matching <code>team-.*</code>.</p>
 
 <p>Use a <code>type: Match</code> on a mapping to say: hey, find namespaces using this <strong>regular expression</strong> at the namespace field rather than re-using the project name using <code>type: Translate</code>.</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">spec:
-  projectSelector:
-  - type: Regex
-    name: <span style="color:#e6db74">&#34;platform-team&#34;</span>
-    robotAccountSuffix: <span style="color:#e6db74">&#34;k8s-sync-robot&#34;</span>
-    mapping:
-    - type: Match  <span style="color:#75715e"># treat namespace as regexp</span>
-      namespace: <span style="color:#e6db74">&#34;team-.*&#34;</span> <span style="color:#75715e"># if ns matches this it will receive the secret</span>
-      secret: <span style="color:#e6db74">&#34;platform-pull-token&#34;</span> <span style="color:#75715e"># you can still use the capturing group from projectSelector.Name here</span></code></pre></div>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">kind: HaborSync
+metadata:
+  name: platform-team
+spec:
+  type: Regex
+  name: <span style="color:#e6db74">&#34;platform-team&#34;</span>
+  robotAccountSuffix: <span style="color:#e6db74">&#34;k8s-sync-robot&#34;</span>
+  mapping:
+  - type: Match  <span style="color:#75715e"># treat namespace as regexp</span>
+    namespace: <span style="color:#e6db74">&#34;team-.*&#34;</span> <span style="color:#75715e"># if ns matches this it will receive the secret</span>
+    secret: <span style="color:#e6db74">&#34;platform-pull-token&#34;</span> <span style="color:#75715e"># you can still use the capturing group from projectSelector.Name here</span></code></pre></div>
 <h2 id="mapping-projects">Mapping Projects</h2>
 
 <p>A <code>mapping</code> defines how to lookup namespaces in the cluster. Generally there are two lookup types: <code>Translate</code> and <code>Match</code>.</p>

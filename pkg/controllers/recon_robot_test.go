@@ -55,7 +55,7 @@ var _ = Describe("Controller", func() {
 				return createdAccount, nil
 			}
 			cfg.Status.RobotCredentials = make(map[string]crdv1.RobotAccountCredentials)
-			skip, credentials := reconcileRobotAccounts(harborClient, log, &cfg, harborProject, cfg.Spec.ProjectSelector[0].RobotAccountSuffix)
+			skip, credentials := reconcileRobotAccounts(harborClient, log, &cfg, harborProject, cfg.Spec.RobotAccountSuffix)
 			Expect(skip).To(BeFalse())
 			Expect(*credentials).To(Equal(crdv1.RobotAccountCredential{
 				Name:  createdAccount.Name,

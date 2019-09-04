@@ -25,6 +25,14 @@ $ vagrant up
 Right now you need to click your way through harbor to create the projects for testing.
 Once the installation is done harbor tells you the ip address for this installation (e.g. `http://172.28.128.XXX.xip.io.`).
 
+If it is not yet running ssh into the machine and try to start the containers with docker-compose:
+
+```sh
+$ vagrant ssh
+vagrant@harbor:~$ sudo docker-compose -f harbor/docker-compose.yml up -d
+
+```
+
 Tell the manager to access this deployment using environment variables:
 
 ```sh

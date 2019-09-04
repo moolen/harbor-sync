@@ -5,18 +5,20 @@
 Map harbor project to several namespaces. This will create a robot account in `my-project` **harbor project** and sync the credentials into `team-a` and `team-b`'s namespace as secret `central-project-token`.
 
 ```yml
+kind: HaborSync
+metadata:
+  name: my-project
 spec:
-  projectSelector:
-  - type: Regex
-    name: "my-project" # <--- specify harbor project
-    robotAccountSuffix: "k8s-sync-robot"
-    mapping:
-    - type: Translate
-      namespace: "team-a" # <--- target namespace
-      secret: "my-project-pull-token" # <--- target secret name
-    - type: Translate
-      namespace: "team-b"
-      secret: "my-project-pull-token"
+  type: Regex
+  name: "my-project" # <--- specify harbor project
+  robotAccountSuffix: "k8s-sync-robot"
+  mapping:
+  - type: Translate
+    namespace: "team-a" # <--- target namespace
+    secret: "my-project-pull-token" # <--- target secret name
+  - type: Translate
+    namespace: "team-b"
+    secret: "my-project-pull-token"
 ```
 
 
@@ -26,15 +28,17 @@ spec:
 You can specify regular expressions to map a **large number** of projects to namespaces. This maps harbor teams with the prefix `team-`. E.g. Harbor project `team-frontend` maps to k8s namespace `team-frontend`. The secret's name will always be `my-pull-token`. Non-existent k8s namespaces will be ignored.
 
 ```yaml
+kind: HaborSync
+metadata:
+  name: team-projects
 spec:
-  projectSelector:
-  - type: Regex
-    name: "team-(.*)" # find harbor projects matching this expression
-    robotAccountSuffix: "k8s-sync-robot"
-    mapping:
-    - type: Translate
-      namespace: "team-$1"    # references capturing group from the above projectSelector.name
-      secret: "team-$1-pull-token" # also here
+  type: Regex
+  name: "team-(.*)" # find harbor projects matching this expression
+  robotAccountSuffix: "k8s-sync-robot"
+  mapping:
+  - type: Translate
+    namespace: "team-$1"    # references capturing group from the above projectSelector.name
+    secret: "team-$1-pull-token" # also here
 ```
 
 
@@ -47,15 +51,17 @@ Use a `type: Match` on a mapping to say: hey, find namespaces using this **regul
 
 
 ```yaml
+kind: HaborSync
+metadata:
+  name: platform-team
 spec:
-  projectSelector:
-  - type: Regex
-    name: "platform-team"
-    robotAccountSuffix: "k8s-sync-robot"
-    mapping:
-    - type: Match  # treat namespace as regexp
-      namespace: "team-.*" # if ns matches this it will receive the secret
-      secret: "platform-pull-token" # you can still use the capturing group from projectSelector.Name here
+  type: Regex
+  name: "platform-team"
+  robotAccountSuffix: "k8s-sync-robot"
+  mapping:
+  - type: Match  # treat namespace as regexp
+    namespace: "team-.*" # if ns matches this it will receive the secret
+    secret: "platform-pull-token" # you can still use the capturing group from projectSelector.Name here
 ```
 
 ## Mapping Projects

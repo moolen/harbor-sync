@@ -56,7 +56,7 @@ Installation Prerequisites Harbor You need a Harbor deployment and a user with e
       
       <guid>http://moolen.github.io/harbor-sync/docs/spec/</guid>
       <description>Spec SyncConfig This is the root-level type.
-type HarborSyncConfig struct { metav1.TypeMeta `json:&amp;#34;,inline&amp;#34;` metav1.ObjectMeta `json:&amp;#34;metadata,omitempty&amp;#34;` Spec HarborSyncConfigSpec `json:&amp;#34;spec,omitempty&amp;#34;` Status HarborSyncConfigStatus `json:&amp;#34;status,omitempty&amp;#34;` } SyncConfigSpec // HarborSyncConfigSpec defines the desired state of HarborSyncConfig type HarborSyncConfigSpec struct { // ProjectSelector specifies a list of projects to look up and synchronize 	ProjectSelector []ProjectSelector `json:&amp;#34;projectSelector&amp;#34;` } ProjectSelector ProjectSelector specifies how to find projects in harbor and how to map those to secrets in namespaces.</description>
+type HarborSync struct { metav1.TypeMeta `json:&amp;#34;,inline&amp;#34;` metav1.ObjectMeta `json:&amp;#34;metadata,omitempty&amp;#34;` Spec HarborSyncSpec `json:&amp;#34;spec,omitempty&amp;#34;` // Status stores the plain credentials of the robot accounts 	// this is necessary, because the credentials are not accessible via API 	Status HarborSyncStatus `json:&amp;#34;status,omitempty&amp;#34;` } HarborSyncSpec ProjectSelector specifies how to find projects in harbor and how to map those to secrets in namespaces. The robotAccountSuffix field defines what names the robot accounts have.</description>
     </item>
     
     <item>
@@ -66,7 +66,7 @@ type HarborSyncConfig struct { metav1.TypeMeta `json:&amp;#34;,inline&amp;#34;` 
       
       <guid>http://moolen.github.io/harbor-sync/docs/usage/</guid>
       <description>Usage examples Map projects by name Map harbor project to several namespaces. This will create a robot account in my-project harbor project and sync the credentials into team-a and team-b&amp;rsquo;s namespace as secret central-project-token.
-spec: projectSelector: - type: Regex name: &amp;#34;my-project&amp;#34; # &amp;lt;--- specify harbor project robotAccountSuffix: &amp;#34;k8s-sync-robot&amp;#34; mapping: - type: Translate namespace: &amp;#34;team-a&amp;#34; # &amp;lt;--- target namespace secret: &amp;#34;my-project-pull-token&amp;#34; # &amp;lt;--- target secret name - type: Translate namespace: &amp;#34;team-b&amp;#34; secret: &amp;#34;my-project-pull-token&amp;#34; Map projects using a regular expression You can specify regular expressions to map a large number of projects to namespaces.</description>
+kind: HaborSync metadata: name: my-project spec: type: Regex name: &amp;#34;my-project&amp;#34; # &amp;lt;--- specify harbor project robotAccountSuffix: &amp;#34;k8s-sync-robot&amp;#34; mapping: - type: Translate namespace: &amp;#34;team-a&amp;#34; # &amp;lt;--- target namespace secret: &amp;#34;my-project-pull-token&amp;#34; # &amp;lt;--- target secret name - type: Translate namespace: &amp;#34;team-b&amp;#34; secret: &amp;#34;my-project-pull-token&amp;#34; Map projects using a regular expression You can specify regular expressions to map a large number of projects to namespaces.</description>
     </item>
     
   </channel>

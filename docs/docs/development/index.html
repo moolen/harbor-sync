@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="/harbor-sync/book.min.6c7317d2e8552a0ac3ea8fd4ba500c3dfb1cc9c74e7afd73eee6d729751fad30.css" integrity="sha256-bHMX0uhVKgrD6o/UulAMPfscycdOev1z7ubXKXUfrTA=">
 
 
-<script defer src="/harbor-sync/search.min.bdd60287ceefc26f746b58d7a635fd5ede7219378e59f4926644b9d3e4db98eb.js" integrity="sha256-vdYCh87vwm90a1jXpjX9Xt5yGTeOWfSSZkS50&#43;TbmOs="></script>
+<script defer src="/harbor-sync/search.min.bb83821c5454cb6e683246ea6d19fc01dae83959ced2de9bf0cd6f58825f2333.js" integrity="sha256-u4OCHFRUy25oMkbqbRn8AdroOVnO0t6b8M1vWIJfIzM="></script>
 
 
 
@@ -185,6 +185,9 @@ $ cd ~/dev/harbor-sync</code></pre></div>
 <p>Right now you need to click your way through harbor to create the projects for testing.
 Once the installation is done harbor tells you the ip address for this installation (e.g. <code>http://172.28.128.XXX.xip.io.</code>).</p>
 
+<p>If it is not yet running ssh into the machine and try to start the containers with docker-compose:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">$ vagrant ssh
+vagrant@harbor:~$ sudo docker-compose -f harbor/docker-compose.yml up -d</code></pre></div>
 <p>Tell the manager to access this deployment using environment variables:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">$ export HARBOR_API_ENDPOINT<span style="color:#f92672">=</span>http://172.28.128.XXX.xip.io.
 $ export HARBOR_USERNAME<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;admin&#34;</span>

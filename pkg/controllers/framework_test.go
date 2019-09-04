@@ -27,13 +27,16 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func ensureHarborSyncConfig(cl client.Client, name string) crdv1.HarborSyncConfig {
-	cfg := &crdv1.HarborSyncConfig{
+func ensureHarborSyncConfig(cl client.Client, name string) crdv1.HarborSync {
+	cfg := &crdv1.HarborSync{
 		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: name},
-		Spec: crdv1.HarborSyncConfigSpec{
-			ProjectSelector: []crdv1.ProjectSelector{},
+		Spec: crdv1.HarborSyncSpec{
+			Type:               crdv1.RegexMatching,
+			ProjectName:        name,
+			RobotAccountSuffix: "sync-bot",
+			Mapping:            []crdv1.ProjectMapping{},
 		},
-		Status: crdv1.HarborSyncConfigStatus{
+		Status: crdv1.HarborSyncStatus{
 			RobotCredentials: map[string]crdv1.RobotAccountCredentials{},
 		},
 	}
@@ -44,22 +47,18 @@ func ensureHarborSyncConfig(cl client.Client, name string) crdv1.HarborSyncConfi
 	return *cfg
 }
 
-func ensureHarborSyncConfigWithParams(cl client.Client, name, projectName string, mapping crdv1.ProjectMapping) crdv1.HarborSyncConfig {
-	cfg := &crdv1.HarborSyncConfig{
+func ensureHarborSyncConfigWithParams(cl client.Client, name, projectName string, mapping crdv1.ProjectMapping) crdv1.HarborSync {
+	cfg := &crdv1.HarborSync{
 		ObjectMeta: metav1.ObjectMeta{Name: name},
-		Spec: crdv1.HarborSyncConfigSpec{
-			ProjectSelector: []crdv1.ProjectSelector{
-				{
-					Type:               crdv1.RegexMatching,
-					ProjectName:        projectName,
-					RobotAccountSuffix: "sync-bot",
-					Mapping: []crdv1.ProjectMapping{
-						mapping,
-					},
-				},
+		Spec: crdv1.HarborSyncSpec{
+			Type:               crdv1.RegexMatching,
+			ProjectName:        projectName,
+			RobotAccountSuffix: "sync-bot",
+			Mapping: []crdv1.ProjectMapping{
+				mapping,
 			},
 		},
-		Status: crdv1.HarborSyncConfigStatus{
+		Status: crdv1.HarborSyncStatus{
 			RobotCredentials: map[string]crdv1.RobotAccountCredentials{},
 		},
 	}
@@ -71,7 +70,7 @@ func ensureHarborSyncConfigWithParams(cl client.Client, name, projectName string
 }
 
 func deleteHarborSyncConfig(cl client.Client, name string) {
-	err := cl.Delete(context.Background(), &crdv1.HarborSyncConfig{
+	err := cl.Delete(context.Background(), &crdv1.HarborSync{
 		ObjectMeta: metav1.ObjectMeta{Name: name},
 	}, client.GracePeriodSeconds(0))
 	Expect(err).ToNot(HaveOccurred())
