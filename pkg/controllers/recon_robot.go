@@ -27,7 +27,7 @@ import (
 
 const robotPrefix = "robot$"
 
-func reconcileRobotAccounts(harborAPI harbor.API, log logr.Logger, syncConfig *crdv1.HarborSyncConfig, project harbor.Project, accountSuffix string) (bool, *crdv1.RobotAccountCredential) {
+func reconcileRobotAccounts(harborAPI harbor.API, log logr.Logger, syncConfig *crdv1.HarborSync, project harbor.Project, accountSuffix string) (bool, *crdv1.RobotAccountCredential) {
 	robots, err := harborAPI.GetRobotAccounts(project)
 	if err != nil {
 		log.Error(err, "could not get robot accounts from harbor")

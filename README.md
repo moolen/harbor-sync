@@ -14,6 +14,10 @@ A `HarborSyncConfig` defines which Harbor projects should be synced with which n
 ## Documentation
 You can find the documentation [here](http://moolen.github.io/harbor-sync).
 
+## Status
+This project is in alpha state, we do not offer strong guarantees for our API interface.
+We will introduce breaking changes before the 1.0 release.
+
 ### Contributions
 
 Pull requests are welcome!

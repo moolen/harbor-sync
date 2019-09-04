@@ -49,7 +49,7 @@ func (r *HarborSyncConfigReconciler) Reconcile(req ctrl.Request) (ctrl.Result, e
 	ctx := context.Background()
 	log := r.Log.WithValues("harborsyncconfig", req.NamespacedName)
 
-	var syncConfig crdv1.HarborSyncConfig
+	var syncConfig crdv1.HarborSync
 	if err := r.Get(ctx, req.NamespacedName, &syncConfig); err != nil {
 		if apierrs.IsNotFound(err) {
 			log.V(1).Info("ignoring object delete")
@@ -65,56 +65,56 @@ func (r *HarborSyncConfigReconciler) Reconcile(req ctrl.Request) (ctrl.Result, e
 	// - if match:
 	//   - reconcile robot account
 	//   - populate secret in specified namespace
-	for _, selector := range syncConfig.Spec.ProjectSelector {
-		var err error
-		var matchingProjects []harbor.Project
-		var matcher *regexp.Regexp
+	selector := syncConfig.Spec
+	var err error
+	var matchingProjects []harbor.Project
+	var matcher *regexp.Regexp
 
-		allProjects, err := r.Harbor.ListProjects()
-		if err != nil {
-			log.Error(err, "could not list harbor projects")
-			continue
+	allProjects, err := r.Harbor.ListProjects()
+	if err != nil {
+		log.Error(err, "could not list harbor projects")
+		return ctrl.Result{Requeue: true, RequeueAfter: time.Second * 15}, err
+	}
+	if selector.Type != crdv1.RegexMatching {
+		log.Error(fmt.Errorf("invalid selector type: %s", selector.Type), "selector type must be regex")
+		return ctrl.Result{Requeue: true, RequeueAfter: time.Second * 15}, err
+	}
+	matcher, err = regexp.Compile(selector.ProjectName)
+	if err != nil {
+		log.Error(err, "error compiling regex", "selector_project_name", selector.ProjectName)
+		return ctrl.Result{Requeue: true, RequeueAfter: time.Second * 15}, err
+	}
+	for _, project := range allProjects {
+		if matcher.MatchString(project.Name) {
+			log.V(1).Info("project match", "type", selector.Type, "project_name", project.Name)
+			matchingProjects = append(matchingProjects, project)
 		}
-		if selector.Type != crdv1.RegexMatching {
-			log.Error(fmt.Errorf("invalid selector type: %s", selector.Type), "selector type must be regex")
-			continue
-		}
-		matcher, err = regexp.Compile(selector.ProjectName)
-		if err != nil {
-			log.Error(err, "error compiling regex", "selector_project_name", selector.ProjectName)
-			continue
-		}
-		for _, project := range allProjects {
-			if matcher.MatchString(project.Name) {
-				log.V(1).Info("project match", "type", selector.Type, "project_name", project.Name)
-				matchingProjects = append(matchingProjects, project)
-			}
-		}
-		log.V(1).Info("found matching projects", "matching_projects", len(matchingProjects), "all_projects", len(allProjects))
-		matchingProjectsGauge.WithLabelValues(syncConfig.ObjectMeta.Name, string(selector.Type), selector.ProjectName).Set(float64(len(matchingProjects)))
-		// check if projects have a specific robot account
-		// create it if not
-		for _, project := range matchingProjects {
-			skip, projectCredential := reconcileRobotAccounts(r.Harbor, log.WithName("reconcile_robots"), &syncConfig, project, selector.RobotAccountSuffix)
-			if skip {
-				continue
-			}
+	}
+	log.V(1).Info("found matching projects", "matching_projects", len(matchingProjects), "all_projects", len(allProjects))
+	matchingProjectsGauge.WithLabelValues(syncConfig.ObjectMeta.Name, string(selector.Type), selector.ProjectName).Set(float64(len(matchingProjects)))
 
-			// reconcile secrets in namespaces
-			for _, mapping := range selector.Mapping {
-				if mapping.Type == crdv1.TranslateMappingType {
-					r.mapByTranslating(mapping, matcher, project, *projectCredential)
-				} else if mapping.Type == crdv1.MatchMappingType {
-					r.mapByMatching(mapping, matcher, project, *projectCredential)
-				} else {
-					// not implemented
-					log.Error(fmt.Errorf("invalid mapping type: %s", mapping.Type), "unsupported mapping")
-				}
+	// check if projects have a specific robot account
+	// create it if not
+	for _, project := range matchingProjects {
+		skip, projectCredential := reconcileRobotAccounts(r.Harbor, log.WithName("reconcile_robots"), &syncConfig, project, selector.RobotAccountSuffix)
+		if skip {
+			continue
+		}
+
+		// reconcile secrets in namespaces
+		for _, mapping := range selector.Mapping {
+			if mapping.Type == crdv1.TranslateMappingType {
+				r.mapByTranslating(mapping, matcher, project, *projectCredential)
+			} else if mapping.Type == crdv1.MatchMappingType {
+				r.mapByMatching(mapping, matcher, project, *projectCredential)
+			} else {
+				// not implemented
+				log.Error(fmt.Errorf("invalid mapping type: %s", mapping.Type), "unsupported mapping")
 			}
 		}
 	}
 
-	err := r.Update(context.Background(), &syncConfig)
+	err = r.Update(context.Background(), &syncConfig)
 	if err != nil {
 		log.Error(err, "could not update syncConfig status field", "sync_config_name", syncConfig.Name)
 		return ctrl.Result{Requeue: true, RequeueAfter: time.Second * 15}, nil
@@ -126,7 +126,7 @@ func (r *HarborSyncConfigReconciler) Reconcile(req ctrl.Request) (ctrl.Result, e
 // the input chan is used to trigger recon based on external events (harbor API resources changed, forced sync)
 func (r *HarborSyncConfigReconciler) SetupWithManager(mgr ctrl.Manager, input <-chan event.GenericEvent) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&crdv1.HarborSyncConfig{}).
+		For(&crdv1.HarborSync{}).
 		Watches(&source.Channel{Source: input}, &handler.EnqueueRequestForObject{}).
 		Complete(r)
 }

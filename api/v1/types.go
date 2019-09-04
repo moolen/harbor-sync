@@ -20,15 +20,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// HarborSyncConfigSpec defines the desired state of HarborSyncConfig
-type HarborSyncConfigSpec struct {
+// HarborSyncSpec defines the desired state
+// how should harbor projects map to secrets in namespaces
+type HarborSyncSpec struct {
 
-	// ProjectSelector specifies a list of projects to look up and synchronize
-	ProjectSelector []ProjectSelector `json:"projectSelector"`
-}
-
-// ProjectSelector defines how to select harbor projects
-type ProjectSelector struct {
 	// Specifies how to do matching on a harbor project.
 	// Valid values are:
 	// - "Regex" (default): interpret the project name as regular expression;
@@ -93,8 +88,8 @@ type WebhookConfig struct {
 	// TODO: design doc
 }
 
-// HarborSyncConfigStatus defines the observed state of HarborSyncConfig
-type HarborSyncConfigStatus struct {
+// HarborSyncStatus defines the observed state of HarborSync
+type HarborSyncStatus struct {
 	RobotCredentials map[string]RobotAccountCredentials `json:"credentials"`
 }
 
@@ -110,24 +105,24 @@ type RobotAccountCredential struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:resource:scope=Cluster
 
-// HarborSyncConfig is the Schema for the harborsyncconfigs API
-type HarborSyncConfig struct {
+// HarborSync is the Schema for the harborsyncs API
+type HarborSync struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   HarborSyncConfigSpec   `json:"spec,omitempty"`
-	Status HarborSyncConfigStatus `json:"status,omitempty"`
+	Spec   HarborSyncSpec   `json:"spec,omitempty"`
+	Status HarborSyncStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// HarborSyncConfigList contains a list of HarborSyncConfig
-type HarborSyncConfigList struct {
+// HarborSyncList contains a list of HarborSync
+type HarborSyncList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []HarborSyncConfig `json:"items"`
+	Items           []HarborSync `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&HarborSyncConfig{}, &HarborSyncConfigList{})
+	SchemeBuilder.Register(&HarborSync{}, &HarborSyncList{})
 }
