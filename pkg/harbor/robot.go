@@ -71,6 +71,10 @@ func (c *Client) GetRobotAccounts(project Project) ([]Robot, error) {
 		return robotAccounts, err
 	}
 
+	for _, acc := range robotAccounts {
+		robotAccountExpiry.WithLabelValues(project.Name, acc.Name).Set(float64(acc.ExpiresAt))
+	}
+
 	return robotAccounts, nil
 }
 

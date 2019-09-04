@@ -11,6 +11,10 @@ var (
 		Name: "http_request_duration_seconds",
 		Help: "Duration of the last http request",
 	}, []string{"code", "method", "path"})
+	robotAccountExpiry = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "harbor_robot_account_expiry",
+		Help: "The date after which the robot account expires. Expressed as Unix Epoch Time",
+	}, []string{"project", "robot"})
 )
 
 func init() {
