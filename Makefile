@@ -3,12 +3,11 @@ version ?= test
 IMG ?= quay.io/moolen/harbor-sync:${version}
 CRD_OPTIONS ?= "crd:trivialVersions=true"
 
-# Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
-ifeq (,$(shell go env GOBIN))
-GOBIN=$(shell go env GOPATH)/bin
-else
-GOBIN=$(shell go env GOBIN)
-endif
+GOPATH=$(shell go env GOPATH)
+HUGO=bin/hugo
+KUBECTL=bin/kubectl
+MISSPELL=bin/misspell
+CONTROLLER_GEN=bin/controller-gen
 
 all: controller
 
@@ -18,6 +17,9 @@ test: generate fmt vet manifests
 
 docs: hugo-bin
 	cd docs_src; $(HUGO) --theme book --destination ../docs
+
+docs-live: hugo-bin
+	cd docs_src; $(HUGO) server --minify --theme book
 
 # Build harbor-sync-controller binary
 controller: generate fmt vet
@@ -41,15 +43,14 @@ check-gen-files: docs quick-install
 	git diff --exit-code
 
 # Generate manifests e.g. CRD, RBAC etc.
-manifests: controller-gen
+manifests: bin/controller-gen
 	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role paths="./..." output:crd:artifacts:config=config/crd/bases
 
-quick-install: kubectl-bin
-	kubectl kustomize config/default/ > install/kubernetes/quick-install.yaml
+quick-install: bin/kubectl
+	$(KUBECTL) kustomize config/default/ > install/kubernetes/quick-install.yaml
 
-misspell:
-	go get github.com/client9/misspell/cmd/misspell
-	misspell \
+misspell: bin/misspell
+	$(MISSPELL) \
 		-locale US \
 		-error \
 		api/* pkg/* docs_src/content/* config/* hack/* README.md CONTRIBUTING.md
@@ -63,13 +64,13 @@ vet:
 	go vet ./...
 
 # Generate code
-generate: controller-gen
+generate: bin/controller-gen
 	$(CONTROLLER_GEN) object:headerFile=./hack/boilerplate.go.txt paths="./..."
 
 # Run tests in container
 docker-test:
 	docker build -t test:latest -f Dockerfile.test .
-	docker run -v $$PWD:/app test:latest test
+	docker run test:latest
 
 # Build the docker image
 docker-build:
@@ -84,31 +85,21 @@ docker-release: docker-build docker-push
 release: quick-install controller docker-release
 	tar cvzf bin/harbor-sync-controller.tar.gz bin/harbor-sync-controller
 
-hugo-bin:
-ifeq (, $(shell which hugo))
-	curl -sL https://github.com/gohugoio/hugo/releases/download/v0.57.2/hugo_extended_0.57.2_Linux-64bit.tar.gz | tar -xz -C /tmp/
-	mkdir bin && cp /tmp/hugo bin/hugo
-HUGO=$(shell pwd)/bin/hugo
-else
-HUGO=$(shell which hugo)
-endif
+bin/misspell:
+	curl -sL https://github.com/client9/misspell/releases/download/v0.3.4/misspell_0.3.4_linux_64bit.tar.gz | tar -xz -C /tmp/
+	mkdir bin; cp /tmp/misspell bin/misspell
 
-kubectl-bin:
-ifeq (, $(shell which kubectl))
+bin/hugo:
+	curl -sL https://github.com/gohugoio/hugo/releases/download/v0.57.2/hugo_extended_0.57.2_Linux-64bit.tar.gz | tar -xz -C /tmp/
+	mkdir bin; cp /tmp/hugo bin/hugo
+
+bin/kubectl:
 	curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.15.0/bin/linux/amd64/kubectl
 	chmod +x ./kubectl
-	mkdir bin && mv kubectl bin/kubectl
-KUBECTL=$(shell pwd)/bin/kubectl
-else
-KUBECTL=$(shell which kubectl)
-endif
+	mkdir bin; mv kubectl bin/kubectl
 
 # find or download controller-gen
 # download controller-gen if necessary
-controller-gen:
-ifeq (, $(shell which controller-gen))
+bin/controller-gen:
 	go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.2.0
-CONTROLLER_GEN=$(GOBIN)/controller-gen
-else
-CONTROLLER_GEN=$(shell which controller-gen)
-endif
+	mkdir bin; mv $(GOPATH)/bin/controller-gen bin/controller-gen
