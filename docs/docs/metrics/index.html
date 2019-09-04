@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="/harbor-sync/book.min.6c7317d2e8552a0ac3ea8fd4ba500c3dfb1cc9c74e7afd73eee6d729751fad30.css" integrity="sha256-bHMX0uhVKgrD6o/UulAMPfscycdOev1z7ubXKXUfrTA=">
 
 
-<script defer src="/harbor-sync/search.min.bb83821c5454cb6e683246ea6d19fc01dae83959ced2de9bf0cd6f58825f2333.js" integrity="sha256-u4OCHFRUy25oMkbqbRn8AdroOVnO0t6b8M1vWIJfIzM="></script>
+<script defer src="/harbor-sync/search.min.070fdb8cce0d802d3f83a24b3622bebae6b8e07112521df4c67ec6f0e5960869.js" integrity="sha256-Bw/bjM4NgC0/g6JLNiK&#43;uua44HESUh30xn7G8OWWCGk="></script>
 
 
 
@@ -191,6 +191,13 @@ The following metrics are available:</p>
 <td>gauge</td>
 <td><code>config,selector_type,selector_project_name</code></td>
 <td>total number of matching projects per HarborSyncConfig</td>
+</tr>
+
+<tr>
+<td><code>harbor_robot_account_expiry</code></td>
+<td>gauge</td>
+<td><code>project,robot</code></td>
+<td>the date after which the robot account expires, expressed as Unix Epoch Time</td>
 </tr>
 </tbody>
 </table>
