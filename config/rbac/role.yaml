@@ -4,12 +4,20 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   creationTimestamp: null
-  name: manager-role
+  name: harbor-sync
 rules:
 - apiGroups:
-  - crd.harborsync.k8s.io
+  - ""
   resources:
-  - harborsyncconfigs
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - secrets
   verbs:
   - create
   - delete
@@ -21,7 +29,19 @@ rules:
 - apiGroups:
   - crd.harborsync.k8s.io
   resources:
-  - harborsyncconfigs/status
+  - harborsyncs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - crd.harborsync.k8s.io
+  resources:
+  - harborsyncs/status
   verbs:
   - get
   - patch

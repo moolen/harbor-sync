@@ -45,8 +45,10 @@ type HarborSyncConfigReconciler struct {
 	Harbor harbor.API
 }
 
-// +kubebuilder:rbac:groups=crd.harborsync.k8s.io,resources=harborsyncconfigs,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=crd.harborsync.k8s.io,resources=harborsyncconfigs/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups="",resources=namespaces,verbs=get;list;watch
+// +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=crd.harborsync.k8s.io,resources=harborsyncs,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=crd.harborsync.k8s.io,resources=harborsyncs/status,verbs=get;update;patch
 
 // Reconcile reconciles the desired state in the cluster
 func (r *HarborSyncConfigReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
@@ -123,6 +125,7 @@ func (r *HarborSyncConfigReconciler) Reconcile(req ctrl.Request) (ctrl.Result, e
 					continue
 				}
 				req, err := http.NewRequest("POST", u.String(), bytes.NewReader(data))
+				req.Header.Set("Content-Type", "application/json")
 				res, err := http.DefaultClient.Do(req)
 				if err != nil {
 					log.Error(err, "error sending webhook", "url", wh.Endpoint)

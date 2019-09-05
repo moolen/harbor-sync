@@ -82,8 +82,7 @@ func (r *Repository) Update() error {
 		r.Log.V(1).Info("listing robot accounts", "found_robot_accouns", len(robotAccounts), "project_name", project.Name)
 		r.RobotsCache.Set(project.Name, robotAccounts)
 	}
-	r.UpdateHash()
-	return nil
+	return r.UpdateHash()
 }
 
 // UpdateHash recalculates the StateHash

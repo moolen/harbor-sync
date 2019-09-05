@@ -1,24 +1,17 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  labels:
-    control-plane: controller-manager
-  name: system
----
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   creationTimestamp: null
-  name: harborsyncconfigs.crd.harborsync.k8s.io
+  name: harborsyncs.crd.harborsync.k8s.io
 spec:
   group: crd.harborsync.k8s.io
   names:
-    kind: HarborSyncConfig
-    plural: harborsyncconfigs
+    kind: HarborSync
+    plural: harborsyncs
   scope: Cluster
   validation:
     openAPIV3Schema:
-      description: HarborSyncConfig is the Schema for the harborsyncconfigs API
+      description: HarborSync is the Schema for the harborsyncs API
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -33,93 +26,85 @@ spec:
         metadata:
           type: object
         spec:
-          description: HarborSyncConfigSpec defines the desired state of HarborSyncConfig
+          description: HarborSyncSpec defines the desired state how should harbor
+            projects map to secrets in namespaces
           properties:
-            projectSelector:
-              description: ProjectSelector specifies a list of projects to look up
-                and synchronize
+            mapping:
+              description: The Mapping contains the mapping from project to a secret
+                in a namespace
               items:
-                description: ProjectSelector defines how to select harbor projects
+                description: ProjectMapping defines how projects are mapped to secrets
+                  in specific namespaces
                 properties:
-                  mapping:
-                    description: The Mapping contains the mapping from project to
-                      a secret in a namespace
-                    items:
-                      description: ProjectMapping defines how projects are mapped
-                        to secrets in specific namespaces
-                      properties:
-                        namespace:
-                          type: string
-                        secret:
-                          type: string
-                        type:
-                          description: MappingType specifies how to map the project
-                            into the namespace/secret Only one of the following matching
-                            types may be specified. If none of the following types
-                            is specified, the default one is Translate.
-                          enum:
-                          - Translate
-                          - Match
-                          type: string
-                      required:
-                      - namespace
-                      - secret
-                      - type
-                      type: object
-                    type: array
-                  name:
-                    description: ProjectName specifies the project name
+                  namespace:
                     type: string
-                  robotAccountSuffix:
-                    description: The RobotAccountSuffix specifies the suffix to use
-                      when creating a new robot account
-                    minLength: 4
+                  secret:
                     type: string
                   type:
-                    description: 'Specifies how to do matching on a harbor project.
-                      Valid values are: - "Regex" (default): interpret the project
-                      name as regular expression;'
+                    description: MappingType specifies how to map the project into
+                      the namespace/secret Only one of the following matching types
+                      may be specified. If none of the following types is specified,
+                      the default one is Translate.
                     enum:
-                    - Regex
+                    - Translate
+                    - Match
                     type: string
-                  webhook:
-                    description: Webhook is WIP
-                    items:
-                      description: WebhookConfig defines how to call a webhook
-                      type: object
-                    type: array
                 required:
-                - mapping
-                - name
-                - robotAccountSuffix
+                - namespace
+                - secret
                 - type
                 type: object
               type: array
+            name:
+              description: ProjectName specifies the project name
+              type: string
+            robotAccountSuffix:
+              description: The RobotAccountSuffix specifies the suffix to use when
+                creating a new robot account
+              minLength: 4
+              type: string
+            type:
+              description: 'Specifies how to do matching on a harbor project. Valid
+                values are: - "Regex" (default): interpret the project name as regular
+                expression;'
+              enum:
+              - Regex
+              type: string
+            webhook:
+              description: Webhook is WIP
+              items:
+                description: WebhookConfig defines how to call a webhook
+                properties:
+                  endpoint:
+                    description: Endpoint is a url
+                    type: string
+                required:
+                - endpoint
+                type: object
+              type: array
           required:
-          - projectSelector
+          - mapping
+          - name
+          - robotAccountSuffix
+          - type
           type: object
         status:
-          description: HarborSyncConfigStatus defines the observed state of HarborSyncConfig
+          description: HarborSyncStatus defines the observed state of HarborSync
           properties:
             credentials:
               additionalProperties:
-                description: RobotAccountCredentials holds a list of credentials
-                items:
-                  description: RobotAccountCredential holds the robot account name
-                    & token to access the harbor API
-                  properties:
-                    name:
-                      type: string
-                    token:
-                      type: string
-                  required:
-                  - name
-                  - token
-                  type: object
-                type: array
+                description: RobotAccountCredential holds the robot account name &
+                  token to access the harbor API
+                properties:
+                  name:
+                    type: string
+                  token:
+                    type: string
+                required:
+                - name
+                - token
+                type: object
               type: object
-          required:
-          - credentials
           type: object
       type: object
   version: v1
@@ -171,12 +156,20 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   creationTimestamp: null
-  name: manager-role
+  name: harbor-sync
 rules:
 - apiGroups:
-  - crd.harborsync.k8s.io
+  - ""
   resources:
-  - harborsyncconfigs
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - secrets
   verbs:
   - create
   - delete
@@ -188,7 +181,19 @@ rules:
 - apiGroups:
   - crd.harborsync.k8s.io
   resources:
-  - harborsyncconfigs/status
+  - harborsyncs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - crd.harborsync.k8s.io
+  resources:
+  - harborsyncs/status
   verbs:
   - get
   - patch
@@ -224,26 +229,18 @@ subjects:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  labels:
-    control-plane: controller-manager
-  name: controller-manager
+  name: harbor-sync
   namespace: kube-system
 spec:
   replicas: 1
-  selector:
-    matchLabels:
-      control-plane: controller-manager
   template:
-    metadata:
-      labels:
-        control-plane: controller-manager
     spec:
       containers:
       - args:
         - -harbor-poll-interval=2m
         - -force-sync-interval=5m
         command:
-        - /manager
+        - /harbor-sync-controller
         env:
         - name: HARBOR_API_ENDPOINT
           value: http://harbor.example.com

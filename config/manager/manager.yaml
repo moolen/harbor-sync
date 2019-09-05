@@ -1,32 +1,17 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  labels:
-    control-plane: controller-manager
-  name: system
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: controller-manager
-  namespace: system
-  labels:
-    control-plane: controller-manager
+  name: harbor-sync
 spec:
-  selector:
-    matchLabels:
-      control-plane: controller-manager
   replicas: 1
   template:
-    metadata:
-      labels:
-        control-plane: controller-manager
     spec:
       containers:
       - name: manager
         image: docker.io/moolen/harbor-sync:latest
         command:
-        - /manager
+        - /harbor-sync-controller
         args:
         - -harbor-poll-interval=2m
         - -force-sync-interval=5m

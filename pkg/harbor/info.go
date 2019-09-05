@@ -24,19 +24,19 @@ import (
 
 // SystemInfoResponse is the harbor response of a /systeminfo call
 type SystemInfoResponse struct {
-	WithNotary                 bool   `json:"with_notary"`
-	WithClair                  bool   `json:"with_clair"`
-	WithAdmiral                bool   `json:"with_admiral"`
-	AdmiralEndpoint            string `json:"admiral_endpoint"`
-	RegistryURL                string `json:"registry_url"`
-	ExternalURL                string `json:"external_url"`
-	AuthMode                   string `json:"auth_mode"`
-	ProjectCreationRestriction string `json:"project_creation_restriction"`
-	SelfRegistration           bool   `json:"self_registration"`
-	HasCARoot                  bool   `json:"has_ca_root"`
-	HarborVersion              string `json:"harbor_version"`
-	NextScalAll                bool   `json:"next_scan_all"`
-	ClairVulnerabilityStatus   bool   `json:"clair_vulnerability_status"`
+	WithNotary                 bool                     `json:"with_notary"`
+	WithClair                  bool                     `json:"with_clair"`
+	WithAdmiral                bool                     `json:"with_admiral"`
+	AdmiralEndpoint            string                   `json:"admiral_endpoint"`
+	RegistryURL                string                   `json:"registry_url"`
+	ExternalURL                string                   `json:"external_url"`
+	AuthMode                   string                   `json:"auth_mode"`
+	ProjectCreationRestriction string                   `json:"project_creation_restriction"`
+	SelfRegistration           bool                     `json:"self_registration"`
+	HasCARoot                  bool                     `json:"has_ca_root"`
+	HarborVersion              string                   `json:"harbor_version"`
+	NextScalAll                bool                     `json:"next_scan_all"`
+	ClairVulnerabilityStatus   ClairVulnerabilityStatus `json:"clair_vulnerability_status"`
 }
 
 // ClairVulnerabilityStatus contains the vulnerability details

@@ -21,9 +21,11 @@ import (
 	"os"
 	"time"
 
+	"strings"
+
+	"github.com/blang/semver"
 	"github.com/go-logr/glogr"
 	"github.com/golang/glog"
-	"github.com/hashicorp/go-version"
 	crdv1 "github.com/moolen/harbor-sync/api/v1"
 	"github.com/moolen/harbor-sync/pkg/controllers"
 	"github.com/moolen/harbor-sync/pkg/harbor"
@@ -79,14 +81,16 @@ func main() {
 		setupLog.Error(err, "unable to get harbor system info ")
 		os.Exit(1)
 	}
-	check, _ := version.NewVersion("1.8.0")
-	v, err := version.NewVersion(info.HarborVersion)
+
+	check, _ := semver.Make("1.8.0")
+	v, err := semver.Make(strings.TrimLeft(info.HarborVersion, "v"))
 	if err != nil {
 		setupLog.Error(err, "unable to validate harbor version")
 		os.Exit(1)
 	}
-	if v.LessThan(check) {
-		setupLog.Info("your harbor version does not support robot accounts", "harbor_version", v, "required_version", check)
+	v.Pre = nil // pre-releases are OK, too
+	if v.LT(check) {
+		setupLog.Info("your harbor version does not support robot accounts", "harbor_version", v.String(), "required_version", check.String())
 		os.Exit(1)
 	}
 

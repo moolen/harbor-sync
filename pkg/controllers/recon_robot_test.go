@@ -42,7 +42,7 @@ var _ = Describe("Controller", func() {
 				Secret:    "foo",
 				Type:      crdv1.TranslateMappingType,
 			}
-			cfg := ensureHarborSyncConfigWithParams(k8sClient, "my-cfg", "my-project", mapping)
+			cfg := ensureHarborSyncConfigWithParams(k8sClient, "my-cfg", "my-project", mapping, nil)
 			harborProject := harbor.Project{
 				ID:   1,
 				Name: "foo",
@@ -54,7 +54,7 @@ var _ = Describe("Controller", func() {
 			harborClient.CreateRobotAccountFunc = func(name string, project harbor.Project) (*harbor.CreateRobotResponse, error) {
 				return createdAccount, nil
 			}
-			cfg.Status.RobotCredentials = make(map[string]crdv1.RobotAccountCredentials)
+			cfg.Status.RobotCredentials = make(map[string]crdv1.RobotAccountCredential)
 			credentials, changed, err := reconcileRobotAccounts(harborClient, log, &cfg, harborProject, cfg.Spec.RobotAccountSuffix)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(changed).To(BeTrue())
@@ -62,11 +62,9 @@ var _ = Describe("Controller", func() {
 				Name:  createdAccount.Name,
 				Token: createdAccount.Token,
 			}))
-			Expect(cfg.Status.RobotCredentials["foo"]).To(Equal(crdv1.RobotAccountCredentials{
-				crdv1.RobotAccountCredential{
-					Name:  createdAccount.Name,
-					Token: createdAccount.Token,
-				},
+			Expect(cfg.Status.RobotCredentials["foo"]).To(Equal(crdv1.RobotAccountCredential{
+				Name:  createdAccount.Name,
+				Token: createdAccount.Token,
 			}))
 			close(done)
 		})
