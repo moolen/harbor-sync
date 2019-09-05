@@ -95,23 +95,18 @@ spec:
           properties:
             credentials:
               additionalProperties:
-                description: RobotAccountCredentials holds a list of credentials
-                items:
-                  description: RobotAccountCredential holds the robot account name
-                    & token to access the harbor API
-                  properties:
-                    name:
-                      type: string
-                    token:
-                      type: string
-                  required:
-                  - name
-                  - token
-                  type: object
-                type: array
+                description: RobotAccountCredential holds the robot account name &
+                  token to access the harbor API
+                properties:
+                  name:
+                    type: string
+                  token:
+                    type: string
+                required:
+                - name
+                - token
+                type: object
               type: object
-          required:
-          - credentials
           type: object
       type: object
   version: v1

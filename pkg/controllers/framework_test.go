@@ -37,7 +37,7 @@ func ensureHarborSyncConfig(cl client.Client, name string) crdv1.HarborSync {
 			Mapping:            []crdv1.ProjectMapping{},
 		},
 		Status: crdv1.HarborSyncStatus{
-			RobotCredentials: map[string]crdv1.RobotAccountCredentials{},
+			RobotCredentials: map[string]crdv1.RobotAccountCredential{},
 		},
 	}
 	err := cl.Create(context.Background(), cfg)
@@ -47,7 +47,7 @@ func ensureHarborSyncConfig(cl client.Client, name string) crdv1.HarborSync {
 	return *cfg
 }
 
-func ensureHarborSyncConfigWithParams(cl client.Client, name, projectName string, mapping crdv1.ProjectMapping) crdv1.HarborSync {
+func ensureHarborSyncConfigWithParams(cl client.Client, name, projectName string, mapping crdv1.ProjectMapping, whc []crdv1.WebhookConfig) crdv1.HarborSync {
 	cfg := &crdv1.HarborSync{
 		ObjectMeta: metav1.ObjectMeta{Name: name},
 		Spec: crdv1.HarborSyncSpec{
@@ -57,9 +57,10 @@ func ensureHarborSyncConfigWithParams(cl client.Client, name, projectName string
 			Mapping: []crdv1.ProjectMapping{
 				mapping,
 			},
+			Webhook: whc,
 		},
 		Status: crdv1.HarborSyncStatus{
-			RobotCredentials: map[string]crdv1.RobotAccountCredentials{},
+			RobotCredentials: map[string]crdv1.RobotAccountCredential{},
 		},
 	}
 	err := cl.Create(context.Background(), cfg)

@@ -97,11 +97,8 @@ type WebhookUpdatePayload struct {
 
 // HarborSyncStatus defines the observed state of HarborSync
 type HarborSyncStatus struct {
-	RobotCredentials map[string]RobotAccountCredentials `json:"credentials"`
+	RobotCredentials map[string]RobotAccountCredential `json:"credentials,omitempty"`
 }
-
-// RobotAccountCredentials holds a list of credentials
-type RobotAccountCredentials []RobotAccountCredential
 
 // RobotAccountCredential holds the robot account name & token to access the harbor API
 type RobotAccountCredential struct {

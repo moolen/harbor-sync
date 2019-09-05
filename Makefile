@@ -44,7 +44,7 @@ check-gen-files: docs quick-install
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: bin/controller-gen
-	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role paths="./..." output:crd:artifacts:config=config/crd/bases
+	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=harbor-sync paths="./..." output:crd:artifacts:config=config/crd/bases
 
 quick-install: bin/kubectl
 	$(KUBECTL) kustomize config/default/ > install/kubernetes/quick-install.yaml

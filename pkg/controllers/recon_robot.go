@@ -73,12 +73,10 @@ func reconcileRobotAccounts(harborAPI harbor.API, log logr.Logger, syncConfig *c
 			}
 
 			// good case: we have the credentials. do not re-create
-			creds := syncConfig.Status.RobotCredentials[project.Name]
-			for _, cred := range creds {
-				if cred.Name == addPrefix(accountSuffix) {
-					log.V(1).Info("found credentials in status.credentials. will not delete robot account")
-					return &cred, false, nil
-				}
+			cred := syncConfig.Status.RobotCredentials[project.Name]
+			if cred.Name == addPrefix(accountSuffix) {
+				log.V(1).Info("found credentials in status.credentials. will not delete robot account")
+				return &cred, false, nil
 			}
 
 			// case: creds do not exist. delete robot account
@@ -99,36 +97,17 @@ func reconcileRobotAccounts(harborAPI harbor.API, log logr.Logger, syncConfig *c
 	}
 	// store secret in status field
 	if syncConfig.Status.RobotCredentials == nil {
-		syncConfig.Status.RobotCredentials = make(map[string]crdv1.RobotAccountCredentials)
-	}
-	if syncConfig.Status.RobotCredentials[project.Name] == nil {
-		syncConfig.Status.RobotCredentials[project.Name] = crdv1.RobotAccountCredentials{}
+		syncConfig.Status.RobotCredentials = make(map[string]crdv1.RobotAccountCredential)
 	}
 	log.Info("updating status field", "project_name", project.Name)
 
 	// check if old token exists: update it or append it to list
-	found := false
-	var credential crdv1.RobotAccountCredential
-	creds := syncConfig.Status.RobotCredentials[project.Name]
-	for i, cred := range creds {
-		if cred.Name == addPrefix(accountSuffix) {
-			log.V(1).Info("found credentials in status.credentials. updating token")
-			creds[i].Token = res.Token
-			found = true
-			credential = creds[i]
-			break
-		}
+	cred := crdv1.RobotAccountCredential{
+		Name:  res.Name,
+		Token: res.Token,
 	}
-	if !found {
-		credential = crdv1.RobotAccountCredential{
-			Name:  res.Name,
-			Token: res.Token,
-		}
-		creds = append(creds, credential)
-	}
-
-	syncConfig.Status.RobotCredentials[project.Name] = creds
-	return &credential, true, nil
+	syncConfig.Status.RobotCredentials[project.Name] = cred
+	return &cred, true, nil
 }
 
 func addPrefix(str string) string {

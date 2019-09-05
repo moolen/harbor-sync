@@ -18,6 +18,10 @@ package controllers
 
 import (
 	"context"
+	"encoding/json"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -41,8 +45,8 @@ var _ = Describe("Controller", func() {
 	var hscr *HarborSyncConfigReconciler
 
 	BeforeEach(func() {
-		ensureNamespace(k8sClient, "team-recon-a")
-		ensureNamespace(k8sClient, "team-recon-b")
+		ensureNamespace(k8sClient, "team-recon-foo")
+		ensureNamespace(k8sClient, "team-recon-bar")
 		fakeHarbor = &harborfake.Client{}
 		log = zap.Logger(true)
 		hscr = &HarborSyncConfigReconciler{
@@ -53,14 +57,29 @@ var _ = Describe("Controller", func() {
 	})
 
 	AfterEach(func() {
-		deleteNamespace(k8sClient, "team-recon-a")
-		deleteNamespace(k8sClient, "team-recon-b")
+		deleteNamespace(k8sClient, "team-recon-foo")
+		deleteNamespace(k8sClient, "team-recon-bar")
 	})
 
 	Describe("Reconcile", func() {
 
-		var listProjectsResponse []harbor.Project
-		var getRobotAccountsResponse []harbor.Robot
+		listProjectsResponse := []harbor.Project{
+			{
+				ID:   1,
+				Name: "team-foo",
+			},
+			{
+				ID:   2,
+				Name: "team-bar",
+			},
+		}
+		getRobotAccountsResponse := []harbor.Robot{
+			{
+				Name: "robot$sync-bot",
+				// expires right now
+				ExpiresAt: int(time.Now().Unix()),
+			},
+		}
 
 		BeforeEach(func() {
 			fakeHarbor.CreateRobotAccountFunc = func(name string, project harbor.Project) (*harbor.CreateRobotResponse, error) {
@@ -82,28 +101,11 @@ var _ = Describe("Controller", func() {
 		})
 
 		It("should reconcile robot accounts by matching", func(done Done) {
-			listProjectsResponse = []harbor.Project{
-				{
-					ID:   1,
-					Name: "platform-team",
-				},
-				{
-					ID:   2,
-					Name: "operations-team",
-				},
-			}
-			getRobotAccountsResponse = []harbor.Robot{
-				{
-					Name: "robot$sync-bot",
-					// expires right now
-					ExpiresAt: int(time.Now().Unix()),
-				},
-			}
-			ensureHarborSyncConfigWithParams(k8sClient, "my-recon-cfg", "(platform|operations)-team", crdv1.ProjectMapping{
+			ensureHarborSyncConfigWithParams(k8sClient, "my-recon-cfg", "team-(.*)", crdv1.ProjectMapping{
 				Namespace: "team-recon-.*",
 				Secret:    "$1-pull-secret",
 				Type:      crdv1.MatchMappingType,
-			})
+			}, nil)
 			_, err := hscr.Reconcile(ctrl.Request{
 				NamespacedName: types.NamespacedName{
 					Name: "my-recon-cfg",
@@ -118,20 +120,20 @@ var _ = Describe("Controller", func() {
 				secret string
 			}{
 				{
-					ns:     "team-recon-a",
-					secret: "platform-pull-secret",
+					ns:     "team-recon-foo",
+					secret: "foo-pull-secret",
 				},
 				{
-					ns:     "team-recon-a",
-					secret: "operations-pull-secret",
+					ns:     "team-recon-foo",
+					secret: "bar-pull-secret",
 				},
 				{
-					ns:     "team-recon-b",
-					secret: "platform-pull-secret",
+					ns:     "team-recon-bar",
+					secret: "foo-pull-secret",
 				},
 				{
-					ns:     "team-recon-b",
-					secret: "operations-pull-secret",
+					ns:     "team-recon-bar",
+					secret: "bar-pull-secret",
 				},
 			}
 
@@ -152,28 +154,11 @@ var _ = Describe("Controller", func() {
 		})
 
 		It("should reconcile robot accounts by translating", func(done Done) {
-			listProjectsResponse = []harbor.Project{
-				{
-					ID:   1,
-					Name: "team-a",
-				},
-				{
-					ID:   2,
-					Name: "team-b",
-				},
-			}
-			getRobotAccountsResponse = []harbor.Robot{
-				{
-					Name: "robot$sync-bot",
-					// expires right now
-					ExpiresAt: int(time.Now().Add(time.Hour * 24).Unix()),
-				},
-			}
 			ensureHarborSyncConfigWithParams(k8sClient, "my-recon-cfg", "team-(.*)", crdv1.ProjectMapping{
 				Namespace: "team-recon-$1",
 				Secret:    "default-pull-secret",
 				Type:      crdv1.TranslateMappingType,
-			})
+			}, nil)
 			_, err := hscr.Reconcile(ctrl.Request{
 				NamespacedName: types.NamespacedName{
 					Name: "my-recon-cfg",
@@ -188,11 +173,11 @@ var _ = Describe("Controller", func() {
 				secret string
 			}{
 				{
-					ns:     "team-recon-a",
+					ns:     "team-recon-foo",
 					secret: "default-pull-secret",
 				},
 				{
-					ns:     "team-recon-b",
+					ns:     "team-recon-bar",
 					secret: "default-pull-secret",
 				},
 			}
@@ -207,7 +192,56 @@ var _ = Describe("Controller", func() {
 				Expect(secret.Data[v1.DockerConfigJsonKey]).ToNot(BeNil())
 				Expect(string(secret.Data[v1.DockerConfigJsonKey])).To(Equal(defaultRobotSecretData))
 			}
+			close(done)
+		})
 
+		It("should call the webhook", func(done Done) {
+			var fooWebhookCalled bool
+			var barWebhookCalled bool
+
+			// our webhook receiver
+			srv := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+				// ensure we can decode the message
+				var msg crdv1.WebhookUpdatePayload
+				Expect(req.Header.Get("content-type")).To(Equal("application/json"))
+				body, err := ioutil.ReadAll(req.Body)
+				Expect(err).ToNot(HaveOccurred())
+				err = json.Unmarshal(body, &msg)
+				Expect(err).ToNot(HaveOccurred())
+				res.WriteHeader(http.StatusOK)
+
+				if msg.Project == "team-foo" {
+					Expect(msg.Credentials.Name).To(Equal("robot$sync-bot"))
+					Expect(msg.Credentials.Token).To(Equal("1234"))
+					fooWebhookCalled = true
+					return
+				} else if msg.Project == "team-bar" {
+					Expect(msg.Credentials.Name).To(Equal("robot$sync-bot"))
+					Expect(msg.Credentials.Token).To(Equal("1234"))
+					barWebhookCalled = true
+					return
+				}
+				Fail("unexpected webhook payload")
+			}))
+
+			ensureHarborSyncConfigWithParams(k8sClient, "my-recon-cfg", "team-(.*)", crdv1.ProjectMapping{
+				Namespace: "team-recon-$1",
+				Secret:    "default-pull-secret",
+				Type:      crdv1.TranslateMappingType,
+			}, []crdv1.WebhookConfig{
+				{
+					Endpoint: srv.URL,
+				},
+			})
+			_, err := hscr.Reconcile(ctrl.Request{
+				NamespacedName: types.NamespacedName{
+					Name: "my-recon-cfg",
+				},
+			})
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(fooWebhookCalled).To(BeTrue())
+			Expect(barWebhookCalled).To(BeTrue())
 			close(done)
 		})
 	})
