@@ -12,7 +12,7 @@ CONTROLLER_GEN=bin/controller-gen
 all: controller
 
 # Run tests
-test: generate fmt vet manifests
+test: generate fmt vet manifests misspell
 	go test ./... -coverprofile cover.out
 
 docs: hugo-bin
@@ -69,6 +69,7 @@ generate: bin/controller-gen
 
 # Run tests in container
 docker-test:
+	rm -rf bin
 	docker build -t test:latest -f Dockerfile.test .
 	docker run test:latest
 

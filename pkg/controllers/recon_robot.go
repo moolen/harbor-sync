@@ -27,11 +27,11 @@ import (
 
 const robotPrefix = "robot$"
 
-func reconcileRobotAccounts(harborAPI harbor.API, log logr.Logger, syncConfig *crdv1.HarborSync, project harbor.Project, accountSuffix string) (bool, *crdv1.RobotAccountCredential) {
+func reconcileRobotAccounts(harborAPI harbor.API, log logr.Logger, syncConfig *crdv1.HarborSync, project harbor.Project, accountSuffix string) (*crdv1.RobotAccountCredential, bool, error) {
 	robots, err := harborAPI.GetRobotAccounts(project)
 	if err != nil {
 		log.Error(err, "could not get robot accounts from harbor")
-		return true, nil
+		return nil, false, fmt.Errorf("could not get robot accounts from harbor")
 	}
 
 	// check if we manage the credentials for this robot account
@@ -77,7 +77,7 @@ func reconcileRobotAccounts(harborAPI harbor.API, log logr.Logger, syncConfig *c
 			for _, cred := range creds {
 				if cred.Name == addPrefix(accountSuffix) {
 					log.V(1).Info("found credentials in status.credentials. will not delete robot account")
-					return false, &cred
+					return &cred, false, nil
 				}
 			}
 
@@ -95,7 +95,7 @@ func reconcileRobotAccounts(harborAPI harbor.API, log logr.Logger, syncConfig *c
 	res, err := harborAPI.CreateRobotAccount(accountSuffix, project)
 	if err != nil {
 		log.Error(err, "could not create robot account", "project_name", project.Name)
-		return true, nil
+		return nil, false, fmt.Errorf("could not create robot account")
 	}
 	// store secret in status field
 	if syncConfig.Status.RobotCredentials == nil {
@@ -128,7 +128,7 @@ func reconcileRobotAccounts(harborAPI harbor.API, log logr.Logger, syncConfig *c
 	}
 
 	syncConfig.Status.RobotCredentials[project.Name] = creds
-	return false, &credential
+	return &credential, true, nil
 }
 
 func addPrefix(str string) string {

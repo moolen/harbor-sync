@@ -76,6 +76,12 @@ spec:
               description: Webhook is WIP
               items:
                 description: WebhookConfig defines how to call a webhook
+                properties:
+                  endpoint:
+                    description: Endpoint is a url
+                    type: string
+                required:
+                - endpoint
                 type: object
               type: array
           required:
