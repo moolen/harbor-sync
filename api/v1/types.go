@@ -85,7 +85,14 @@ const (
 
 // WebhookConfig defines how to call a webhook
 type WebhookConfig struct {
-	// TODO: design doc
+	// Endpoint is a url
+	Endpoint string `json:"endpoint"`
+}
+
+// WebhookUpdatePayload ...
+type WebhookUpdatePayload struct {
+	Project     string                 `json:"project"`
+	Credentials RobotAccountCredential `json:"credentials"`
 }
 
 // HarborSyncStatus defines the observed state of HarborSync

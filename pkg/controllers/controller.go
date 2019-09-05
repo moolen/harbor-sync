@@ -17,8 +17,12 @@ limitations under the License.
 package controllers
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/url"
 	"regexp"
 	"time"
 
@@ -96,9 +100,40 @@ func (r *HarborSyncConfigReconciler) Reconcile(req ctrl.Request) (ctrl.Result, e
 	// check if projects have a specific robot account
 	// create it if not
 	for _, project := range matchingProjects {
-		skip, projectCredential := reconcileRobotAccounts(r.Harbor, log.WithName("reconcile_robots"), &syncConfig, project, selector.RobotAccountSuffix)
-		if skip {
+		projectCredential, changed, err := reconcileRobotAccounts(r.Harbor, log.WithName("reconcile_robots"), &syncConfig, project, selector.RobotAccountSuffix)
+		if err != nil {
+			log.Error(err, "error reconciling robot accounts")
 			continue
+		}
+
+		if changed {
+			log.Info("robot account changed. sending webhook", "robot_name", projectCredential.Name)
+			payload := crdv1.WebhookUpdatePayload{
+				Project:     project.Name,
+				Credentials: *projectCredential,
+			}
+			data, err := json.Marshal(payload)
+			if err != nil {
+				log.Error(err, "failed to encode webhook payload")
+			}
+			for _, wh := range syncConfig.Spec.Webhook {
+				u, err := url.Parse(wh.Endpoint)
+				if err != nil {
+					log.Error(err, "failed to parse webhook url", "url", wh.Endpoint)
+					continue
+				}
+				req, err := http.NewRequest("POST", u.String(), bytes.NewReader(data))
+				res, err := http.DefaultClient.Do(req)
+				if err != nil {
+					log.Error(err, "error sending webhook", "url", wh.Endpoint)
+					continue
+				}
+				if res.StatusCode > 300 {
+					log.Error(fmt.Errorf("unexpected http response code: %d", res.StatusCode), "url", wh.Endpoint)
+					continue
+				}
+				log.Info("successfully sent webhook", "url", wh.Endpoint)
+			}
 		}
 
 		// reconcile secrets in namespaces
