@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="/harbor-sync/book.min.6c7317d2e8552a0ac3ea8fd4ba500c3dfb1cc9c74e7afd73eee6d729751fad30.css" integrity="sha256-bHMX0uhVKgrD6o/UulAMPfscycdOev1z7ubXKXUfrTA=">
 
 
-<script defer src="/harbor-sync/search.min.070fdb8cce0d802d3f83a24b3622bebae6b8e07112521df4c67ec6f0e5960869.js" integrity="sha256-Bw/bjM4NgC0/g6JLNiK&#43;uua44HESUh30xn7G8OWWCGk="></script>
+<script defer src="/harbor-sync/search.min.bf80452f773ad1020e637060b079c1e5ded82c3191a2dea0ddb82e73af8c9bb7.js" integrity="sha256-v4BFL3c60QIOY3BgsHnB5d7YLDGRot6g3bguc6&#43;Mm7c="></script>
 
 
 
@@ -235,6 +235,43 @@ spec:
 <p>Example 2:</p>
 
 <p>Harbor: we have two projects, <code>team-platform</code> and <code>team-operations</code>. By setting <code>ProjectMapping.Namespace</code> to <code>team-.*</code> we deploy the robot accounts of both the <code>platform</code> and <code>operations</code> project into the namespace. To avoid naming conflicts on the secrets we set <code>ProjectMapping.Secret</code> to <code>$1-pull-token</code>. The result is: All namespaces matching <code>team-.*</code> will have the secrets <code>platform-pull-token</code> and <code>operations-pull-token</code>.</p>
+
+<h2 id="configuring-webhook-receiver">Configuring Webhook Receiver</h2>
+
+<p>Webhooks can be configured to notify other services whenever a Robot account is being recreated or refreshed. A POST Request is sent <strong>for every</strong> Robot account <strong>in every</strong> Project that has been (re-)created.</p>
+
+<p>Example HTTP Request:</p>
+
+<pre><code>POST / HTTP/1.1
+Host: localhost:1938
+User-Agent: Go-http-client/1.1
+Content-Length: 77
+Content-Type: application/json
+Accept-Encoding: gzip
+
+{
+  &quot;project&quot;: &quot;team-foo&quot;,
+  &quot;credentials&quot;: {
+    &quot;name&quot;: &quot;robot$sync-bot&quot;,
+    &quot;token&quot;:&quot;1234&quot;
+  }
+}
+</code></pre>
+
+<p>HarborSync CRD configuration:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">kind: HaborSync
+metadata:
+  name: platform-team
+spec:
+  type: Regex
+  name: <span style="color:#e6db74">&#34;team-(.*)&#34;</span>
+  robotAccountSuffix: <span style="color:#e6db74">&#34;k8s-sync-robot&#34;</span>
+  mapping: [] <span style="color:#75715e"># mappings are optional!</span>
+
+  <span style="color:#75715e"># you can specify multiple webhooks</span>
+  webhook:
+  - endpoint: http://example.com</code></pre></div>
+<p>The only thing you can configure right now is a target endpoint for the HTTP request. Feel free to contribute or open an issue if you need more functionality.</p>
 </article>
 
       
@@ -258,6 +295,7 @@ spec:
 <li><a href="#translate">Translate</a></li>
 <li><a href="#match">Match</a></li>
 </ul></li>
+<li><a href="#configuring-webhook-receiver">Configuring Webhook Receiver</a></li>
 </ul></li>
 </ul>
 </nav>

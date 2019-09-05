@@ -101,7 +101,7 @@ var _ = Describe("Controller", func() {
 		})
 
 		It("should reconcile robot accounts by matching", func(done Done) {
-			ensureHarborSyncConfigWithParams(k8sClient, "my-recon-cfg", "team-(.*)", crdv1.ProjectMapping{
+			ensureHarborSyncConfigWithParams(k8sClient, "my-recon-cfg", "team-(.*)", &crdv1.ProjectMapping{
 				Namespace: "team-recon-.*",
 				Secret:    "$1-pull-secret",
 				Type:      crdv1.MatchMappingType,
@@ -154,7 +154,7 @@ var _ = Describe("Controller", func() {
 		})
 
 		It("should reconcile robot accounts by translating", func(done Done) {
-			ensureHarborSyncConfigWithParams(k8sClient, "my-recon-cfg", "team-(.*)", crdv1.ProjectMapping{
+			ensureHarborSyncConfigWithParams(k8sClient, "my-recon-cfg", "team-(.*)", &crdv1.ProjectMapping{
 				Namespace: "team-recon-$1",
 				Secret:    "default-pull-secret",
 				Type:      crdv1.TranslateMappingType,
@@ -224,11 +224,57 @@ var _ = Describe("Controller", func() {
 				Fail("unexpected webhook payload")
 			}))
 
-			ensureHarborSyncConfigWithParams(k8sClient, "my-recon-cfg", "team-(.*)", crdv1.ProjectMapping{
+			ensureHarborSyncConfigWithParams(k8sClient, "my-recon-cfg", "team-(.*)", &crdv1.ProjectMapping{
 				Namespace: "team-recon-$1",
 				Secret:    "default-pull-secret",
 				Type:      crdv1.TranslateMappingType,
 			}, []crdv1.WebhookConfig{
+				{
+					Endpoint: srv.URL,
+				},
+			})
+			_, err := hscr.Reconcile(ctrl.Request{
+				NamespacedName: types.NamespacedName{
+					Name: "my-recon-cfg",
+				},
+			})
+
+			Expect(err).ToNot(HaveOccurred())
+			Expect(fooWebhookCalled).To(BeTrue())
+			Expect(barWebhookCalled).To(BeTrue())
+			close(done)
+		})
+
+		It("should call the webhook without mapping", func(done Done) {
+			var fooWebhookCalled bool
+			var barWebhookCalled bool
+
+			// our webhook receiver
+			srv := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+				// ensure we can decode the message
+				var msg crdv1.WebhookUpdatePayload
+				Expect(req.Header.Get("content-type")).To(Equal("application/json"))
+				body, err := ioutil.ReadAll(req.Body)
+				Expect(err).ToNot(HaveOccurred())
+				err = json.Unmarshal(body, &msg)
+				Expect(err).ToNot(HaveOccurred())
+				res.WriteHeader(http.StatusOK)
+
+				if msg.Project == "team-foo" {
+					Expect(msg.Credentials.Name).To(Equal("robot$sync-bot"))
+					Expect(msg.Credentials.Token).To(Equal("1234"))
+					fooWebhookCalled = true
+					return
+				} else if msg.Project == "team-bar" {
+					Expect(msg.Credentials.Name).To(Equal("robot$sync-bot"))
+					Expect(msg.Credentials.Token).To(Equal("1234"))
+					barWebhookCalled = true
+					return
+				}
+				Fail("unexpected webhook payload")
+			}))
+
+			ensureHarborSyncConfigWithParams(k8sClient, "my-recon-cfg", "team-(.*)", nil, []crdv1.WebhookConfig{
 				{
 					Endpoint: srv.URL,
 				},

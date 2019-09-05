@@ -69,7 +69,7 @@ var _ = Describe("Mapping", func() {
 				Namespace: "team-match-.*",
 				Secret:    "platform-pull-token",
 			}
-			ensureHarborSyncConfigWithParams(k8sClient, "my-match-cfg", "platform-team", mapping, nil)
+			ensureHarborSyncConfigWithParams(k8sClient, "my-match-cfg", "platform-team", &mapping, nil)
 			hscr.mapByMatching(
 				mapping,
 				regexp.MustCompile("platform-team"),
@@ -122,7 +122,7 @@ var _ = Describe("Mapping", func() {
 				Namespace: "team-translate-$1",
 				Secret:    "team-$1-pull-token",
 			}
-			ensureHarborSyncConfigWithParams(k8sClient, "my-translate-cfg", "team-translate-(.*)", mapping, nil)
+			ensureHarborSyncConfigWithParams(k8sClient, "my-translate-cfg", "team-translate-(.*)", &mapping, nil)
 
 			hscr.mapByTranslating(
 				mapping,

@@ -85,3 +85,44 @@ Harbor: we have one project, `team-platform`. By setting the field `ProjectMappi
 Example 2:
 
 Harbor: we have two projects, `team-platform` and `team-operations`. By setting `ProjectMapping.Namespace` to `team-.*` we deploy the robot accounts of both the `platform` and `operations` project into the namespace. To avoid naming conflicts on the secrets we set `ProjectMapping.Secret` to `$1-pull-token`. The result is: All namespaces matching `team-.*` will have the secrets `platform-pull-token` and `operations-pull-token`.
+
+## Configuring Webhook Receiver
+Webhooks can be configured to notify other services whenever a Robot account is being recreated or refreshed. A POST Request is sent **for every** Robot account **in every** Project that has been (re-)created.
+
+Example HTTP Request:
+
+```
+POST / HTTP/1.1
+Host: localhost:1938
+User-Agent: Go-http-client/1.1
+Content-Length: 77
+Content-Type: application/json
+Accept-Encoding: gzip
+
+{
+  "project": "team-foo",
+  "credentials": {
+    "name": "robot$sync-bot",
+    "token":"1234"
+  }
+}
+```
+
+HarborSync CRD configuration:
+
+```yaml
+kind: HaborSync
+metadata:
+  name: platform-team
+spec:
+  type: Regex
+  name: "team-(.*)"
+  robotAccountSuffix: "k8s-sync-robot"
+  mapping: [] # mappings are optional!
+
+  # you can specify multiple webhooks
+  webhook:
+  - endpoint: http://example.com
+```
+
+The only thing you can configure right now is a target endpoint for the HTTP request. Feel free to contribute or open an issue if you need more functionality.

@@ -42,7 +42,7 @@ var _ = Describe("Controller", func() {
 				Secret:    "foo",
 				Type:      crdv1.TranslateMappingType,
 			}
-			cfg := ensureHarborSyncConfigWithParams(k8sClient, "my-cfg", "my-project", mapping, nil)
+			cfg := ensureHarborSyncConfigWithParams(k8sClient, "my-cfg", "my-project", &mapping, nil)
 			harborProject := harbor.Project{
 				ID:   1,
 				Name: "foo",

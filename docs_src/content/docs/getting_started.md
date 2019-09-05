@@ -30,4 +30,8 @@ $ vim quick-install.yaml
 $ kubectl create -f quick-install.yaml
 ```
 
-Also, take a look at the [kustomize setup](https://github.com/moolen/harbor-sync/tree/v0.1/config) if you use kustomize. If you prefer to use helm for deployment feel free to contribute a helm chart.
+Also, take a look at the [kustomize setup](https://github.com/moolen/harbor-sync/tree/master/config) if you use kustomize. If you prefer to use helm for deployment feel free to contribute a helm chart.
+
+## Next steps
+
+You may want to check out the the [Usage Examples]({{< ref "usage.md" >}}) or [Configuration]({{< ref "configuration.md" >}}).

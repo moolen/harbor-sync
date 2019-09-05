@@ -40,7 +40,7 @@ type HarborSyncSpec struct {
 	RobotAccountSuffix string `json:"robotAccountSuffix"`
 
 	// The Mapping contains the mapping from project to a secret in a namespace
-	Mapping []ProjectMapping `json:"mapping"`
+	Mapping []ProjectMapping `json:"mapping,omitempty"`
 
 	// Webhook is WIP
 	// +optional

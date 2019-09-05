@@ -15,11 +15,11 @@ all: controller
 test: generate fmt vet manifests misspell
 	go test ./... -coverprofile cover.out
 
-docs: hugo-bin
-	cd docs_src; $(HUGO) --theme book --destination ../docs
+docs: bin/hugo
+	cd docs_src; ../$(HUGO) --theme book --destination ../docs
 
-docs-live: hugo-bin
-	cd docs_src; $(HUGO) server --minify --theme book
+docs-live: bin/hugo
+	cd docs_src; ../$(HUGO) server --minify --theme book
 
 # Build harbor-sync-controller binary
 controller: generate fmt vet

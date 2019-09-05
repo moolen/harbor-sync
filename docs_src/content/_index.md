@@ -7,6 +7,6 @@ type: docs
 
 This is the documentation for the Harbor Sync Controller.
 
-This documentation is split for two audiences: **user** and **developer**.
-
 If you're new go ahead with the [Getting Started]({{< ref "getting_started.md" >}}) guide.
+
+For reference, take a look at [Usage]({{< ref "usage.md" >}}), [Configuration]({{< ref "configuration.md" >}}) or [Spec]({{< ref "spec.md" >}}).
