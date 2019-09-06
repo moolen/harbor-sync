@@ -1,6 +1,7 @@
 
 version ?= test
-IMG ?= quay.io/moolen/harbor-sync:${version}
+IMAGE_REPO = quay.io/moolen/harbor-sync
+IMG ?= ${IMAGE_REPO}:${version}
 CRD_OPTIONS ?= "crd:trivialVersions=true"
 
 GOPATH=$(shell go env GOPATH)
@@ -82,7 +83,11 @@ docker-build:
 docker-push:
 	docker push ${IMG}
 
-docker-release: docker-build docker-push
+docker-push-latest:
+	docker tag ${IMG} ${IMAGE_REPO}:latest
+	docker push ${IMAGE_REPO}:latest
+
+docker-release: docker-build docker-push docker-push-latest
 
 release: quick-install controller docker-release
 	tar cvzf bin/harbor-sync-controller.tar.gz bin/harbor-sync-controller

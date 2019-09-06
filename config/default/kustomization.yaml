@@ -1,5 +1,8 @@
 namespace: kube-system
 
+commonLabels:
+  app: harbor-sync
+
 bases:
 - ../crd
 - ../rbac

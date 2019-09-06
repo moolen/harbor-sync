@@ -9,7 +9,7 @@ spec:
     spec:
       containers:
       - name: manager
-        image: docker.io/moolen/harbor-sync:latest
+        image: quay.io/moolen/harbor-sync:latest
         command:
         - /harbor-sync-controller
         args:

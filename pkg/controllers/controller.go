@@ -105,6 +105,8 @@ func (r *HarborSyncConfigReconciler) Reconcile(req ctrl.Request) (ctrl.Result, e
 		log.Error(err, "could not update syncConfig status field", "sync_config_name", syncConfig.Name)
 		return ctrl.Result{Requeue: true, RequeueAfter: time.Second * 15}, nil
 	}
+
+	log.V(1).Info("successfully reconciled")
 	return ctrl.Result{}, nil
 }
 
