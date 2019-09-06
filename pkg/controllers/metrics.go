@@ -11,6 +11,10 @@ var (
 		Name: "harbor_matching_projects",
 		Help: "The total number of matching projects per HarborSyncConfig",
 	}, []string{"config", "selector_type", "selector_project_name"})
+	webhookCounter = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "harbor_sync_sent_webhooks",
+		Help: "The number of webhooks sent",
+	}, []string{"config", "target", "status_code"})
 )
 
 func init() {

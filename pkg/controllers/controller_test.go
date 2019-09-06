@@ -245,7 +245,7 @@ var _ = Describe("Controller", func() {
 			close(done)
 		})
 
-		It("should call the webhook without mapping", func(done Done) {
+		It("should call the webhook even without mapping", func(done Done) {
 			var fooWebhookCalled bool
 			var barWebhookCalled bool
 

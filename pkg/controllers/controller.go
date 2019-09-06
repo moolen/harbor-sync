@@ -22,8 +22,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -64,90 +64,38 @@ func (r *HarborSyncConfigReconciler) Reconcile(req ctrl.Request) (ctrl.Result, e
 		log.Error(err, "unable to fetch sync config")
 		return ctrl.Result{}, err
 	}
-
-	// for each project in projectSelector
-	//
-	// - find projects that match the selector
-	// - if match:
-	//   - reconcile robot account
-	//   - populate secret in specified namespace
 	selector := syncConfig.Spec
-	var err error
-	var matchingProjects []harbor.Project
-	var matcher *regexp.Regexp
+	matches, err := findMatches(syncConfig, r.Harbor)
+	log.V(1).Info("found matching projects", "matching_projects", len(matches))
+	matchingProjectsGauge.WithLabelValues(syncConfig.ObjectMeta.Name, string(selector.Type), selector.ProjectName).Set(float64(len(matches)))
 
-	allProjects, err := r.Harbor.ListProjects()
-	if err != nil {
-		log.Error(err, "could not list harbor projects")
-		return ctrl.Result{Requeue: true, RequeueAfter: time.Second * 15}, err
-	}
-	if selector.Type != crdv1.RegexMatching {
-		log.Error(fmt.Errorf("invalid selector type: %s", selector.Type), "selector type must be regex")
-		return ctrl.Result{Requeue: true, RequeueAfter: time.Second * 15}, err
-	}
-	matcher, err = regexp.Compile(selector.ProjectName)
-	if err != nil {
-		log.Error(err, "error compiling regex", "selector_project_name", selector.ProjectName)
-		return ctrl.Result{Requeue: true, RequeueAfter: time.Second * 15}, err
-	}
-	for _, project := range allProjects {
-		if matcher.MatchString(project.Name) {
-			log.V(1).Info("project match", "type", selector.Type, "project_name", project.Name)
-			matchingProjects = append(matchingProjects, project)
-		}
-	}
-	log.V(1).Info("found matching projects", "matching_projects", len(matchingProjects), "all_projects", len(allProjects))
-	matchingProjectsGauge.WithLabelValues(syncConfig.ObjectMeta.Name, string(selector.Type), selector.ProjectName).Set(float64(len(matchingProjects)))
-
-	// check if projects have a specific robot account
-	// create it if not
-	for _, project := range matchingProjects {
-		projectCredential, changed, err := reconcileRobotAccounts(r.Harbor, log.WithName("reconcile_robots"), &syncConfig, project, selector.RobotAccountSuffix)
+	// reconcile robot accounts
+	for _, project := range matches {
+		credential, changed, err := reconcileRobotAccounts(r.Harbor, log.WithName("reconcile_robots"), &syncConfig, project, selector.RobotAccountSuffix)
 		if err != nil {
 			log.Error(err, "error reconciling robot accounts")
 			continue
 		}
 
 		if changed {
-			log.Info("robot account changed. sending webhook", "robot_name", projectCredential.Name)
-			payload := crdv1.WebhookUpdatePayload{
-				Project:     project.Name,
-				Credentials: *projectCredential,
-			}
-			data, err := json.Marshal(payload)
+			log.Info("robot account changed. sending webhook", "robot_name", credential.Name)
+			err = runWebhook(syncConfig.ObjectMeta.Name, syncConfig.Spec.Webhook, project, credential)
 			if err != nil {
-				log.Error(err, "failed to encode webhook payload")
-			}
-			for _, wh := range syncConfig.Spec.Webhook {
-				u, err := url.Parse(wh.Endpoint)
-				if err != nil {
-					log.Error(err, "failed to parse webhook url", "url", wh.Endpoint)
-					continue
-				}
-				req, err := http.NewRequest("POST", u.String(), bytes.NewReader(data))
-				req.Header.Set("Content-Type", "application/json")
-				res, err := http.DefaultClient.Do(req)
-				if err != nil {
-					log.Error(err, "error sending webhook", "url", wh.Endpoint)
-					continue
-				}
-				if res.StatusCode > 300 {
-					log.Error(fmt.Errorf("unexpected http response code: %d", res.StatusCode), "url", wh.Endpoint)
-					continue
-				}
-				log.Info("successfully sent webhook", "url", wh.Endpoint)
+				log.Error(err, "error calling webhook")
 			}
 		}
 
 		// reconcile secrets in namespaces
 		for _, mapping := range selector.Mapping {
-			if mapping.Type == crdv1.TranslateMappingType {
-				r.mapByTranslating(mapping, matcher, project, *projectCredential)
-			} else if mapping.Type == crdv1.MatchMappingType {
-				r.mapByMatching(mapping, matcher, project, *projectCredential)
-			} else {
-				// not implemented
-				log.Error(fmt.Errorf("invalid mapping type: %s", mapping.Type), "unsupported mapping")
+			f, err := mappingFuncForConfig(mapping)
+			if err != nil {
+				log.Error(err, "failed to get mapping for config")
+				continue
+			}
+			err = f(r, mapping, syncConfig, project, *credential, r.Harbor.BaseURL())
+			if err != nil {
+				log.Error(err, "mapping failed")
+				continue
 			}
 		}
 	}
@@ -167,4 +115,59 @@ func (r *HarborSyncConfigReconciler) SetupWithManager(mgr ctrl.Manager, input <-
 		For(&crdv1.HarborSync{}).
 		Watches(&source.Channel{Source: input}, &handler.EnqueueRequestForObject{}).
 		Complete(r)
+}
+
+// findMatches filters from a list of projects those projects that match the given syncConfig
+func findMatches(syncConfig crdv1.HarborSync, api harbor.API) ([]harbor.Project, error) {
+	var matchingProjects []harbor.Project
+	allProjects, err := api.ListProjects()
+	if err != nil {
+		return nil, fmt.Errorf("could not list harbor projects: %s", err.Error())
+	}
+	if syncConfig.Spec.Type != crdv1.RegexMatching {
+		return nil, fmt.Errorf("invalid selector type: %s", syncConfig.Spec.Type)
+	}
+	matcher, err := regexp.Compile(syncConfig.Spec.ProjectName)
+	if err != nil {
+		return nil, fmt.Errorf("error compiling regex: %s", err.Error())
+	}
+	for _, project := range allProjects {
+		if matcher.MatchString(project.Name) {
+			matchingProjects = append(matchingProjects, project)
+		}
+	}
+	matchingProjectsGauge.WithLabelValues(syncConfig.ObjectMeta.Name, string(syncConfig.Spec.Type), syncConfig.Spec.ProjectName).Set(float64(len(matchingProjects)))
+	return matchingProjects, nil
+}
+
+// runWebhook issues HTTP Requests for the configured webhooks
+func runWebhook(syncConfigName string, webhookCfg []crdv1.WebhookConfig, project harbor.Project, credential *crdv1.RobotAccountCredential) error {
+	payload := crdv1.WebhookUpdatePayload{
+		Project:     project.Name,
+		Credentials: *credential,
+	}
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to encode webhook payload: %s", err.Error())
+	}
+	var errs []string
+	for _, wh := range webhookCfg {
+		req, err := http.NewRequest("POST", wh.Endpoint, bytes.NewReader(data))
+		req.Header.Set("Content-Type", "application/json")
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			webhookCounter.WithLabelValues(syncConfigName, wh.Endpoint, "error").Inc()
+			errs = append(errs, fmt.Sprintf("error sending webhook to %s: %s", wh.Endpoint, err.Error()))
+			continue
+		}
+		webhookCounter.WithLabelValues(syncConfigName, wh.Endpoint, strconv.Itoa(res.StatusCode)).Inc()
+		if res.StatusCode > 300 {
+			errs = append(errs, fmt.Sprintf("unexpected http response code: %d for %s", res.StatusCode, wh.Endpoint))
+			continue
+		}
+	}
+	if len(errs) == 0 {
+		return nil
+	}
+	return fmt.Errorf("webhook errors: %#v", errs)
 }

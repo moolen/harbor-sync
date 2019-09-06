@@ -21,7 +21,6 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"github.com/go-logr/logr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	crdv1 "github.com/moolen/harbor-sync/api/v1"
@@ -45,23 +44,19 @@ func makeSecret(namespace, name string, baseURL string, credentials crdv1.RobotA
 	}
 }
 
-func upsertSecret(cl client.Client, log logr.Logger, secret v1.Secret) {
+func upsertSecret(cl client.Client, secret v1.Secret) error {
 	err := cl.Create(context.Background(), &secret)
 	if apierrs.IsAlreadyExists(err) {
 		err = cl.Update(context.TODO(), &secret)
 		if err != nil {
-			log.Error(err, "could not update secret", "proposed_namespace", secret.ObjectMeta.Namespace, "proposed_secret", secret.ObjectMeta.Name)
-			return
+			return fmt.Errorf("could not update secret: %s/%s", secret.ObjectMeta.Namespace, secret.ObjectMeta.Name)
 		}
-		log.V(1).Info("updated secret", "proposed_namespace", secret.ObjectMeta.Namespace, "proposed_secret", secret.ObjectMeta.Name)
-		return
+		return nil
 	}
 	if err != nil {
-		log.Error(err, "could not create secret", "proposed_namespace", secret.ObjectMeta.Namespace, "proposed_secret", secret.ObjectMeta.Name)
-		return
+		return fmt.Errorf("could not create secret %s/%s: %s", secret.ObjectMeta.Namespace, secret.ObjectMeta.Name, err.Error())
 	}
-	log.Info("created secret", "proposed_namespace", secret.ObjectMeta.Namespace, "proposed_secret", secret.ObjectMeta.Name)
-	return
+	return nil
 }
 
 func ignoreNotFound(err error) error {

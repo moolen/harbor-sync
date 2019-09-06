@@ -17,7 +17,11 @@ limitations under the License.
 package controllers
 
 import (
+	"fmt"
+	"strings"
+
 	crdv1 "github.com/moolen/harbor-sync/api/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"context"
 	"regexp"
@@ -29,46 +33,73 @@ import (
 	"github.com/moolen/harbor-sync/pkg/harbor"
 )
 
-func (r *HarborSyncConfigReconciler) mapByMatching(mapping crdv1.ProjectMapping, matcher *regexp.Regexp, project harbor.Project, credential crdv1.RobotAccountCredential) {
+// MappingFunc ..
+type MappingFunc func(client.Client, crdv1.ProjectMapping, crdv1.HarborSync, harbor.Project, crdv1.RobotAccountCredential, string) error
+
+var mappins = make(map[string]MappingFunc)
+
+func mapByMatching(cl client.Client, mapping crdv1.ProjectMapping, syncConfig crdv1.HarborSync, project harbor.Project, credential crdv1.RobotAccountCredential, harborURL string) error {
 	nsMatcher, err := regexp.Compile(mapping.Namespace)
 	if err != nil {
-		r.Log.Error(err, "invalid regex", "namespace", mapping.Namespace)
-		return
+		return fmt.Errorf("invalid regex: %s", err.Error())
 	}
 	// get all namespaces
 	// match ns against mapping.Namespace regex
 	var nsList v1.NamespaceList
-	err = r.List(context.Background(), &nsList)
+	err = cl.List(context.Background(), &nsList)
 	if err != nil {
-		r.Log.Error(err, "error listing namespaces")
-		return
+		return fmt.Errorf("error listingnamespaces: %s", err.Error())
 	}
 
+	matcher, err := regexp.Compile(syncConfig.Spec.ProjectName)
+	if err != nil {
+		return fmt.Errorf("error compiling regex: %s", err.Error())
+	}
+
+	var errs []string
 	for _, ns := range nsList.Items {
 		if nsMatcher.MatchString(ns.Name) {
 			proposedSecret := matcher.ReplaceAllString(project.Name, mapping.Secret)
-			secret := makeSecret(ns.Name, proposedSecret, r.Harbor.BaseURL(), credential)
-			upsertSecret(r, r.Log, secret)
+			secret := makeSecret(ns.Name, proposedSecret, harborURL, credential)
+			err = upsertSecret(cl, secret)
+			if err != nil {
+				errs = append(errs, err.Error())
+				continue
+			}
 		}
 	}
+	if len(errs) == 0 {
+		return nil
+	}
+	return fmt.Errorf("error upserting secrets: %s", strings.Join(errs, " | "))
 }
 
-func (r *HarborSyncConfigReconciler) mapByTranslating(mapping crdv1.ProjectMapping, matcher *regexp.Regexp, project harbor.Project, credential crdv1.RobotAccountCredential) {
+func mapByTranslating(cl client.Client, mapping crdv1.ProjectMapping, syncConfig crdv1.HarborSync, project harbor.Project, credential crdv1.RobotAccountCredential, harborURL string) error {
+	matcher, err := regexp.Compile(syncConfig.Spec.ProjectName)
+	if err != nil {
+		return fmt.Errorf("error compiling regex: %s", err.Error())
+	}
 	// propse a namespace and secret name / ignore missing namespace
 	var ns v1.Namespace
 	proposedNamespace := matcher.ReplaceAllString(project.Name, mapping.Namespace)
-	err := r.Get(context.Background(), types.NamespacedName{Name: proposedNamespace}, &ns)
+	err = cl.Get(context.Background(), types.NamespacedName{Name: proposedNamespace}, &ns)
 	if apierrs.IsNotFound(err) {
-		r.Log.V(1).Info("ignoring proposed namespace", "project_name", project.Name, "proposed_namespace", proposedNamespace)
-		return
+		return nil
 	} else if err != nil {
-		r.Log.Error(err, "error fetching namespace", "proposed_namespace", proposedNamespace)
-		return
+		return fmt.Errorf("error fetching namespace %s: %s", proposedNamespace, err.Error())
 	}
 
 	// propose a secret name for this project
 	proposedSecret := matcher.ReplaceAllString(project.Name, mapping.Secret)
-	r.Log.V(2).Info("proposing secret", "project_name", project.Name, "proposed_namespace", proposedNamespace, "proposed_secret", proposedSecret)
-	secret := makeSecret(proposedNamespace, proposedSecret, r.Harbor.BaseURL(), credential)
-	upsertSecret(r, r.Log, secret)
+	secret := makeSecret(proposedNamespace, proposedSecret, harborURL, credential)
+	return upsertSecret(cl, secret)
+}
+
+func mappingFuncForConfig(mapping crdv1.ProjectMapping) (MappingFunc, error) {
+	if mapping.Type == crdv1.TranslateMappingType {
+		return mapByTranslating, nil
+	} else if mapping.Type == crdv1.MatchMappingType {
+		return mapByMatching, nil
+	}
+	return nil, fmt.Errorf("invalid mapping type: %s", mapping.Type)
 }

@@ -18,34 +18,19 @@ package controllers
 
 import (
 	"context"
-	"regexp"
 
-	"github.com/go-logr/logr"
 	crdv1 "github.com/moolen/harbor-sync/api/v1"
 	"github.com/moolen/harbor-sync/pkg/harbor"
 	"k8s.io/api/core/v1"
 
-	harborfake "github.com/moolen/harbor-sync/pkg/harbor/fake"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
 var _ = Describe("Mapping", func() {
 
-	var fakeHarbor harborfake.Client
-	var log logr.Logger
-	var hscr *HarborSyncConfigReconciler
-
 	BeforeEach(func() {
-		fakeHarbor = harborfake.Client{}
-		log = zap.Logger(true)
-		hscr = &HarborSyncConfigReconciler{
-			k8sClient,
-			log,
-			fakeHarbor,
-		}
 	})
 
 	Describe("Match", func() {
@@ -69,10 +54,11 @@ var _ = Describe("Mapping", func() {
 				Namespace: "team-match-.*",
 				Secret:    "platform-pull-token",
 			}
-			ensureHarborSyncConfigWithParams(k8sClient, "my-match-cfg", "platform-team", &mapping, nil)
-			hscr.mapByMatching(
+			cfg := ensureHarborSyncConfigWithParams(k8sClient, "my-match-cfg", "platform-team", &mapping, nil)
+			err = mapByMatching(
+				k8sClient,
 				mapping,
-				regexp.MustCompile("platform-team"),
+				cfg,
 				harbor.Project{
 					ID:   1,
 					Name: "platform-team",
@@ -81,7 +67,9 @@ var _ = Describe("Mapping", func() {
 					Name:  "robot$sync-bot",
 					Token: "my-token",
 				},
+				"my-registry-url",
 			)
+			Expect(err).ToNot(HaveOccurred())
 
 			teamASecret := v1.Secret{}
 			teamBSecret := v1.Secret{}
@@ -93,8 +81,8 @@ var _ = Describe("Mapping", func() {
 			err = k8sClient.Get(context.Background(), types.NamespacedName{Namespace: "kube-system", Name: "platform-pull-token"}, &teamBSecret)
 			Expect(err).To(HaveOccurred())
 
-			Expect(string(teamASecret.Data[v1.DockerConfigJsonKey])).To(Equal(`{"auths":{"":{"username":"robot$sync-bot","password":"my-token","auth":"cm9ib3Qkc3luYy1ib3Q6bXktdG9rZW4="}}}`))
-			Expect(string(teamBSecret.Data[v1.DockerConfigJsonKey])).To(Equal(`{"auths":{"":{"username":"robot$sync-bot","password":"my-token","auth":"cm9ib3Qkc3luYy1ib3Q6bXktdG9rZW4="}}}`))
+			Expect(string(teamASecret.Data[v1.DockerConfigJsonKey])).To(Equal(`{"auths":{"my-registry-url":{"username":"robot$sync-bot","password":"my-token","auth":"cm9ib3Qkc3luYy1ib3Q6bXktdG9rZW4="}}}`))
+			Expect(string(teamBSecret.Data[v1.DockerConfigJsonKey])).To(Equal(`{"auths":{"my-registry-url":{"username":"robot$sync-bot","password":"my-token","auth":"cm9ib3Qkc3luYy1ib3Q6bXktdG9rZW4="}}}`))
 			Expect(SystemSecret.Data).To(BeNil())
 
 			close(done)
@@ -122,11 +110,12 @@ var _ = Describe("Mapping", func() {
 				Namespace: "team-translate-$1",
 				Secret:    "team-$1-pull-token",
 			}
-			ensureHarborSyncConfigWithParams(k8sClient, "my-translate-cfg", "team-translate-(.*)", &mapping, nil)
+			cfg := ensureHarborSyncConfigWithParams(k8sClient, "my-translate-cfg", "team-translate-(.*)", &mapping, nil)
 
-			hscr.mapByTranslating(
+			mapByTranslating(
+				k8sClient,
 				mapping,
-				regexp.MustCompile("team-translate-(.*)"),
+				cfg,
 				harbor.Project{
 					ID:   1,
 					Name: "team-translate-a",
@@ -135,6 +124,7 @@ var _ = Describe("Mapping", func() {
 					Name:  "robot$sync-bot",
 					Token: "my-token",
 				},
+				"my-registry-url",
 			)
 
 			teamASecret := v1.Secret{}
@@ -144,7 +134,7 @@ var _ = Describe("Mapping", func() {
 			err = k8sClient.Get(context.Background(), types.NamespacedName{Namespace: "team-translate-b", Name: "team-b-pull-token"}, &teamBSecret)
 			Expect(err).To(HaveOccurred())
 
-			Expect(string(teamASecret.Data[v1.DockerConfigJsonKey])).To(Equal(`{"auths":{"":{"username":"robot$sync-bot","password":"my-token","auth":"cm9ib3Qkc3luYy1ib3Q6bXktdG9rZW4="}}}`))
+			Expect(string(teamASecret.Data[v1.DockerConfigJsonKey])).To(Equal(`{"auths":{"my-registry-url":{"username":"robot$sync-bot","password":"my-token","auth":"cm9ib3Qkc3luYy1ib3Q6bXktdG9rZW4="}}}`))
 			Expect(teamBSecret.Data).To(BeNil())
 
 			close(done)

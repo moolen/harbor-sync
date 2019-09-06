@@ -27,16 +27,18 @@ import (
 
 const robotPrefix = "robot$"
 
+// reconcileRobotAccounts ensures that the required robot accounts exist in the given project
 func reconcileRobotAccounts(harborAPI harbor.API, log logr.Logger, syncConfig *crdv1.HarborSync, project harbor.Project, accountSuffix string) (*crdv1.RobotAccountCredential, bool, error) {
 	robots, err := harborAPI.GetRobotAccounts(project)
 	if err != nil {
-		log.Error(err, "could not get robot accounts from harbor")
 		return nil, false, fmt.Errorf("could not get robot accounts from harbor")
 	}
 
 	// check if we manage the credentials for this robot account
 	// if we do not have them we first delete, then re-create the robot account
 	for _, robot := range robots {
+
+		// only one robot account will match
 		if robot.Name == addPrefix(accountSuffix) {
 			log.V(1).Info("robot account already exists", "project_name", project.Name, "robot_account", robot.Name)
 
@@ -45,9 +47,8 @@ func reconcileRobotAccounts(harborAPI harbor.API, log logr.Logger, syncConfig *c
 				log.Info(fmt.Sprintf("sync config status.credentials does not exist, deleting robot account"))
 				err = harborAPI.DeleteRobotAccount(project, robot.ID)
 				if err != nil {
-					log.Error(err, "could not delete robot account", "project_name", project.Name, "robot_account", robot.Name)
+					return nil, false, fmt.Errorf("could not delete robot account: %s", err.Error())
 				}
-				continue
 			}
 
 			// case: robot is disabled: re-create
@@ -55,9 +56,8 @@ func reconcileRobotAccounts(harborAPI harbor.API, log logr.Logger, syncConfig *c
 				log.Info(fmt.Sprintf("robot account is disabled, deleting it"))
 				err = harborAPI.DeleteRobotAccount(project, robot.ID)
 				if err != nil {
-					log.Error(err, "could not delete robot account", "project_name", project.Name, "robot_account", robot.Name)
+					return nil, false, fmt.Errorf("could not delete robot account: %s", err.Error())
 				}
-				continue
 			}
 
 			// case: robot will expires soon: re-create
@@ -67,9 +67,8 @@ func reconcileRobotAccounts(harborAPI harbor.API, log logr.Logger, syncConfig *c
 				log.Info(fmt.Sprintf("robot account expires soon, deleting it"))
 				err = harborAPI.DeleteRobotAccount(project, robot.ID)
 				if err != nil {
-					log.Error(err, "could not delete robot account", "project_name", project.Name, "robot_account", robot.Name)
+					return nil, false, fmt.Errorf("could not delete robot account: %s", err.Error())
 				}
-				continue
 			}
 
 			// good case: we have the credentials. do not re-create
@@ -83,8 +82,7 @@ func reconcileRobotAccounts(harborAPI harbor.API, log logr.Logger, syncConfig *c
 			log.Info("sync config does not hold the credentials for robot account. deleting it.", "project_name", project.Name, "robot_account", robot.Name)
 			err = harborAPI.DeleteRobotAccount(project, robot.ID)
 			if err != nil {
-				log.Error(err, "could not delete robot account", "project_name", project.Name, "robot_account", robot.Name)
-				continue
+				return nil, false, fmt.Errorf("could not delete robot account: %s", err)
 			}
 		}
 	}
@@ -92,14 +90,13 @@ func reconcileRobotAccounts(harborAPI harbor.API, log logr.Logger, syncConfig *c
 	log.Info("creating robot account", "project_name", project.Name, "robot_account_suffix", accountSuffix)
 	res, err := harborAPI.CreateRobotAccount(accountSuffix, project)
 	if err != nil {
-		log.Error(err, "could not create robot account", "project_name", project.Name)
 		return nil, false, fmt.Errorf("could not create robot account")
 	}
 	// store secret in status field
 	if syncConfig.Status.RobotCredentials == nil {
 		syncConfig.Status.RobotCredentials = make(map[string]crdv1.RobotAccountCredential)
 	}
-	log.Info("updating status field", "project_name", project.Name)
+	log.V(1).Info("updating status field", "project_name", project.Name)
 
 	// check if old token exists: update it or append it to list
 	cred := crdv1.RobotAccountCredential{
