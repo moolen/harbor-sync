@@ -15,6 +15,7 @@ all: controller
 test: generate fmt vet manifests misspell
 	go test ./... -coverprofile cover.out
 
+.PHONY: docs
 docs: bin/hugo
 	cd docs_src; ../$(HUGO) --theme book --destination ../docs
 

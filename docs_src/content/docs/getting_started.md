@@ -3,7 +3,7 @@
 ## What is Harbor Sync Controller?
 Harbor Sync Controller synchronizes Harbor with your Kubernetes cluster. It simplifies the management of robot accounts by automating the process of renewal and distribution of access tokens.
 
-![Harbor Sync Controller]({{< baseurl >}}/harbor-sync-mapping.jpg)
+![Harbor Sync Controller]({{< baseurl >}}/harbor-sync-overview.png)
 
 # Installation
 

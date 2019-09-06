@@ -8,7 +8,7 @@ This project extends the Kubernetes API by adding a Custom Resource `HarborSyncC
 
 A `HarborSyncConfig` defines which Harbor projects should be synced with which namespaces.
 
-![Harbor Sync Controller](./docs_src/static/harbor-sync-mapping.jpg)
+![Harbor Sync Controller](./docs_src/static/harbor-sync-overview.png)
 
 
 ## Documentation
