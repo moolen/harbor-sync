@@ -83,7 +83,6 @@ spec:
                 type: object
               type: array
           required:
-          - mapping
           - name
           - robotAccountSuffix
           - type
