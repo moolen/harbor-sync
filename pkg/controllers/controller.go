@@ -72,11 +72,20 @@ func (r *HarborSyncConfigReconciler) Reconcile(req ctrl.Request) (ctrl.Result, e
 		return ctrl.Result{Requeue: true, RequeueAfter: time.Second * 15}, err
 	}
 	log.V(1).Info("found matching projects", "matching_projects", len(matches))
-	matchingProjectsGauge.WithLabelValues(syncConfig.ObjectMeta.Name, string(selector.Type), selector.ProjectName).Set(float64(len(matches)))
+	matchingProjectsGauge.WithLabelValues(
+		syncConfig.ObjectMeta.Name,
+		string(selector.Type),
+		selector.ProjectName,
+	).Set(float64(len(matches)))
 
 	// reconcile robot accounts
 	for _, project := range matches {
-		credential, changed, err := reconciler.ReconcileRobotAccounts(r.Harbor, log.WithName("reconcile_robots"), &syncConfig, project, selector.RobotAccountSuffix)
+		credential, changed, err := reconciler.ReconcileRobotAccounts(
+			r.Harbor,
+			log.WithName("reconcile_robots"),
+			&syncConfig,
+			project,
+			selector.RobotAccountSuffix)
 		if err != nil {
 			log.Error(err, "error reconciling robot accounts")
 			continue
@@ -143,12 +152,21 @@ func findMatches(syncConfig crdv1.HarborSync, api harbor.API) ([]harbor.Project,
 			matchingProjects = append(matchingProjects, project)
 		}
 	}
-	matchingProjectsGauge.WithLabelValues(syncConfig.ObjectMeta.Name, string(syncConfig.Spec.Type), syncConfig.Spec.ProjectName).Set(float64(len(matchingProjects)))
+	matchingProjectsGauge.WithLabelValues(
+		syncConfig.ObjectMeta.Name,
+		string(syncConfig.Spec.Type),
+		syncConfig.Spec.ProjectName,
+	).Set(float64(len(matchingProjects)))
 	return matchingProjects, nil
 }
 
 // runWebhook issues HTTP Requests for the configured webhooks
-func runWebhook(syncConfigName string, webhookCfg []crdv1.WebhookConfig, project harbor.Project, credential *crdv1.RobotAccountCredential) error {
+func runWebhook(
+	syncConfigName string,
+	webhookCfg []crdv1.WebhookConfig,
+	project harbor.Project,
+	credential *crdv1.RobotAccountCredential,
+) error {
 	payload := crdv1.WebhookUpdatePayload{
 		Project:     project.Name,
 		Credentials: *credential,

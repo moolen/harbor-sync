@@ -28,7 +28,13 @@ import (
 const robotPrefix = "robot$"
 
 // ReconcileRobotAccounts ensures that the required robot accounts exist in the given project
-func ReconcileRobotAccounts(harborAPI harbor.API, log logr.Logger, syncConfig *crdv1.HarborSync, project harbor.Project, accountSuffix string) (*crdv1.RobotAccountCredential, bool, error) {
+func ReconcileRobotAccounts(
+	harborAPI harbor.API,
+	log logr.Logger,
+	syncConfig *crdv1.HarborSync,
+	project harbor.Project,
+	accountSuffix string,
+) (*crdv1.RobotAccountCredential, bool, error) {
 	robots, err := harborAPI.GetRobotAccounts(project)
 	if err != nil {
 		return nil, false, fmt.Errorf("could not get robot accounts from harbor")
@@ -79,7 +85,9 @@ func ReconcileRobotAccounts(harborAPI harbor.API, log logr.Logger, syncConfig *c
 			}
 
 			// case: creds do not exist. delete robot account
-			log.Info("sync config does not hold the credentials for robot account. deleting it.", "project_name", project.Name, "robot_account", robot.Name)
+			log.Info("sync config does not hold the credentials for robot account. deleting it.",
+				"project_name", project.Name,
+				"robot_account", robot.Name)
 			err = harborAPI.DeleteRobotAccount(project, robot.ID)
 			if err != nil {
 				return nil, false, fmt.Errorf("could not delete robot account: %s", err)

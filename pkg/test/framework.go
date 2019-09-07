@@ -49,7 +49,13 @@ func EnsureHarborSyncConfig(cl client.Client, name string) crdv1.HarborSync {
 }
 
 // EnsureHarborSyncConfigWithParams does the same as EnsureHarborSyncConfig but gives you more params
-func EnsureHarborSyncConfigWithParams(cl client.Client, name, projectName string, mapping *crdv1.ProjectMapping, whc []crdv1.WebhookConfig) crdv1.HarborSync {
+func EnsureHarborSyncConfigWithParams(
+	cl client.Client,
+	name,
+	projectName string,
+	mapping *crdv1.ProjectMapping,
+	whc []crdv1.WebhookConfig,
+) crdv1.HarborSync {
 	var mappings []crdv1.ProjectMapping
 
 	if mapping != nil {

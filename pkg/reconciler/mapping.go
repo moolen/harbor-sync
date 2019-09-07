@@ -34,12 +34,35 @@ import (
 	"github.com/moolen/harbor-sync/pkg/util"
 )
 
-// MappingFunc ..
-type MappingFunc func(client.Client, crdv1.ProjectMapping, crdv1.HarborSync, harbor.Project, crdv1.RobotAccountCredential, string) error
+// MappingFunc implements a specific strategy for
+// reconciling the cluster state
+type MappingFunc func(
+	client.Client,
+	crdv1.ProjectMapping,
+	crdv1.HarborSync,
+	harbor.Project,
+	crdv1.RobotAccountCredential,
+	string) error
 
-var mappins = make(map[string]MappingFunc)
+// MappingFuncForConfig returns a MappingFunc for the given mapping
+// which can be used by the called to reconcile the desired state
+func MappingFuncForConfig(mapping crdv1.ProjectMapping) (MappingFunc, error) {
+	if mapping.Type == crdv1.TranslateMappingType {
+		return mapByTranslating, nil
+	} else if mapping.Type == crdv1.MatchMappingType {
+		return mapByMatching, nil
+	}
+	return nil, fmt.Errorf("invalid mapping type: %s", mapping.Type)
+}
 
-func mapByMatching(cl client.Client, mapping crdv1.ProjectMapping, syncConfig crdv1.HarborSync, project harbor.Project, credential crdv1.RobotAccountCredential, harborURL string) error {
+func mapByMatching(
+	cl client.Client,
+	mapping crdv1.ProjectMapping,
+	syncConfig crdv1.HarborSync,
+	project harbor.Project,
+	credential crdv1.RobotAccountCredential,
+	harborURL string,
+) error {
 	nsMatcher, err := regexp.Compile(mapping.Namespace)
 	if err != nil {
 		return fmt.Errorf("invalid regex: %s", err.Error())
@@ -75,7 +98,14 @@ func mapByMatching(cl client.Client, mapping crdv1.ProjectMapping, syncConfig cr
 	return fmt.Errorf("error upserting secrets: %s", strings.Join(errs, " | "))
 }
 
-func mapByTranslating(cl client.Client, mapping crdv1.ProjectMapping, syncConfig crdv1.HarborSync, project harbor.Project, credential crdv1.RobotAccountCredential, harborURL string) error {
+func mapByTranslating(
+	cl client.Client,
+	mapping crdv1.ProjectMapping,
+	syncConfig crdv1.HarborSync,
+	project harbor.Project,
+	credential crdv1.RobotAccountCredential,
+	harborURL string,
+) error {
 	matcher, err := regexp.Compile(syncConfig.Spec.ProjectName)
 	if err != nil {
 		return fmt.Errorf("error compiling regex: %s", err.Error())
@@ -94,15 +124,4 @@ func mapByTranslating(cl client.Client, mapping crdv1.ProjectMapping, syncConfig
 	proposedSecret := matcher.ReplaceAllString(project.Name, mapping.Secret)
 	secret := util.MakeSecret(proposedNamespace, proposedSecret, harborURL, credential)
 	return util.UpsertSecret(cl, secret)
-}
-
-// MappingFuncForConfig returns a MappingFunc for the given mapping
-// which can be used by the called to reconcile the desired state
-func MappingFuncForConfig(mapping crdv1.ProjectMapping) (MappingFunc, error) {
-	if mapping.Type == crdv1.TranslateMappingType {
-		return mapByTranslating, nil
-	} else if mapping.Type == crdv1.MatchMappingType {
-		return mapByMatching, nil
-	}
-	return nil, fmt.Errorf("invalid mapping type: %s", mapping.Type)
 }
