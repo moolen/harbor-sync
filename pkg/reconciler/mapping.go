@@ -96,6 +96,8 @@ func mapByTranslating(cl client.Client, mapping crdv1.ProjectMapping, syncConfig
 	return util.UpsertSecret(cl, secret)
 }
 
+// MappingFuncForConfig returns a MappingFunc for the given mapping
+// which can be used by the called to reconcile the desired state
 func MappingFuncForConfig(mapping crdv1.ProjectMapping) (MappingFunc, error) {
 	if mapping.Type == crdv1.TranslateMappingType {
 		return mapByTranslating, nil

@@ -26,6 +26,7 @@ type API interface {
 	BaseURL() string
 }
 
+// Project is the harbor API response
 type Project struct {
 	ID        int             `json:"project_id"`
 	Name      string          `json:"name"`
@@ -33,6 +34,7 @@ type Project struct {
 	Metadata  ProjectMetadata `json:"metadata"`
 }
 
+// ProjectMetadata contains the metadata of the project
 type ProjectMetadata struct {
 	Public             string `json:"public"`
 	EnableContentTrust string `json:"enable_content_trust"`

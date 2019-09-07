@@ -27,6 +27,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// EnsureHarborSyncConfig creates a HarborSync config with defaults
 func EnsureHarborSyncConfig(cl client.Client, name string) crdv1.HarborSync {
 	cfg := &crdv1.HarborSync{
 		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: name},
@@ -47,6 +48,7 @@ func EnsureHarborSyncConfig(cl client.Client, name string) crdv1.HarborSync {
 	return *cfg
 }
 
+// EnsureHarborSyncConfigWithParams does the same as EnsureHarborSyncConfig but gives you more params
 func EnsureHarborSyncConfigWithParams(cl client.Client, name, projectName string, mapping *crdv1.ProjectMapping, whc []crdv1.WebhookConfig) crdv1.HarborSync {
 	var mappings []crdv1.ProjectMapping
 
@@ -74,6 +76,7 @@ func EnsureHarborSyncConfigWithParams(cl client.Client, name, projectName string
 	return *cfg
 }
 
+// DeleteHarborSyncConfig deletes a HarborSync config
 func DeleteHarborSyncConfig(cl client.Client, name string) {
 	err := cl.Delete(context.Background(), &crdv1.HarborSync{
 		ObjectMeta: metav1.ObjectMeta{Name: name},
@@ -81,6 +84,7 @@ func DeleteHarborSyncConfig(cl client.Client, name string) {
 	Expect(err).ToNot(HaveOccurred())
 }
 
+// EnsureNamespace ensures that a namespace is present
 func EnsureNamespace(cl client.Client, namespace string) {
 	err := cl.Create(context.Background(), &v1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
@@ -93,6 +97,7 @@ func EnsureNamespace(cl client.Client, namespace string) {
 	Expect(err).ToNot(HaveOccurred())
 }
 
+// DeleteNamespace deletes a namespace
 func DeleteNamespace(cl client.Client, namespace string) {
 	err := cl.Delete(context.Background(), &v1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
@@ -105,6 +110,7 @@ func DeleteNamespace(cl client.Client, namespace string) {
 	Expect(err).ToNot(HaveOccurred())
 }
 
+// DeleteSecret deletes a secret
 func DeleteSecret(cl client.Client, ns, name string) {
 	err := cl.Delete(context.Background(), &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{

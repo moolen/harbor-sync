@@ -63,10 +63,14 @@ func (r *HarborSyncConfigReconciler) Reconcile(req ctrl.Request) (ctrl.Result, e
 			return ctrl.Result{}, nil
 		}
 		log.Error(err, "unable to fetch sync config")
-		return ctrl.Result{}, err
+		return ctrl.Result{Requeue: true, RequeueAfter: time.Second * 15}, err
 	}
 	selector := syncConfig.Spec
 	matches, err := findMatches(syncConfig, r.Harbor)
+	if err != nil {
+		log.Error(err, "unable to find matches")
+		return ctrl.Result{Requeue: true, RequeueAfter: time.Second * 15}, err
+	}
 	log.V(1).Info("found matching projects", "matching_projects", len(matches))
 	matchingProjectsGauge.WithLabelValues(syncConfig.ObjectMeta.Name, string(selector.Type), selector.ProjectName).Set(float64(len(matches)))
 

@@ -29,6 +29,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// MakeSecret creates a v1.Secret with type dockerconfigjson from the given credentials
 func MakeSecret(namespace, name string, baseURL string, credentials crdv1.RobotAccountCredential) v1.Secret {
 	auth := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", credentials.Name, credentials.Token)))
 	configJSON := fmt.Sprintf(`{"auths":{"%s":{"username":"%s","password":"%s","auth":"%s"}}}`, baseURL, credentials.Name, credentials.Token, auth)
@@ -44,6 +45,7 @@ func MakeSecret(namespace, name string, baseURL string, credentials crdv1.RobotA
 	}
 }
 
+// UpsertSecret creates or updates the specified secret
 func UpsertSecret(cl client.Client, secret v1.Secret) error {
 	err := cl.Create(context.Background(), &secret)
 	if apierrs.IsAlreadyExists(err) {

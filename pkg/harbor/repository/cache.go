@@ -22,22 +22,28 @@ import (
 	"github.com/moolen/harbor-sync/pkg/harbor"
 )
 
+// ProjectsCache is a cache for harbor projects
+// it is protected against concurrent access with a mutex
 type ProjectsCache struct {
 	mu   *sync.RWMutex
 	data map[string]harbor.Project
 }
 
+// RobotsCache is a cache for robot accounts
+// it is protected against concurrent access with a mutex
 type RobotsCache struct {
 	mu   *sync.RWMutex
 	data map[string][]harbor.Robot
 }
 
+// Set sets the cache item
 func (p *ProjectsCache) Set(project harbor.Project) {
 	p.mu.Lock()
 	p.data[project.Name] = project
 	p.mu.Unlock()
 }
 
+// Get reads from the cache
 func (p *ProjectsCache) Get() []harbor.Project {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
@@ -48,12 +54,14 @@ func (p *ProjectsCache) Get() []harbor.Project {
 	return projects
 }
 
+// Set sets the cache item
 func (r *RobotsCache) Set(key string, val []harbor.Robot) {
 	r.mu.Lock()
 	r.data[key] = val
 	r.mu.Unlock()
 }
 
+// Get returns an item from cache
 func (r *RobotsCache) Get(key string) []harbor.Robot {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
