@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controllers
+package reconciler
 
 import (
 	"fmt"
@@ -27,8 +27,8 @@ import (
 
 const robotPrefix = "robot$"
 
-// reconcileRobotAccounts ensures that the required robot accounts exist in the given project
-func reconcileRobotAccounts(harborAPI harbor.API, log logr.Logger, syncConfig *crdv1.HarborSync, project harbor.Project, accountSuffix string) (*crdv1.RobotAccountCredential, bool, error) {
+// ReconcileRobotAccounts ensures that the required robot accounts exist in the given project
+func ReconcileRobotAccounts(harborAPI harbor.API, log logr.Logger, syncConfig *crdv1.HarborSync, project harbor.Project, accountSuffix string) (*crdv1.RobotAccountCredential, bool, error) {
 	robots, err := harborAPI.GetRobotAccounts(project)
 	if err != nil {
 		return nil, false, fmt.Errorf("could not get robot accounts from harbor")
@@ -41,7 +41,7 @@ func reconcileRobotAccounts(harborAPI harbor.API, log logr.Logger, syncConfig *c
 		// only one robot account will match
 		if robot.Name == addPrefix(accountSuffix) {
 			log.V(1).Info("robot account already exists", "project_name", project.Name, "robot_account", robot.Name)
-
+			fmt.Printf("creds: %#v", syncConfig.Status.RobotCredentials)
 			// case: robot account exists in harbor, but we do not have the credentials: re-create!
 			if syncConfig.Status.RobotCredentials == nil {
 				log.Info(fmt.Sprintf("sync config status.credentials does not exist, deleting robot account"))

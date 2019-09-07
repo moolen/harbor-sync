@@ -36,6 +36,7 @@ import (
 
 	crdv1 "github.com/moolen/harbor-sync/api/v1"
 	"github.com/moolen/harbor-sync/pkg/harbor"
+	"github.com/moolen/harbor-sync/pkg/reconciler"
 )
 
 // HarborSyncConfigReconciler reconciles a HarborSyncConfig object
@@ -71,7 +72,7 @@ func (r *HarborSyncConfigReconciler) Reconcile(req ctrl.Request) (ctrl.Result, e
 
 	// reconcile robot accounts
 	for _, project := range matches {
-		credential, changed, err := reconcileRobotAccounts(r.Harbor, log.WithName("reconcile_robots"), &syncConfig, project, selector.RobotAccountSuffix)
+		credential, changed, err := reconciler.ReconcileRobotAccounts(r.Harbor, log.WithName("reconcile_robots"), &syncConfig, project, selector.RobotAccountSuffix)
 		if err != nil {
 			log.Error(err, "error reconciling robot accounts")
 			continue
@@ -87,7 +88,7 @@ func (r *HarborSyncConfigReconciler) Reconcile(req ctrl.Request) (ctrl.Result, e
 
 		// reconcile secrets in namespaces
 		for _, mapping := range selector.Mapping {
-			f, err := mappingFuncForConfig(mapping)
+			f, err := reconciler.MappingFuncForConfig(mapping)
 			if err != nil {
 				log.Error(err, "failed to get mapping for config")
 				continue

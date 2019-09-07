@@ -17,7 +17,6 @@ limitations under the License.
 package harbor
 
 import (
-	"crypto/tls"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -51,13 +50,7 @@ func New(baseurl, username, password string) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	// FIXME / testing
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
-	c := &http.Client{
-		Transport: tr,
-	}
+	c := &http.Client{}
 	return &Client{
 		APIBaseURL: parsedBaseURL,
 		Username:   username,

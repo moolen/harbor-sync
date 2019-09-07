@@ -28,6 +28,7 @@ import (
 	crdv1 "github.com/moolen/harbor-sync/api/v1"
 	"github.com/moolen/harbor-sync/pkg/harbor"
 	harborfake "github.com/moolen/harbor-sync/pkg/harbor/fake"
+	"github.com/moolen/harbor-sync/pkg/test"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"k8s.io/api/core/v1"
@@ -45,8 +46,8 @@ var _ = Describe("Controller", func() {
 	var hscr *HarborSyncConfigReconciler
 
 	BeforeEach(func() {
-		ensureNamespace(k8sClient, "team-recon-foo")
-		ensureNamespace(k8sClient, "team-recon-bar")
+		test.EnsureNamespace(k8sClient, "team-recon-foo")
+		test.EnsureNamespace(k8sClient, "team-recon-bar")
 		fakeHarbor = &harborfake.Client{}
 		log = zap.Logger(true)
 		hscr = &HarborSyncConfigReconciler{
@@ -57,8 +58,8 @@ var _ = Describe("Controller", func() {
 	})
 
 	AfterEach(func() {
-		deleteNamespace(k8sClient, "team-recon-foo")
-		deleteNamespace(k8sClient, "team-recon-bar")
+		test.DeleteNamespace(k8sClient, "team-recon-foo")
+		test.DeleteNamespace(k8sClient, "team-recon-bar")
 	})
 
 	Describe("Reconcile", func() {
@@ -97,11 +98,11 @@ var _ = Describe("Controller", func() {
 		})
 
 		AfterEach(func() {
-			deleteHarborSyncConfig(k8sClient, "my-recon-cfg")
+			test.DeleteHarborSyncConfig(k8sClient, "my-recon-cfg")
 		})
 
 		It("should reconcile robot accounts by matching", func(done Done) {
-			ensureHarborSyncConfigWithParams(k8sClient, "my-recon-cfg", "team-(.*)", &crdv1.ProjectMapping{
+			test.EnsureHarborSyncConfigWithParams(k8sClient, "my-recon-cfg", "team-(.*)", &crdv1.ProjectMapping{
 				Namespace: "team-recon-.*",
 				Secret:    "$1-pull-secret",
 				Type:      crdv1.MatchMappingType,
@@ -147,14 +148,14 @@ var _ = Describe("Controller", func() {
 				Expect(secret.Data[v1.DockerConfigJsonKey]).ToNot(BeNil())
 				Expect(string(secret.Data[v1.DockerConfigJsonKey])).To(Equal(defaultRobotSecretData))
 
-				deleteSecret(k8sClient, expect.ns, expect.secret)
+				test.DeleteSecret(k8sClient, expect.ns, expect.secret)
 			}
 
 			close(done)
 		})
 
 		It("should reconcile robot accounts by translating", func(done Done) {
-			ensureHarborSyncConfigWithParams(k8sClient, "my-recon-cfg", "team-(.*)", &crdv1.ProjectMapping{
+			test.EnsureHarborSyncConfigWithParams(k8sClient, "my-recon-cfg", "team-(.*)", &crdv1.ProjectMapping{
 				Namespace: "team-recon-$1",
 				Secret:    "default-pull-secret",
 				Type:      crdv1.TranslateMappingType,
@@ -224,7 +225,7 @@ var _ = Describe("Controller", func() {
 				Fail("unexpected webhook payload")
 			}))
 
-			ensureHarborSyncConfigWithParams(k8sClient, "my-recon-cfg", "team-(.*)", &crdv1.ProjectMapping{
+			test.EnsureHarborSyncConfigWithParams(k8sClient, "my-recon-cfg", "team-(.*)", &crdv1.ProjectMapping{
 				Namespace: "team-recon-$1",
 				Secret:    "default-pull-secret",
 				Type:      crdv1.TranslateMappingType,
@@ -274,7 +275,7 @@ var _ = Describe("Controller", func() {
 				Fail("unexpected webhook payload")
 			}))
 
-			ensureHarborSyncConfigWithParams(k8sClient, "my-recon-cfg", "team-(.*)", nil, []crdv1.WebhookConfig{
+			test.EnsureHarborSyncConfigWithParams(k8sClient, "my-recon-cfg", "team-(.*)", nil, []crdv1.WebhookConfig{
 				{
 					Endpoint: srv.URL,
 				},

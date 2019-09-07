@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controllers
+package util
 
 import (
 	"context"
@@ -29,7 +29,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func makeSecret(namespace, name string, baseURL string, credentials crdv1.RobotAccountCredential) v1.Secret {
+func MakeSecret(namespace, name string, baseURL string, credentials crdv1.RobotAccountCredential) v1.Secret {
 	auth := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", credentials.Name, credentials.Token)))
 	configJSON := fmt.Sprintf(`{"auths":{"%s":{"username":"%s","password":"%s","auth":"%s"}}}`, baseURL, credentials.Name, credentials.Token, auth)
 	return v1.Secret{
@@ -44,7 +44,7 @@ func makeSecret(namespace, name string, baseURL string, credentials crdv1.RobotA
 	}
 }
 
-func upsertSecret(cl client.Client, secret v1.Secret) error {
+func UpsertSecret(cl client.Client, secret v1.Secret) error {
 	err := cl.Create(context.Background(), &secret)
 	if apierrs.IsAlreadyExists(err) {
 		err = cl.Update(context.TODO(), &secret)

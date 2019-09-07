@@ -14,13 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controllers
+package reconciler
 
 import (
 	"context"
 
 	crdv1 "github.com/moolen/harbor-sync/api/v1"
 	"github.com/moolen/harbor-sync/pkg/harbor"
+	"github.com/moolen/harbor-sync/pkg/test"
 	"k8s.io/api/core/v1"
 
 	. "github.com/onsi/ginkgo"
@@ -36,15 +37,15 @@ var _ = Describe("Mapping", func() {
 	Describe("Match", func() {
 
 		BeforeEach(func() {
-			ensureNamespace(k8sClient, "team-match-a")
-			ensureNamespace(k8sClient, "team-match-b")
+			test.EnsureNamespace(k8sClient, "team-match-a")
+			test.EnsureNamespace(k8sClient, "team-match-b")
 		})
 
 		AfterEach(func() {
-			deleteNamespace(k8sClient, "team-match-a")
-			deleteNamespace(k8sClient, "team-match-b")
+			test.DeleteNamespace(k8sClient, "team-match-a")
+			test.DeleteNamespace(k8sClient, "team-match-b")
 
-			deleteHarborSyncConfig(k8sClient, "my-match-cfg")
+			test.DeleteHarborSyncConfig(k8sClient, "my-match-cfg")
 		})
 
 		It("should create secrets in namespace", func(done Done) {
@@ -54,7 +55,7 @@ var _ = Describe("Mapping", func() {
 				Namespace: "team-match-.*",
 				Secret:    "platform-pull-token",
 			}
-			cfg := ensureHarborSyncConfigWithParams(k8sClient, "my-match-cfg", "platform-team", &mapping, nil)
+			cfg := test.EnsureHarborSyncConfigWithParams(k8sClient, "my-match-cfg", "platform-team", &mapping, nil)
 			err = mapByMatching(
 				k8sClient,
 				mapping,
@@ -92,15 +93,15 @@ var _ = Describe("Mapping", func() {
 	Describe("Translate", func() {
 
 		BeforeEach(func() {
-			ensureNamespace(k8sClient, "team-translate-a")
-			ensureNamespace(k8sClient, "team-translate-b")
+			test.EnsureNamespace(k8sClient, "team-translate-a")
+			test.EnsureNamespace(k8sClient, "team-translate-b")
 		})
 
 		AfterEach(func() {
-			deleteNamespace(k8sClient, "team-translate-a")
-			deleteNamespace(k8sClient, "team-translate-b")
+			test.DeleteNamespace(k8sClient, "team-translate-a")
+			test.DeleteNamespace(k8sClient, "team-translate-b")
 
-			deleteHarborSyncConfig(k8sClient, "my-translate-cfg")
+			test.DeleteHarborSyncConfig(k8sClient, "my-translate-cfg")
 		})
 
 		It("should create secrets in namespace", func(done Done) {
@@ -110,7 +111,7 @@ var _ = Describe("Mapping", func() {
 				Namespace: "team-translate-$1",
 				Secret:    "team-$1-pull-token",
 			}
-			cfg := ensureHarborSyncConfigWithParams(k8sClient, "my-translate-cfg", "team-translate-(.*)", &mapping, nil)
+			cfg := test.EnsureHarborSyncConfigWithParams(k8sClient, "my-translate-cfg", "team-translate-(.*)", &mapping, nil)
 
 			mapByTranslating(
 				k8sClient,

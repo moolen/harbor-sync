@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controllers
+package reconciler
 
 import (
 	"fmt"
@@ -31,6 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/moolen/harbor-sync/pkg/harbor"
+	"github.com/moolen/harbor-sync/pkg/util"
 )
 
 // MappingFunc ..
@@ -60,8 +61,8 @@ func mapByMatching(cl client.Client, mapping crdv1.ProjectMapping, syncConfig cr
 	for _, ns := range nsList.Items {
 		if nsMatcher.MatchString(ns.Name) {
 			proposedSecret := matcher.ReplaceAllString(project.Name, mapping.Secret)
-			secret := makeSecret(ns.Name, proposedSecret, harborURL, credential)
-			err = upsertSecret(cl, secret)
+			secret := util.MakeSecret(ns.Name, proposedSecret, harborURL, credential)
+			err = util.UpsertSecret(cl, secret)
 			if err != nil {
 				errs = append(errs, err.Error())
 				continue
@@ -91,11 +92,11 @@ func mapByTranslating(cl client.Client, mapping crdv1.ProjectMapping, syncConfig
 
 	// propose a secret name for this project
 	proposedSecret := matcher.ReplaceAllString(project.Name, mapping.Secret)
-	secret := makeSecret(proposedNamespace, proposedSecret, harborURL, credential)
-	return upsertSecret(cl, secret)
+	secret := util.MakeSecret(proposedNamespace, proposedSecret, harborURL, credential)
+	return util.UpsertSecret(cl, secret)
 }
 
-func mappingFuncForConfig(mapping crdv1.ProjectMapping) (MappingFunc, error) {
+func MappingFuncForConfig(mapping crdv1.ProjectMapping) (MappingFunc, error) {
 	if mapping.Type == crdv1.TranslateMappingType {
 		return mapByTranslating, nil
 	} else if mapping.Type == crdv1.MatchMappingType {

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controllers
+package test
 
 import (
 	"context"
@@ -27,7 +27,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func ensureHarborSyncConfig(cl client.Client, name string) crdv1.HarborSync {
+func EnsureHarborSyncConfig(cl client.Client, name string) crdv1.HarborSync {
 	cfg := &crdv1.HarborSync{
 		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: name},
 		Spec: crdv1.HarborSyncSpec{
@@ -47,7 +47,7 @@ func ensureHarborSyncConfig(cl client.Client, name string) crdv1.HarborSync {
 	return *cfg
 }
 
-func ensureHarborSyncConfigWithParams(cl client.Client, name, projectName string, mapping *crdv1.ProjectMapping, whc []crdv1.WebhookConfig) crdv1.HarborSync {
+func EnsureHarborSyncConfigWithParams(cl client.Client, name, projectName string, mapping *crdv1.ProjectMapping, whc []crdv1.WebhookConfig) crdv1.HarborSync {
 	var mappings []crdv1.ProjectMapping
 
 	if mapping != nil {
@@ -74,14 +74,14 @@ func ensureHarborSyncConfigWithParams(cl client.Client, name, projectName string
 	return *cfg
 }
 
-func deleteHarborSyncConfig(cl client.Client, name string) {
+func DeleteHarborSyncConfig(cl client.Client, name string) {
 	err := cl.Delete(context.Background(), &crdv1.HarborSync{
 		ObjectMeta: metav1.ObjectMeta{Name: name},
 	}, client.GracePeriodSeconds(0))
 	Expect(err).ToNot(HaveOccurred())
 }
 
-func ensureNamespace(cl client.Client, namespace string) {
+func EnsureNamespace(cl client.Client, namespace string) {
 	err := cl.Create(context.Background(), &v1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: namespace,
@@ -93,7 +93,7 @@ func ensureNamespace(cl client.Client, namespace string) {
 	Expect(err).ToNot(HaveOccurred())
 }
 
-func deleteNamespace(cl client.Client, namespace string) {
+func DeleteNamespace(cl client.Client, namespace string) {
 	err := cl.Delete(context.Background(), &v1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: namespace,
@@ -105,7 +105,7 @@ func deleteNamespace(cl client.Client, namespace string) {
 	Expect(err).ToNot(HaveOccurred())
 }
 
-func deleteSecret(cl client.Client, ns, name string) {
+func DeleteSecret(cl client.Client, ns, name string) {
 	err := cl.Delete(context.Background(), &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: ns,

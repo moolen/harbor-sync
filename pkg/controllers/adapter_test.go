@@ -19,6 +19,7 @@ package controllers
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/moolen/harbor-sync/pkg/test"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -27,15 +28,15 @@ import (
 var _ = Describe("Adapter", func() {
 
 	BeforeEach(func() {
-		ensureHarborSyncConfig(k8sClient, "bar")
-		ensureHarborSyncConfig(k8sClient, "baz")
-		ensureHarborSyncConfig(k8sClient, "foo")
+		test.EnsureHarborSyncConfig(k8sClient, "bar")
+		test.EnsureHarborSyncConfig(k8sClient, "baz")
+		test.EnsureHarborSyncConfig(k8sClient, "foo")
 	})
 
 	AfterEach(func() {
-		deleteHarborSyncConfig(k8sClient, "bar")
-		deleteHarborSyncConfig(k8sClient, "baz")
-		deleteHarborSyncConfig(k8sClient, "foo")
+		test.DeleteHarborSyncConfig(k8sClient, "bar")
+		test.DeleteHarborSyncConfig(k8sClient, "baz")
+		test.DeleteHarborSyncConfig(k8sClient, "foo")
 	})
 
 	It("should send events", func(done Done) {
