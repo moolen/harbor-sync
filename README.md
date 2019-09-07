@@ -1,5 +1,5 @@
 # Harbor Sync
-[![Actions Status](https://github.com/moolen/harbor-sync/workflows/Run%20Tests/badge.svg)](https://github.com/moolen/harbor-sync/actions)
+[![Actions Status](https://github.com/moolen/harbor-sync/workflows/Run%20Tests/badge.svg)](https://github.com/moolen/harbor-sync/actions) [![Go Report Card](https://goreportcard.com/badge/github.com/moolen/harbor-sync)](https://goreportcard.com/report/github.com/moolen/harbor-sync)
 
 Harbor Sync allows you to synchronize your Harbor robot accounts with your Kubernetes cluster.
 
