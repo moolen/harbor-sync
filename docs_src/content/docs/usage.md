@@ -11,7 +11,7 @@ metadata:
 spec:
   type: Regex
   name: "my-project" # <--- specify harbor project
-  robotAccountSuffix: "k8s-sync-robot"
+  robotAccountSuffix: "k8s-sync-robot" # <--- should be unique per kind: HaborSync
   mapping:
   - type: Translate
     namespace: "team-a" # <--- target namespace

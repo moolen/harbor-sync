@@ -22,6 +22,8 @@ type HarborSync struct {
 ProjectSelector specifies how to find projects in harbor and how to map those to secrets in namespaces.
 The `robotAccountSuffix` field defines what names the robot accounts have. The robot accounts always have a prefix of `robot$` - this is behavior is enforced by Harbor and might change in the future.
 
+**Note:** The robot account suffix **should** be unique per `HarborSync`. If you map projects twice using two different `HarborSync` configurations you end up with a race condition.
+
 ```go
 // HarborSyncSpec defines the desired state
 // how should harbor projects map to secrets in namespaces

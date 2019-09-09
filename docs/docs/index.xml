@@ -66,7 +66,7 @@ type HarborSync struct { metav1.TypeMeta `json:&amp;#34;,inline&amp;#34;` metav1
       
       <guid>http://moolen.github.io/harbor-sync/docs/usage/</guid>
       <description>Usage examples Map projects by name Map harbor project to several namespaces. This will create a robot account in my-project harbor project and sync the credentials into team-a and team-b&amp;rsquo;s namespace as secret central-project-token.
-kind: HaborSync metadata: name: my-project spec: type: Regex name: &amp;#34;my-project&amp;#34; # &amp;lt;--- specify harbor project robotAccountSuffix: &amp;#34;k8s-sync-robot&amp;#34; mapping: - type: Translate namespace: &amp;#34;team-a&amp;#34; # &amp;lt;--- target namespace secret: &amp;#34;my-project-pull-token&amp;#34; # &amp;lt;--- target secret name - type: Translate namespace: &amp;#34;team-b&amp;#34; secret: &amp;#34;my-project-pull-token&amp;#34; Map projects using a regular expression You can specify regular expressions to map a large number of projects to namespaces.</description>
+kind: HaborSync metadata: name: my-project spec: type: Regex name: &amp;#34;my-project&amp;#34; # &amp;lt;--- specify harbor project robotAccountSuffix: &amp;#34;k8s-sync-robot&amp;#34; # &amp;lt;--- should be unique per kind: HaborSync mapping: - type: Translate namespace: &amp;#34;team-a&amp;#34; # &amp;lt;--- target namespace secret: &amp;#34;my-project-pull-token&amp;#34; # &amp;lt;--- target secret name - type: Translate namespace: &amp;#34;team-b&amp;#34; secret: &amp;#34;my-project-pull-token&amp;#34; Map projects using a regular expression You can specify regular expressions to map a large number of projects to namespaces.</description>
     </item>
     
   </channel>
