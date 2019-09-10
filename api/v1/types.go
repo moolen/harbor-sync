@@ -96,14 +96,13 @@ type WebhookUpdatePayload struct {
 }
 
 // HarborSyncStatus defines the observed state of HarborSync
-type HarborSyncStatus struct {
-	RobotCredentials map[string]RobotAccountCredential `json:"credentials,omitempty"`
-}
+type HarborSyncStatus struct{}
 
 // RobotAccountCredential holds the robot account name & token to access the harbor API
 type RobotAccountCredential struct {
-	Name  string `json:"name"`
-	Token string `json:"token"`
+	Name      string `json:"name"`
+	CreatedAt int64  `json:"created_at"`
+	Token     string `json:"token"`
 }
 
 // +kubebuilder:object:root=true

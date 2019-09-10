@@ -32,6 +32,13 @@ $ kubectl create -f quick-install.yaml
 
 Also, take a look at the [kustomize setup](https://github.com/moolen/harbor-sync/tree/master/config) if you use kustomize. If you prefer to use helm for deployment feel free to contribute a helm chart.
 
+## Important Notes
+
+Harbor Sync Controller is stateful. Right now, it stores the credentials for the robot accounts on disk. This is necessary because there is no way to retrieve the token from the harbor API.
+But using a PVC to store the credentials not strictly necessary. If the reconciler does not find the credentials, it will simply re-create the account and distribute the credentials to the respective namespaces.
+
+So in a worst-case scenario (pod dies, credentials lost) the robot accounts will be recreated.
+
 ## Next steps
 
 You may want to check out the the [Usage Examples]({{< ref "usage.md" >}}) or [Configuration]({{< ref "configuration.md" >}}).

@@ -30,6 +30,7 @@ import (
 	"github.com/moolen/harbor-sync/pkg/controllers"
 	"github.com/moolen/harbor-sync/pkg/harbor"
 	"github.com/moolen/harbor-sync/pkg/harbor/repository"
+	"github.com/moolen/harbor-sync/pkg/store"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -54,9 +55,13 @@ func main() {
 	var enableLeaderElection bool
 	var harborPollInterval time.Duration
 	var forceSyncInterval time.Duration
+	var rotationInterval time.Duration
+	var storePath string
 	flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
+	flag.StringVar(&storePath, "store", "/data", "path to the credentials cache")
 	flag.DurationVar(&harborPollInterval, "harbor-poll-interval", time.Minute*5, "poll interval to update harbor projects & robot accounts")
-	flag.DurationVar(&forceSyncInterval, "force-sync-interval", time.Minute*10, "force reconciliation interval")
+	flag.DurationVar(&forceSyncInterval, "force-sync-interval", time.Minute*10, "set this to force reconciliation after a certain time")
+	flag.DurationVar(&rotationInterval, "rotation-interval", time.Minute*60, "set this to rotate the credentials after the specified time")
 	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
 		"Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.")
 	flag.Set("logtostderr", "true")
@@ -69,6 +74,12 @@ func main() {
 	log := glogr.New().WithName("controller")
 	ctrl.SetLogger(log)
 	defer glog.Flush()
+
+	store, err := store.New(storePath)
+	if err != nil {
+		setupLog.Error(err, "unable to create credential store")
+		os.Exit(1)
+	}
 
 	harborClient, err := harbor.New(harborAPIEndpoint, harborUsername, harborPassword)
 	if err != nil {
@@ -125,9 +136,11 @@ func main() {
 	syncCfgChanges := adapter.Run()
 
 	if err = (&controllers.HarborSyncConfigReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("reconciler"),
-		Harbor: harborRepo,
+		CredCache:        store,
+		RotationInterval: rotationInterval,
+		Client:           mgr.GetClient(),
+		Log:              ctrl.Log.WithName("reconciler"),
+		Harbor:           harborRepo,
 	}).SetupWithManager(mgr, syncCfgChanges); err != nil {
 		setupLog.Error(err, "unable to create controller")
 		os.Exit(1)

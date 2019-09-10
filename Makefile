@@ -25,11 +25,14 @@ docs-live: bin/hugo
 
 # Build harbor-sync-controller binary
 controller: generate fmt vet
-	go build -o bin/harbor-sync-controller ./main.go
+	go build -o bin/harbor-sync-controller ./cmd/harbor-sync-controller/main.go
+
+store: fmt vet
+	go build -o bin/store ./cmd/store/main.go
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
 run: generate fmt vet manifests
-	go run ./main.go
+	go run ./cmd/harbor-sync-controller/main.go
 
 # Install CRDs into a cluster
 install: kubectl-bin manifests

@@ -28,6 +28,7 @@ import (
 	crdv1 "github.com/moolen/harbor-sync/api/v1"
 	"github.com/moolen/harbor-sync/pkg/harbor"
 	harborfake "github.com/moolen/harbor-sync/pkg/harbor/fake"
+	"github.com/moolen/harbor-sync/pkg/store"
 	"github.com/moolen/harbor-sync/pkg/test"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -44,14 +45,18 @@ var _ = Describe("Controller", func() {
 	var fakeHarbor *harborfake.Client
 	var log logr.Logger
 	var hscr *HarborSyncConfigReconciler
+	var credStore *store.DiskStore
 
 	BeforeEach(func() {
 		test.EnsureNamespace(k8sClient, "team-recon-foo")
 		test.EnsureNamespace(k8sClient, "team-recon-bar")
 		fakeHarbor = &harborfake.Client{}
 		log = zap.Logger(true)
+		credStore, _ = store.NewTemp()
 		hscr = &HarborSyncConfigReconciler{
 			k8sClient,
+			time.Hour * 24,
+			credStore,
 			log,
 			fakeHarbor,
 		}
@@ -60,6 +65,7 @@ var _ = Describe("Controller", func() {
 	AfterEach(func() {
 		test.DeleteNamespace(k8sClient, "team-recon-foo")
 		test.DeleteNamespace(k8sClient, "team-recon-bar")
+		credStore.Reset()
 	})
 
 	Describe("Reconcile", func() {
@@ -78,7 +84,7 @@ var _ = Describe("Controller", func() {
 			{
 				Name: "robot$sync-bot",
 				// expires right now
-				ExpiresAt: int(time.Now().Unix()),
+				ExpiresAt: time.Now().Unix(),
 			},
 		}
 

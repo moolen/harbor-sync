@@ -91,21 +91,6 @@ spec:
           type: object
         status:
           description: HarborSyncStatus defines the observed state of HarborSync
-          properties:
-            credentials:
-              additionalProperties:
-                description: RobotAccountCredential holds the robot account name &
-                  token to access the harbor API
-                properties:
-                  name:
-                    type: string
-                  token:
-                    type: string
-                required:
-                - name
-                - token
-                type: object
-              type: object
           type: object
       type: object
   version: v1
@@ -256,6 +241,8 @@ spec:
       - args:
         - -harbor-poll-interval=2m
         - -force-sync-interval=5m
+        - -rotation-interval=10m
+        - -store=/data
         command:
         - /harbor-sync-controller
         env:
@@ -274,4 +261,25 @@ spec:
           requests:
             cpu: 10m
             memory: 20Mi
+        volumeMounts:
+        - mountPath: /data
+          name: harbor-sync-data
       terminationGracePeriodSeconds: 10
+      volumes:
+      - name: harbor-sync-data
+        persistentVolumeClaim:
+          claimName: harbor-sync-volume
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    app: harbor-sync
+  name: harbor-sync-volume
+  namespace: kube-system
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Mi

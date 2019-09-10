@@ -31,7 +31,7 @@ type Robot struct {
 
 	Name         string `json:"name"`
 	Description  string `json:"description"`
-	ExpiresAt    int    `json:"expires_at"`
+	ExpiresAt    int64  `json:"expires_at"`
 	CreationTime string `json:"creation_time"`
 	UpdateTime   string `json:"update_time"`
 }

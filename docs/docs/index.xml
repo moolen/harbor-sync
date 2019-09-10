@@ -16,7 +16,7 @@
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>http://moolen.github.io/harbor-sync/docs/configuration/</guid>
-      <description>Configuration Environment Variables    ENV DEFAULT DESCRIPTION     HARBOR_API_ENDPOINT - specify the harbor URL   HARBOR_USERNAME - set the username used for authenticating with harbor   HARBOR_PASSWORD - password for harbor authentication    Commandline flags Usage: -harbor-poll-interval duration poll interval to update harbor projects &amp;amp; robot accounts (default 5m) -force-sync-interval force reconciliation interval (default 10m) -v value log level for V logs -kubeconfig string Paths to a kubeconfig.</description>
+      <description>Configuration Environment Variables    ENV DEFAULT DESCRIPTION     HARBOR_API_ENDPOINT - specify the harbor URL   HARBOR_USERNAME - set the username used for authenticating with harbor   HARBOR_PASSWORD - password for harbor authentication    Commandline flags Usage: -harbor-poll-interval duration poll interval to update harbor projects &amp;amp; robot accounts (default 5m) -force-sync-interval force reconciliation interval (default 10m) -rotation-interval duration set this to rotate the credentials after the specified time (default 1h0m0s) -store string path to the credentials cache (default &amp;quot;/data&amp;quot;) -v value log level for V logs -kubeconfig string Paths to a kubeconfig.</description>
     </item>
     
     <item>
@@ -56,7 +56,7 @@ Installation Prerequisites Harbor You need a Harbor deployment and a user with e
       
       <guid>http://moolen.github.io/harbor-sync/docs/spec/</guid>
       <description>Spec SyncConfig This is the root-level type.
-type HarborSync struct { metav1.TypeMeta `json:&amp;#34;,inline&amp;#34;` metav1.ObjectMeta `json:&amp;#34;metadata,omitempty&amp;#34;` Spec HarborSyncSpec `json:&amp;#34;spec,omitempty&amp;#34;` // Status stores the plain credentials of the robot accounts 	// this is necessary, because the credentials are not accessible via API 	Status HarborSyncStatus `json:&amp;#34;status,omitempty&amp;#34;` } HarborSyncSpec ProjectSelector specifies how to find projects in harbor and how to map those to secrets in namespaces. The robotAccountSuffix field defines what names the robot accounts have.</description>
+type HarborSync struct { metav1.TypeMeta `json:&amp;#34;,inline&amp;#34;` metav1.ObjectMeta `json:&amp;#34;metadata,omitempty&amp;#34;` Spec HarborSyncSpec `json:&amp;#34;spec,omitempty&amp;#34;` } HarborSyncSpec ProjectSelector specifies how to find projects in harbor and how to map those to secrets in namespaces. The robotAccountSuffix field defines what names the robot accounts have. The robot accounts always have a prefix of robot$ - this is behavior is enforced by Harbor and might change in the future.</description>
     </item>
     
     <item>
