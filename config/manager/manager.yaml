@@ -1,4 +1,15 @@
 ---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: harbor-sync-volume
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Mi
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -7,6 +18,10 @@ spec:
   replicas: 1
   template:
     spec:
+      volumes:
+      - name: harbor-sync-data
+        persistentVolumeClaim:
+          claimName: harbor-sync-volume
       containers:
       - name: manager
         image: quay.io/moolen/harbor-sync:latest
@@ -15,6 +30,8 @@ spec:
         args:
         - -harbor-poll-interval=2m
         - -force-sync-interval=5m
+        - -rotation-interval=10m
+        - -store=/data
         env:
           - name: HARBOR_API_ENDPOINT
             value: http://harbor.example.com
@@ -22,6 +39,9 @@ spec:
             value: admin
           - name: HARBOR_PASSWORD
             value: Harbor12345
+        volumeMounts:
+        - name: harbor-sync-data
+          mountPath: /data
         resources:
           limits:
             cpu: 100m

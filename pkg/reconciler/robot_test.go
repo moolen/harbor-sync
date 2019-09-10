@@ -22,6 +22,7 @@ import (
 	crdv1 "github.com/moolen/harbor-sync/api/v1"
 	"github.com/moolen/harbor-sync/pkg/harbor"
 	harborfake "github.com/moolen/harbor-sync/pkg/harbor/fake"
+	"github.com/moolen/harbor-sync/pkg/store"
 	"github.com/moolen/harbor-sync/pkg/test"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -31,6 +32,7 @@ import (
 var _ = Describe("Controller", func() {
 
 	var harborClient harborfake.Client
+	credStore, _ := store.NewTemp()
 	mapping := crdv1.ProjectMapping{
 		Namespace: "foo",
 		Secret:    "foo",
@@ -54,12 +56,18 @@ var _ = Describe("Controller", func() {
 			GetRobotAccountsFunc: func(project harbor.Project) ([]harbor.Robot, error) {
 				return []harbor.Robot{
 					{
-						Name:      "robot$sync-bot",
-						ExpiresAt: int(time.Now().Unix()),
+						Name:         "robot$sync-bot",
+						CreationTime: "2222-01-02T15:04:05.999999999Z",
+						ExpiresAt:    time.Now().UTC().Add(time.Hour * 24).Unix(),
 					},
 				}, nil
 			},
 		}
+	})
+
+	AfterEach(func() {
+		err := credStore.Reset()
+		Expect(err).ToNot(HaveOccurred())
 	})
 
 	Describe("Robot", func() {
@@ -67,36 +75,45 @@ var _ = Describe("Controller", func() {
 		It("should reconcile robot accounts", func(done Done) {
 			cfg := test.EnsureHarborSyncConfigWithParams(k8sClient, "my-cfg", "my-project", &mapping, nil)
 			harborClient.GetRobotAccountsFunc = nil
-			credentials, changed, err := ReconcileRobotAccounts(harborClient, log, &cfg, harborProject, cfg.Spec.RobotAccountSuffix)
+			credentials, changed, err := ReconcileRobotAccounts(
+				harborClient,
+				credStore,
+				log,
+				harborProject,
+				cfg.Spec.RobotAccountSuffix,
+				time.Hour*1,
+			)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(changed).To(BeTrue())
-			Expect(*credentials).To(Equal(crdv1.RobotAccountCredential{
-				Name:  createdAccount.Name,
-				Token: createdAccount.Token,
-			}))
-			Expect(cfg.Status.RobotCredentials["foo"]).To(Equal(crdv1.RobotAccountCredential{
-				Name:  createdAccount.Name,
-				Token: createdAccount.Token,
-			}))
+			Expect(credentials.Name).To(Equal(createdAccount.Name))
+			Expect(credentials.Token).To(Equal(createdAccount.Token))
+			cacheCreds, err := credStore.Get("foo", "robot$sync-bot")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(cacheCreds.Name).To(Equal(createdAccount.Name))
+			Expect(cacheCreds.Token).To(Equal(createdAccount.Token))
 			close(done)
 		})
 
-		It("should use robot credentials from status field", func(done Done) {
+		It("should use robot credentials from store", func(done Done) {
 			cfg := test.EnsureHarborSyncConfigWithParams(k8sClient, "my-cfg", "my-project", &mapping, nil)
 			harborClient.CreateRobotAccountFunc = nil
-			cfg.Status.RobotCredentials = make(map[string]crdv1.RobotAccountCredential)
-			cfg.Status.RobotCredentials["foo"] = crdv1.RobotAccountCredential{Name: "robot$sync-bot", Token: "bar"}
-			credentials, changed, err := ReconcileRobotAccounts(harborClient, log, &cfg, harborProject, cfg.Spec.RobotAccountSuffix)
+			credStore.Set("foo", crdv1.RobotAccountCredential{Name: "robot$sync-bot", Token: "bar"})
+			credentials, changed, err := ReconcileRobotAccounts(
+				harborClient,
+				credStore,
+				log,
+				harborProject,
+				cfg.Spec.RobotAccountSuffix,
+				time.Hour*1,
+			)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(changed).To(BeFalse())
-			Expect(*credentials).To(Equal(crdv1.RobotAccountCredential{
-				Name:  "robot$sync-bot",
-				Token: "bar",
-			}))
-			Expect(cfg.Status.RobotCredentials["foo"]).To(Equal(crdv1.RobotAccountCredential{
-				Name:  "robot$sync-bot",
-				Token: "bar",
-			}))
+			Expect(credentials.Name).To(Equal("robot$sync-bot"))
+			Expect(credentials.Token).To(Equal("bar"))
+			cacheCreds, err := credStore.Get("foo", "robot$sync-bot")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(cacheCreds.Name).To(Equal("robot$sync-bot"))
+			Expect(cacheCreds.Token).To(Equal("bar"))
 			close(done)
 		})
 
@@ -107,19 +124,23 @@ var _ = Describe("Controller", func() {
 				deleteCalled = true
 				return nil
 			}
-			cfg.Status.RobotCredentials = nil
-			credentials, changed, err := ReconcileRobotAccounts(harborClient, log, &cfg, harborProject, cfg.Spec.RobotAccountSuffix)
+			credentials, changed, err := ReconcileRobotAccounts(
+				harborClient,
+				credStore,
+				log,
+				harborProject,
+				cfg.Spec.RobotAccountSuffix,
+				time.Hour*1,
+			)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(changed).To(BeTrue())
 			Expect(deleteCalled).To(BeTrue())
-			Expect(*credentials).To(Equal(crdv1.RobotAccountCredential{
-				Name:  createdAccount.Name,
-				Token: createdAccount.Token,
-			}))
-			Expect(cfg.Status.RobotCredentials["foo"]).To(Equal(crdv1.RobotAccountCredential{
-				Name:  createdAccount.Name,
-				Token: createdAccount.Token,
-			}))
+			Expect(credentials.Name).To(Equal(createdAccount.Name))
+			Expect(credentials.Token).To(Equal(createdAccount.Token))
+			cacheCreds, err := credStore.Get("foo", "robot$sync-bot")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(cacheCreds.Name).To(Equal(createdAccount.Name))
+			Expect(cacheCreds.Token).To(Equal(createdAccount.Token))
 			close(done)
 		})
 
@@ -128,9 +149,10 @@ var _ = Describe("Controller", func() {
 			harborClient.GetRobotAccountsFunc = func(project harbor.Project) ([]harbor.Robot, error) {
 				return []harbor.Robot{
 					{
-						Name:      "robot$sync-bot",
-						Disabled:  true,
-						ExpiresAt: int(time.Now().Add(time.Hour * 24).Unix()),
+						Name:         "robot$sync-bot",
+						Disabled:     true,
+						CreationTime: "2222-01-02T15:04:05.999999999Z",
+						ExpiresAt:    time.Now().UTC().Add(time.Hour * 24).Unix(),
 					},
 				}, nil
 			}
@@ -139,19 +161,24 @@ var _ = Describe("Controller", func() {
 				deleteCalled = true
 				return nil
 			}
-			cfg.Status.RobotCredentials = nil
-			credentials, changed, err := ReconcileRobotAccounts(harborClient, log, &cfg, harborProject, cfg.Spec.RobotAccountSuffix)
+			credStore.Set("foo", crdv1.RobotAccountCredential{Name: "robot$sync-bot", Token: "bar"})
+			credentials, changed, err := ReconcileRobotAccounts(
+				harborClient,
+				credStore,
+				log,
+				harborProject,
+				cfg.Spec.RobotAccountSuffix,
+				time.Hour*1,
+			)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(changed).To(BeTrue())
 			Expect(deleteCalled).To(BeTrue())
-			Expect(*credentials).To(Equal(crdv1.RobotAccountCredential{
-				Name:  createdAccount.Name,
-				Token: createdAccount.Token,
-			}))
-			Expect(cfg.Status.RobotCredentials["foo"]).To(Equal(crdv1.RobotAccountCredential{
-				Name:  createdAccount.Name,
-				Token: createdAccount.Token,
-			}))
+			Expect(credentials.Name).To(Equal(createdAccount.Name))
+			Expect(credentials.Token).To(Equal(createdAccount.Token))
+			cacheCreds, err := credStore.Get("foo", "robot$sync-bot")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(cacheCreds.Name).To(Equal(createdAccount.Name))
+			Expect(cacheCreds.Token).To(Equal(createdAccount.Token))
 			close(done)
 		})
 
@@ -160,8 +187,9 @@ var _ = Describe("Controller", func() {
 			harborClient.GetRobotAccountsFunc = func(project harbor.Project) ([]harbor.Robot, error) {
 				return []harbor.Robot{
 					{
-						Name:      "robot$sync-bot",
-						ExpiresAt: 0,
+						Name:         "robot$sync-bot",
+						CreationTime: "2222-01-02T15:04:05.999999999Z",
+						ExpiresAt:    0,
 					},
 				}, nil
 			}
@@ -170,19 +198,61 @@ var _ = Describe("Controller", func() {
 				deleteCalled = true
 				return nil
 			}
-			cfg.Status.RobotCredentials = nil
-			credentials, changed, err := ReconcileRobotAccounts(harborClient, log, &cfg, harborProject, cfg.Spec.RobotAccountSuffix)
+			credStore.Set("foo", crdv1.RobotAccountCredential{Name: "robot$sync-bot", Token: "bar"})
+			credentials, changed, err := ReconcileRobotAccounts(
+				harborClient,
+				credStore,
+				log,
+				harborProject,
+				cfg.Spec.RobotAccountSuffix,
+				time.Hour*1,
+			)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(changed).To(BeTrue())
 			Expect(deleteCalled).To(BeTrue())
-			Expect(*credentials).To(Equal(crdv1.RobotAccountCredential{
-				Name:  createdAccount.Name,
-				Token: createdAccount.Token,
-			}))
-			Expect(cfg.Status.RobotCredentials["foo"]).To(Equal(crdv1.RobotAccountCredential{
-				Name:  createdAccount.Name,
-				Token: createdAccount.Token,
-			}))
+			Expect(credentials.Name).To(Equal(createdAccount.Name))
+			Expect(credentials.Token).To(Equal(createdAccount.Token))
+			cacheCreds, err := credStore.Get("foo", "robot$sync-bot")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(cacheCreds.Name).To(Equal(createdAccount.Name))
+			Expect(cacheCreds.Token).To(Equal(createdAccount.Token))
+			close(done)
+		})
+
+		It("should rotate account", func(done Done) {
+			cfg := test.EnsureHarborSyncConfigWithParams(k8sClient, "my-cfg", "my-project", &mapping, nil)
+			harborClient.GetRobotAccountsFunc = func(project harbor.Project) ([]harbor.Robot, error) {
+				return []harbor.Robot{
+					{
+						Name:         "robot$sync-bot",
+						CreationTime: time.Now().UTC().Add(-time.Hour * 2).Format(time.RFC3339Nano),
+						ExpiresAt:    time.Now().UTC().Add(time.Hour * 24).Unix(),
+					},
+				}, nil
+			}
+			var deleteCalled bool
+			harborClient.DeleteRobotAccountFunc = func(project harbor.Project, robotID int) error {
+				deleteCalled = true
+				return nil
+			}
+			credStore.Set("foo", crdv1.RobotAccountCredential{Name: "robot$sync-bot", Token: "bar"})
+			credentials, changed, err := ReconcileRobotAccounts(
+				harborClient,
+				credStore,
+				log,
+				harborProject,
+				cfg.Spec.RobotAccountSuffix,
+				time.Hour*1,
+			)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(changed).To(BeTrue())
+			Expect(deleteCalled).To(BeTrue())
+			Expect(credentials.Name).To(Equal(createdAccount.Name))
+			Expect(credentials.Token).To(Equal(createdAccount.Token))
+			cacheCreds, err := credStore.Get("foo", "robot$sync-bot")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(cacheCreds.Name).To(Equal(createdAccount.Name))
+			Expect(cacheCreds.Token).To(Equal(createdAccount.Token))
 			close(done)
 		})
 	})

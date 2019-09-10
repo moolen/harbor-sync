@@ -10,10 +10,6 @@ type HarborSync struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	Spec   HarborSyncSpec   `json:"spec,omitempty"`
-
-	// Status stores the plain credentials of the robot accounts
-	// this is necessary, because the credentials are not accessible via API
-	Status HarborSyncStatus `json:"status,omitempty"`
 }
 ```
 

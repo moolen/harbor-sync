@@ -10,16 +10,19 @@ COPY go.sum go.sum
 RUN go mod download
 
 # Copy the go source
-COPY main.go main.go
 COPY api/ api/
 COPY pkg/ pkg/
+COPY cmd/ cmd/
 
 # Build
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -a -o harbor-sync-controller main.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -a -o harbor-sync-controller cmd/harbor-sync-controller/main.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -a -o store cmd/store/main.go
 
 # Use distroless as minimal base image to package the manager binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
-FROM gcr.io/distroless/static:latest
+FROM alpine:3.10
 WORKDIR /
+RUN apk add --update ca-certificates
 COPY --from=builder /workspace/harbor-sync-controller .
+COPY --from=builder /workspace/store .
 ENTRYPOINT ["/harbor-sync-controller"]

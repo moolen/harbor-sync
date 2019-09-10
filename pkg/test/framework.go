@@ -37,9 +37,6 @@ func EnsureHarborSyncConfig(cl client.Client, name string) crdv1.HarborSync {
 			RobotAccountSuffix: "sync-bot",
 			Mapping:            []crdv1.ProjectMapping{},
 		},
-		Status: crdv1.HarborSyncStatus{
-			RobotCredentials: map[string]crdv1.RobotAccountCredential{},
-		},
 	}
 	err := cl.Create(context.Background(), cfg)
 	if !apierrs.IsAlreadyExists(err) {
@@ -70,9 +67,6 @@ func EnsureHarborSyncConfigWithParams(
 			RobotAccountSuffix: "sync-bot",
 			Mapping:            mappings,
 			Webhook:            whc,
-		},
-		Status: crdv1.HarborSyncStatus{
-			RobotCredentials: map[string]crdv1.RobotAccountCredential{},
 		},
 	}
 	err := cl.Create(context.Background(), cfg)

@@ -27,13 +27,22 @@ import (
 
 const robotPrefix = "robot$"
 
+// CredentialStore is an interface that is used to store the credentials
+type CredentialStore interface {
+	Has(project, name string) bool
+	Get(project, name string) (*crdv1.RobotAccountCredential, error)
+	Set(project string, cred crdv1.RobotAccountCredential) error
+	Reset() error
+}
+
 // ReconcileRobotAccounts ensures that the required robot accounts exist in the given project
 func ReconcileRobotAccounts(
 	harborAPI harbor.API,
+	creds CredentialStore,
 	log logr.Logger,
-	syncConfig *crdv1.HarborSync,
 	project harbor.Project,
 	accountSuffix string,
+	rotationInterval time.Duration,
 ) (*crdv1.RobotAccountCredential, bool, error) {
 	robots, err := harborAPI.GetRobotAccounts(project)
 	if err != nil {
@@ -47,14 +56,17 @@ func ReconcileRobotAccounts(
 		// only one robot account will match
 		if robot.Name == addPrefix(accountSuffix) {
 			log.V(1).Info("robot account already exists", "project_name", project.Name, "robot_account", robot.Name)
-			fmt.Printf("creds: %#v", syncConfig.Status.RobotCredentials)
+			haveCredentials := creds.Has(project.Name, addPrefix(accountSuffix))
+			existingCreds, _ := creds.Get(project.Name, addPrefix(accountSuffix))
+
 			// case: robot account exists in harbor, but we do not have the credentials: re-create!
-			if syncConfig.Status.RobotCredentials == nil {
-				log.Info(fmt.Sprintf("sync config status.credentials does not exist, deleting robot account"))
+			if !haveCredentials {
+				log.Info(fmt.Sprintf("store does not have credentials, deleting robot account"))
 				err = harborAPI.DeleteRobotAccount(project, robot.ID)
 				if err != nil {
 					return nil, false, fmt.Errorf("could not delete robot account: %s", err.Error())
 				}
+				break
 			}
 
 			// case: robot is disabled: re-create
@@ -64,34 +76,33 @@ func ReconcileRobotAccounts(
 				if err != nil {
 					return nil, false, fmt.Errorf("could not delete robot account: %s", err.Error())
 				}
+				break
+			}
+
+			if shouldRotate(robot, rotationInterval) {
+				log.Info(fmt.Sprintf("robot account should rotate, deleting it"))
+				err = harborAPI.DeleteRobotAccount(project, robot.ID)
+				if err != nil {
+					return nil, false, fmt.Errorf("could not delete robot account: %s", err.Error())
+				}
+				break
 			}
 
 			// case: robot will expires soon: re-create
 			// TODO: implement token regeneration API once it is upstream available:
 			// https://github.com/goharbor/harbor/issues/8405
-			if expiresSoon(robot) {
+			if expiresSoon(robot, rotationInterval) {
 				log.Info(fmt.Sprintf("robot account expires soon, deleting it"))
 				err = harborAPI.DeleteRobotAccount(project, robot.ID)
 				if err != nil {
 					return nil, false, fmt.Errorf("could not delete robot account: %s", err.Error())
 				}
+				break
 			}
 
 			// good case: we have the credentials. do not re-create
-			cred := syncConfig.Status.RobotCredentials[project.Name]
-			if cred.Name == addPrefix(accountSuffix) {
-				log.V(1).Info("found credentials in status.credentials. will not delete robot account")
-				return &cred, false, nil
-			}
-
-			// case: creds do not exist. delete robot account
-			log.Info("sync config does not hold the credentials for robot account. deleting it.",
-				"project_name", project.Name,
-				"robot_account", robot.Name)
-			err = harborAPI.DeleteRobotAccount(project, robot.ID)
-			if err != nil {
-				return nil, false, fmt.Errorf("could not delete robot account: %s", err)
-			}
+			log.V(1).Info("found credentials in store. will not delete robot account")
+			return existingCreds, false, nil
 		}
 	}
 
@@ -100,18 +111,19 @@ func ReconcileRobotAccounts(
 	if err != nil {
 		return nil, false, fmt.Errorf("could not create robot account")
 	}
-	// store secret in status field
-	if syncConfig.Status.RobotCredentials == nil {
-		syncConfig.Status.RobotCredentials = make(map[string]crdv1.RobotAccountCredential)
-	}
-	log.V(1).Info("updating status field", "project_name", project.Name)
 
 	// check if old token exists: update it or append it to list
 	cred := crdv1.RobotAccountCredential{
-		Name:  res.Name,
-		Token: res.Token,
+		Name:      res.Name,
+		CreatedAt: time.Now().UTC().Unix(),
+		Token:     res.Token,
 	}
-	syncConfig.Status.RobotCredentials[project.Name] = cred
+
+	log.V(1).Info("updating store with credentials", "project_name", project.Name)
+	err = creds.Set(project.Name, cred)
+	if err != nil {
+		return nil, true, err
+	}
 	return &cred, true, nil
 }
 
@@ -119,8 +131,17 @@ func addPrefix(str string) string {
 	return robotPrefix + str
 }
 
-func expiresSoon(robot harbor.Robot) bool {
-	now := time.Now().Add(time.Hour) // TODO: make this configurable
-	expiry := time.Unix(int64(robot.ExpiresAt), 0)
+func shouldRotate(robot harbor.Robot, interval time.Duration) bool {
+	created, err := time.Parse(time.RFC3339Nano, robot.CreationTime)
+	if err != nil {
+		fmt.Printf("error parsing time: %s\n", err.Error())
+		return true
+	}
+	return created.UTC().Add(interval).Before(time.Now().UTC())
+}
+
+func expiresSoon(robot harbor.Robot, duration time.Duration) bool {
+	now := time.Now().UTC().Add(duration)
+	expiry := time.Unix(robot.ExpiresAt, 0)
 	return expiry.Before(now)
 }

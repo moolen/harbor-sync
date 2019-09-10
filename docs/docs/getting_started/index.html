@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="/harbor-sync/book.min.6c7317d2e8552a0ac3ea8fd4ba500c3dfb1cc9c74e7afd73eee6d729751fad30.css" integrity="sha256-bHMX0uhVKgrD6o/UulAMPfscycdOev1z7ubXKXUfrTA=">
 
 
-<script defer src="/harbor-sync/search.min.8a92ea0e2feecc31142657ad077389368b350e851ec3352c6b9b534dbd1754ac.js" integrity="sha256-ipLqDi/uzDEUJletB3OJNos1DoUewzUsa5tTTb0XVKw="></script>
+<script defer src="/harbor-sync/search.min.90da1efa1702440e55f25cd6fb858c44fff15abe4c073016de18030db74d13a5.js" integrity="sha256-kNoe&#43;hcCRA5V8lzW&#43;4WMRP/xWr5MBzAW3hgDDbdNE6U="></script>
 
 
 
@@ -197,6 +197,13 @@ $ vim quick-install.yaml
 $ kubectl create -f quick-install.yaml</code></pre></div>
 <p>Also, take a look at the <a href="https://github.com/moolen/harbor-sync/tree/master/config">kustomize setup</a> if you use kustomize. If you prefer to use helm for deployment feel free to contribute a helm chart.</p>
 
+<h2 id="important-notes">Important Notes</h2>
+
+<p>Harbor Sync Controller is stateful. Right now, it stores the credentials for the robot accounts on disk. This is necessary because there is no way to retrieve the token from the harbor API.
+But using a PVC to store the credentials not strictly necessary. If the reconciler does not find the credentials, it will simply re-create the account and distribute the credentials to the respective namespaces.</p>
+
+<p>So in a worst-case scenario (pod dies, credentials lost) the robot accounts will be recreated.</p>
+
 <h2 id="next-steps">Next steps</h2>
 
 <p>You may want to check out the the <a href="http://moolen.github.io/harbor-sync/docs/usage/">Usage Examples</a> or <a href="http://moolen.github.io/harbor-sync/docs/configuration/">Configuration</a>.</p>
@@ -225,6 +232,7 @@ $ kubectl create -f quick-install.yaml</code></pre></div>
 <li><a href="#kubernetes-cluster">Kubernetes Cluster</a></li>
 </ul></li>
 <li><a href="#deployment">Deployment</a></li>
+<li><a href="#important-notes">Important Notes</a></li>
 <li><a href="#next-steps">Next steps</a></li>
 </ul></li>
 </ul>

@@ -42,8 +42,10 @@ import (
 // HarborSyncConfigReconciler reconciles a HarborSyncConfig object
 type HarborSyncConfigReconciler struct {
 	client.Client
-	Log    logr.Logger
-	Harbor harbor.API
+	RotationInterval time.Duration
+	CredCache        reconciler.CredentialStore
+	Log              logr.Logger
+	Harbor           harbor.API
 }
 
 // +kubebuilder:rbac:groups="",resources=namespaces,verbs=get;list;watch
@@ -82,10 +84,12 @@ func (r *HarborSyncConfigReconciler) Reconcile(req ctrl.Request) (ctrl.Result, e
 	for _, project := range matches {
 		credential, changed, err := reconciler.ReconcileRobotAccounts(
 			r.Harbor,
+			r.CredCache,
 			log.WithName("reconcile_robots"),
-			&syncConfig,
 			project,
-			selector.RobotAccountSuffix)
+			selector.RobotAccountSuffix,
+			r.RotationInterval,
+		)
 		if err != nil {
 			log.Error(err, "error reconciling robot accounts")
 			continue

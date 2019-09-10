@@ -17,6 +17,10 @@ Usage:
         poll interval to update harbor projects & robot accounts (default 5m)
   -force-sync-interval
         force reconciliation interval (default 10m)
+  -rotation-interval duration
+        set this to rotate the credentials after the specified time (default 1h0m0s)
+  -store string
+        path to the credentials cache (default "/data")
   -v value
         log level for V logs
   -kubeconfig string
