@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="/harbor-sync/book.min.6c7317d2e8552a0ac3ea8fd4ba500c3dfb1cc9c74e7afd73eee6d729751fad30.css" integrity="sha256-bHMX0uhVKgrD6o/UulAMPfscycdOev1z7ubXKXUfrTA=">
 
 
-<script defer src="/harbor-sync/search.min.90da1efa1702440e55f25cd6fb858c44fff15abe4c073016de18030db74d13a5.js" integrity="sha256-kNoe&#43;hcCRA5V8lzW&#43;4WMRP/xWr5MBzAW3hgDDbdNE6U="></script>
+<script defer src="/harbor-sync/search.min.8e6dad2128f1f61732a940dbd05436e8f34a33d8af0c49d5d977c5ac3ddceaf2.js" integrity="sha256-jm2tISjx9hcyqUDb0FQ26PNKM9ivDEnV2XfFrD3c6vI="></script>
 
 
 
@@ -165,6 +165,8 @@ https://github.com/alex-shpak/hugo-book
 
 <h1 id="configuration">Configuration</h1>
 
+<p>The harbor-sync binary</p>
+
 <h2 id="environment-variables">Environment Variables</h2>
 
 <table>
@@ -197,23 +199,37 @@ https://github.com/alex-shpak/hugo-book
 </tbody>
 </table>
 
-<h2 id="commandline-flags">Commandline flags</h2>
+<h2 id="command-line-interface">Command Line Interface</h2>
 
-<pre><code>Usage:
-  -harbor-poll-interval duration
-        poll interval to update harbor projects &amp; robot accounts (default 5m)
-  -force-sync-interval
-        force reconciliation interval (default 10m)
-  -rotation-interval duration
-        set this to rotate the credentials after the specified time (default 1h0m0s)
-  -store string
-        path to the credentials cache (default &quot;/data&quot;)
-  -v value
-        log level for V logs
-  -kubeconfig string
-        Paths to a kubeconfig. Only required if out-of-cluster.
-  -metrics-addr string
-        The address the metric endpoint binds to. (default &quot;:8080&quot;)
+<p>The harbor-sync binary has two subcommands: <code>store</code> and <code>controller</code>. Store is for dumping the credentials on disk. Controller runs the controller.</p>
+
+<h3 id="standalone-mode">Standalone mode</h3>
+
+<p>The controller may run in <code>standalone</code> mode: This removes the necessity to run inside the Kubernetes cluster. In this mode <code>harbor-sync</code> reads a config file (see <code>kind: HarborSync</code>) and reconciles the robot accounts in Harbor. Webhooks will be called to propagate the credentials into other subsystems. The <code>mappings</code> field will have not effect - this is specific to Kubernetes.</p>
+
+<pre><code>Controller should run inside Kubernetes. It reconciles the desired state by managing the robot accounts in Harbor.
+
+Usage:
+  harbor-sync controller [flags]
+  harbor-sync controller [command]
+
+Available Commands:
+  standalone  Runs the controller in standalone mode. Does not require Kubernetes. It manages robot accounts and sends webhooks.
+
+Flags:
+      --force-sync-interval duration    set this to force reconciliation after a certain time (default 10m0s)
+      --harbor-api-endpoint string      URL to the Harbor API Endpoint
+      --harbor-password string          Harbor password to use for authentication
+      --harbor-poll-interval duration   poll interval to update harbor projects &amp; robot accounts (default 5m0s)
+      --harbor-username string          Harbor username to use for authentication
+  -h, --help                            help for controller
+      --metrics-addr string             The address the metric endpoint binds to. (default &quot;:8080&quot;)
+      --rotation-interval duration      set this to rotate the credentials after the specified time (default 1h0m0s)
+
+Global Flags:
+      --loglevel string   set the loglevel (default &quot;debug&quot;)
+      --store string      path in which the credentials will be stored (default &quot;/data&quot;)
+
 </code></pre>
 </article>
 
@@ -231,7 +247,10 @@ https://github.com/alex-shpak/hugo-book
 <li><a href="#configuration">Configuration</a>
 <ul>
 <li><a href="#environment-variables">Environment Variables</a></li>
-<li><a href="#commandline-flags">Commandline flags</a></li>
+<li><a href="#command-line-interface">Command Line Interface</a>
+<ul>
+<li><a href="#standalone-mode">Standalone mode</a></li>
+</ul></li>
 </ul></li>
 </ul>
 </nav>

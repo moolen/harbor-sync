@@ -26,7 +26,6 @@ import (
 	"github.com/moolen/harbor-sync/pkg/test"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
 var _ = Describe("Controller", func() {
@@ -46,7 +45,6 @@ var _ = Describe("Controller", func() {
 		Name:  "robot$sync-bot",
 		Token: "1234",
 	}
-	log := zap.Logger(false)
 
 	BeforeEach(func() {
 		harborClient = harborfake.Client{
@@ -78,7 +76,6 @@ var _ = Describe("Controller", func() {
 			credentials, changed, err := ReconcileRobotAccounts(
 				harborClient,
 				credStore,
-				log,
 				harborProject,
 				cfg.Spec.RobotAccountSuffix,
 				time.Hour*1,
@@ -101,7 +98,6 @@ var _ = Describe("Controller", func() {
 			credentials, changed, err := ReconcileRobotAccounts(
 				harborClient,
 				credStore,
-				log,
 				harborProject,
 				cfg.Spec.RobotAccountSuffix,
 				time.Hour*1,
@@ -127,7 +123,6 @@ var _ = Describe("Controller", func() {
 			credentials, changed, err := ReconcileRobotAccounts(
 				harborClient,
 				credStore,
-				log,
 				harborProject,
 				cfg.Spec.RobotAccountSuffix,
 				time.Hour*1,
@@ -165,7 +160,6 @@ var _ = Describe("Controller", func() {
 			credentials, changed, err := ReconcileRobotAccounts(
 				harborClient,
 				credStore,
-				log,
 				harborProject,
 				cfg.Spec.RobotAccountSuffix,
 				time.Hour*1,
@@ -202,7 +196,6 @@ var _ = Describe("Controller", func() {
 			credentials, changed, err := ReconcileRobotAccounts(
 				harborClient,
 				credStore,
-				log,
 				harborProject,
 				cfg.Spec.RobotAccountSuffix,
 				time.Hour*1,
@@ -239,7 +232,6 @@ var _ = Describe("Controller", func() {
 			credentials, changed, err := ReconcileRobotAccounts(
 				harborClient,
 				credStore,
-				log,
 				harborProject,
 				cfg.Spec.RobotAccountSuffix,
 				time.Hour*1,

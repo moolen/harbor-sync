@@ -20,7 +20,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-logr/logr"
+	log "github.com/sirupsen/logrus"
+
 	crdv1 "github.com/moolen/harbor-sync/api/v1"
 	"github.com/moolen/harbor-sync/pkg/harbor"
 )
@@ -39,7 +40,6 @@ type CredentialStore interface {
 func ReconcileRobotAccounts(
 	harborAPI harbor.API,
 	creds CredentialStore,
-	log logr.Logger,
 	project harbor.Project,
 	accountSuffix string,
 	rotationInterval time.Duration,
@@ -55,13 +55,19 @@ func ReconcileRobotAccounts(
 
 		// only one robot account will match
 		if robot.Name == addPrefix(accountSuffix) {
-			log.V(1).Info("robot account already exists", "project_name", project.Name, "robot_account", robot.Name)
+			log.WithFields(log.Fields{
+				"project_name":  project.Name,
+				"robot_account": robot.Name,
+			}).Info("robot account already exists")
 			haveCredentials := creds.Has(project.Name, addPrefix(accountSuffix))
 			existingCreds, _ := creds.Get(project.Name, addPrefix(accountSuffix))
 
 			// case: robot account exists in harbor, but we do not have the credentials: re-create!
 			if !haveCredentials {
-				log.Info(fmt.Sprintf("store does not have credentials, deleting robot account"))
+				log.WithFields(log.Fields{
+					"project_name":  project.Name,
+					"robot_account": robot.Name,
+				}).Info("store does not have credentials, deleting robot account")
 				err = harborAPI.DeleteRobotAccount(project, robot.ID)
 				if err != nil {
 					return nil, false, fmt.Errorf("could not delete robot account: %s", err.Error())
@@ -71,7 +77,10 @@ func ReconcileRobotAccounts(
 
 			// case: robot is disabled: re-create
 			if robot.Disabled == true {
-				log.Info(fmt.Sprintf("robot account is disabled, deleting it"))
+				log.WithFields(log.Fields{
+					"project_name":  project.Name,
+					"robot_account": robot.Name,
+				}).Info("robot account is disabled, deleting it")
 				err = harborAPI.DeleteRobotAccount(project, robot.ID)
 				if err != nil {
 					return nil, false, fmt.Errorf("could not delete robot account: %s", err.Error())
@@ -80,7 +89,10 @@ func ReconcileRobotAccounts(
 			}
 
 			if shouldRotate(robot, rotationInterval) {
-				log.Info(fmt.Sprintf("robot account should rotate, deleting it"))
+				log.WithFields(log.Fields{
+					"project_name":  project.Name,
+					"robot_account": robot.Name,
+				}).Info("robot account should rotate, deleting it")
 				err = harborAPI.DeleteRobotAccount(project, robot.ID)
 				if err != nil {
 					return nil, false, fmt.Errorf("could not delete robot account: %s", err.Error())
@@ -92,7 +104,10 @@ func ReconcileRobotAccounts(
 			// TODO: implement token regeneration API once it is upstream available:
 			// https://github.com/goharbor/harbor/issues/8405
 			if expiresSoon(robot, rotationInterval) {
-				log.Info(fmt.Sprintf("robot account expires soon, deleting it"))
+				log.WithFields(log.Fields{
+					"project_name":  project.Name,
+					"robot_account": robot.Name,
+				}).Info("robot account expires soon, deleting it")
 				err = harborAPI.DeleteRobotAccount(project, robot.ID)
 				if err != nil {
 					return nil, false, fmt.Errorf("could not delete robot account: %s", err.Error())
@@ -101,12 +116,18 @@ func ReconcileRobotAccounts(
 			}
 
 			// good case: we have the credentials. do not re-create
-			log.V(1).Info("found credentials in store. will not delete robot account")
+			log.WithFields(log.Fields{
+				"project_name":  project.Name,
+				"robot_account": robot.Name,
+			}).Info("found credentials in store. will not delete robot account")
 			return existingCreds, false, nil
 		}
 	}
 
-	log.Info("creating robot account", "project_name", project.Name, "robot_account_suffix", accountSuffix)
+	log.WithFields(log.Fields{
+		"project_name":         project.Name,
+		"robot_account_suffix": accountSuffix,
+	}).Info("creating robot account")
 	res, err := harborAPI.CreateRobotAccount(accountSuffix, project)
 	if err != nil {
 		return nil, false, fmt.Errorf("could not create robot account")
@@ -119,7 +140,10 @@ func ReconcileRobotAccounts(
 		Token:     res.Token,
 	}
 
-	log.V(1).Info("updating store with credentials", "project_name", project.Name)
+	log.WithFields(log.Fields{
+		"project_name":  project.Name,
+		"robot_account": res.Name,
+	}).Info("updating store with credentials")
 	err = creds.Set(project.Name, cred)
 	if err != nil {
 		return nil, true, err
@@ -134,7 +158,10 @@ func addPrefix(str string) string {
 func shouldRotate(robot harbor.Robot, interval time.Duration) bool {
 	created, err := time.Parse(time.RFC3339Nano, robot.CreationTime)
 	if err != nil {
-		fmt.Printf("error parsing time: %s\n", err.Error())
+		log.WithFields(log.Fields{
+			"robot":    robot.Name,
+			"interval": interval,
+		}).Errorf("error parsing time: %s\n", err.Error())
 		return true
 	}
 	return created.UTC().Add(interval).Before(time.Now().UTC())
