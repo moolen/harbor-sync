@@ -239,12 +239,13 @@ spec:
     spec:
       containers:
       - args:
-        - -harbor-poll-interval=2m
-        - -force-sync-interval=5m
-        - -rotation-interval=10m
-        - -store=/data
+        - controller
+        - --store=/data
+        - --harbor-poll-interval=2m
+        - --force-sync-interval=5m
+        - --rotation-interval=10m
         command:
-        - /harbor-sync-controller
+        - /harbor-sync
         env:
         - name: HARBOR_API_ENDPOINT
           value: http://harbor.example.com

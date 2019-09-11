@@ -26,12 +26,13 @@ spec:
       - name: manager
         image: quay.io/moolen/harbor-sync:latest
         command:
-        - /harbor-sync-controller
+        - /harbor-sync
         args:
-        - -harbor-poll-interval=2m
-        - -force-sync-interval=5m
-        - -rotation-interval=10m
-        - -store=/data
+        - controller
+        - --store=/data
+        - --harbor-poll-interval=2m
+        - --force-sync-interval=5m
+        - --rotation-interval=10m
         env:
           - name: HARBOR_API_ENDPOINT
             value: http://harbor.example.com

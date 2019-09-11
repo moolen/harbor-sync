@@ -24,7 +24,6 @@ import (
 	"net/http/httptest"
 	"time"
 
-	"github.com/go-logr/logr"
 	crdv1 "github.com/moolen/harbor-sync/api/v1"
 	"github.com/moolen/harbor-sync/pkg/harbor"
 	harborfake "github.com/moolen/harbor-sync/pkg/harbor/fake"
@@ -35,7 +34,6 @@ import (
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
 const defaultRobotSecretData = `{"auths":{"":{"username":"robot$sync-bot","password":"1234","auth":"cm9ib3Qkc3luYy1ib3Q6MTIzNA=="}}}`
@@ -43,7 +41,6 @@ const defaultRobotSecretData = `{"auths":{"":{"username":"robot$sync-bot","passw
 var _ = Describe("Controller", func() {
 
 	var fakeHarbor *harborfake.Client
-	var log logr.Logger
 	var hscr *HarborSyncConfigReconciler
 	var credStore *store.DiskStore
 
@@ -51,13 +48,11 @@ var _ = Describe("Controller", func() {
 		test.EnsureNamespace(k8sClient, "team-recon-foo")
 		test.EnsureNamespace(k8sClient, "team-recon-bar")
 		fakeHarbor = &harborfake.Client{}
-		log = zap.Logger(true)
 		credStore, _ = store.NewTemp()
 		hscr = &HarborSyncConfigReconciler{
 			k8sClient,
 			time.Hour * 24,
 			credStore,
-			log,
 			fakeHarbor,
 		}
 	})
