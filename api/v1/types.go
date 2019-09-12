@@ -42,7 +42,8 @@ type HarborSyncSpec struct {
 	// The Mapping contains the mapping from project to a secret in a namespace
 	Mapping []ProjectMapping `json:"mapping,omitempty"`
 
-	// Webhook is WIP
+	// Webhook contains a list of endpoints which will be called
+	// if the robot account changes (e..g automatic rotation, expired account, disabled...)
 	// +optional
 	Webhook []WebhookConfig `json:"webhook,omitempty"`
 }
@@ -89,7 +90,7 @@ type WebhookConfig struct {
 	Endpoint string `json:"endpoint"`
 }
 
-// WebhookUpdatePayload ...
+// WebhookUpdatePayload contains the new credentials of a robot account
 type WebhookUpdatePayload struct {
 	Project     string                 `json:"project"`
 	Credentials RobotAccountCredential `json:"credentials"`

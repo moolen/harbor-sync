@@ -41,9 +41,10 @@ type HarborSyncSpec struct {
 	RobotAccountSuffix string `json:"robotAccountSuffix"`
 
 	// The Mapping contains the mapping from project to a secret in a namespace
-	Mapping []ProjectMapping `json:"mapping"`
+	Mapping []ProjectMapping `json:"mapping,omitempty"`
 
-	// Webhook is WIP
+	// Webhook contains a list of endpoints which will be called
+	// if the robot account changes (e..g automatic rotation, expired account, disabled...)
 	// +optional
 	Webhook []WebhookConfig `json:"webhook,omitempty"`
 }
@@ -76,4 +77,30 @@ const (
 	// all matching namespaces
 	MatchMappingType MappingType = "Match"
 )
+```
+
+
+### Webhook
+
+Webhooks can be configured which will be called if the robot account credentials change. The only supported protocol is HTTP for now. Integrating other protocols is out of scope of this project. You should implement your own services that do the plumbing.
+
+```go
+// WebhookConfig defines how to call a webhook
+type WebhookConfig struct {
+	// Endpoint is a url
+	Endpoint string `json:"endpoint"`
+}
+
+// WebhookUpdatePayload ...
+type WebhookUpdatePayload struct {
+	Project     string                 `json:"project"`
+	Credentials RobotAccountCredential `json:"credentials"`
+}
+
+// RobotAccountCredential holds the robot account name & token to access the harbor API
+type RobotAccountCredential struct {
+	Name      string `json:"name"`
+	CreatedAt int64  `json:"created_at"`
+	Token     string `json:"token"`
+}
 ```
