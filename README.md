@@ -4,9 +4,9 @@
 Harbor Sync allows you to synchronize your Harbor robot accounts with your Kubernetes cluster.
 
 ## How it works
-This project extends the Kubernetes API by adding a Custom Resource `HarborSyncConfig` and a controller that implements a reconciliation loop. This loop takes care of creating and refreshing robot account tokens aswell as distributing the tokens into your namespaces as secrets.
+This project extends the Kubernetes API by adding a Custom Resource `HarborSync` and a controller that implements a reconciliation loop. This loop takes care of creating and refreshing robot account tokens aswell as distributing the tokens into your namespaces as secrets.
 
-A `HarborSyncConfig` defines which Harbor projects should be synced with which namespaces.
+A `HarborSync` defines which Harbor projects should be synced with which namespaces.
 
 ![Harbor Sync Controller](./docs_src/static/harbor-sync-overview.png)
 

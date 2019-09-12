@@ -14,8 +14,8 @@ You need a [Harbor](https://goharbor.io/#getting-started) deployment and a user 
 Also, check your harbor version. It must be `>= 1.8.0`. That's the version that [introduced robot accounts](https://github.com/goharbor/harbor/releases/tag/v1.8.0). Prior to that version it was not possible to create robot accounts.
 
 
-### Kubernetes Cluster
-The Controller runs in [Kubernetes](https://kubernetes.io) so you need a Kubernetes Cluster, too.
+### Execution Environment
+The Controller usually runs in [Kubernetes](https://kubernetes.io) so you need a Kubernetes Cluster, too. Also, you can run this controller in a [standalone mode]({{< ref "configuration.md" >}}).
 
 ## Deployment
 
@@ -34,8 +34,8 @@ Also, take a look at the [kustomize setup](https://github.com/moolen/harbor-sync
 
 ## Important Notes
 
-Harbor Sync Controller is stateful. Right now, it stores the credentials for the robot accounts on disk. This is necessary because there is no way to retrieve the token from the harbor API.
-But using a PVC to store the credentials not strictly necessary. If the reconciler does not find the credentials, it will simply re-create the account and distribute the credentials to the respective namespaces.
+Harbor Sync Controller is **stateful**. Right now, it stores the credentials for the robot accounts on disk. This is necessary because there is no way to retrieve the token from the harbor API.
+But using a dedicated volume to store the credentials is not strictly necessary. If the reconciler does not find the credentials, it will simply re-create the account and distribute the credentials to the respective namespaces.
 
 So in a worst-case scenario (pod dies, credentials lost) the robot accounts will be recreated.
 
