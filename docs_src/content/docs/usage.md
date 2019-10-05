@@ -5,13 +5,13 @@
 Map harbor project to several namespaces. This will create a robot account in `my-project` **harbor project** and sync the credentials into `team-a` and `team-b`'s namespace as secret `central-project-token`.
 
 ```yml
-kind: HaborSync
+kind: HarborSync
 metadata:
   name: my-project
 spec:
   type: Regex
   name: "my-project" # <--- specify harbor project
-  robotAccountSuffix: "k8s-sync-robot" # <--- should be unique per kind: HaborSync
+  robotAccountSuffix: "k8s-sync-robot" # <--- should be unique per kind: HarborSync
   mapping:
   - type: Translate
     namespace: "team-a" # <--- target namespace
@@ -28,7 +28,7 @@ spec:
 You can specify regular expressions to map a **large number** of projects to namespaces. This maps harbor teams with the prefix `team-`. E.g. Harbor project `team-frontend` maps to k8s namespace `team-frontend`. The secret's name will always be `my-pull-token`. Non-existent k8s namespaces will be ignored.
 
 ```yaml
-kind: HaborSync
+kind: HarborSync
 metadata:
   name: team-projects
 spec:
@@ -51,7 +51,7 @@ Use a `type: Match` on a mapping to say: hey, find namespaces using this **regul
 
 
 ```yaml
-kind: HaborSync
+kind: HarborSync
 metadata:
   name: platform-team
 spec:
@@ -111,7 +111,7 @@ Accept-Encoding: gzip
 HarborSync CRD configuration:
 
 ```yaml
-kind: HaborSync
+kind: HarborSync
 metadata:
   name: platform-team
 spec:
