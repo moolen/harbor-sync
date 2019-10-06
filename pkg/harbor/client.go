@@ -17,6 +17,7 @@ limitations under the License.
 package harbor
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -37,7 +38,7 @@ type Client struct {
 }
 
 // New constructs a new harbor API client
-func New(baseurl, username, password string) (*Client, error) {
+func New(baseurl, username, password string, skipVerifyTls bool) (*Client, error) {
 	if baseurl == "" {
 		return nil, fmt.Errorf("API baseurl can not be empty")
 	}
@@ -50,7 +51,16 @@ func New(baseurl, username, password string) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	c := &http.Client{}
+
+	if skipVerifyTls {
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+		c.Transport = tr
+	}
+
 	return &Client{
 		APIBaseURL: parsedBaseURL,
 		Username:   username,
