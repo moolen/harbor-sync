@@ -33,6 +33,7 @@ var (
 	harborAPIEndpoint  *string
 	harborAPIUsername  *string
 	harborAPIPassword  *string
+	skipVerifyTls      *bool
 )
 
 func init() {
@@ -50,6 +51,7 @@ func init() {
 	harborAPIEndpoint = flags.String("harbor-api-endpoint", "", "URL to the Harbor API Endpoint")
 	harborAPIUsername = flags.String("harbor-username", "", "Harbor username to use for authentication")
 	harborAPIPassword = flags.String("harbor-password", "", "Harbor password to use for authentication")
+	skipVerifyTls = flags.Bool("skip-tls-verification", false, "Skip TLS certificate verification")
 	metricsAddr = flags.String("metrics-addr", ":8080", "The address the metric endpoint binds to.")
 	flags.DurationVar(&harborPollInterval, "harbor-poll-interval", time.Minute*5, "poll interval to update harbor projects & robot accounts")
 	flags.DurationVar(&forceSyncInterval, "force-sync-interval", time.Minute*10, "set this to force reconciliation after a certain time")
@@ -75,6 +77,7 @@ var controllerCmd = &cobra.Command{
 			viper.GetString("harbor-api-endpoint"),
 			viper.GetString("harbor-username"),
 			viper.GetString("harbor-password"),
+			viper.GetBool("skip-tls-verification"),
 		)
 		if err != nil {
 			log.Error(err, "unable to create harbor client")

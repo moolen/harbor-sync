@@ -28,13 +28,13 @@ func TestInfo(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.Write([]byte(response))
 	}))
-	_, err := New(srv.URL, "", "")
+	_, err := New(srv.URL, "", "", false)
 	defer srv.Close()
 
 	if err == nil {
 		t.Errorf("client should not be constructed without user/password")
 	}
-	c, err := New(srv.URL, "foo", "bar")
+	c, err := New(srv.URL, "foo", "bar", false)
 	if err != nil {
 		t.Fail()
 	}
@@ -64,7 +64,7 @@ func TestProjects(t *testing.T) {
 		}
 	}))
 	defer srv.Close()
-	c, err := New(srv.URL, "foo", "bar")
+	c, err := New(srv.URL, "foo", "bar", false)
 	if err != nil {
 		t.Fail()
 	}
@@ -84,7 +84,7 @@ func TestRobots(t *testing.T) {
 		res.Write([]byte(`{"name":"foo","token":"bar"}`))
 	}))
 	defer srv.Close()
-	c, err := New(srv.URL, "foo", "bar")
+	c, err := New(srv.URL, "foo", "bar", false)
 	if err != nil {
 		t.Fail()
 	}
