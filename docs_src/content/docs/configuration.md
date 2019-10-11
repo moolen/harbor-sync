@@ -33,6 +33,7 @@ Flags:
       --force-sync-interval duration    set this to force reconciliation after a certain time (default 10m0s)
       --harbor-api-endpoint string      URL to the Harbor API Endpoint
       --harbor-password string          Harbor password to use for authentication
+      --skip-tls-verification boolean   Enables or disables secure TLS certificate verification (default "false")
       --harbor-poll-interval duration   poll interval to update harbor projects & robot accounts (default 5m0s)
       --harbor-username string          Harbor username to use for authentication
   -h, --help                            help for controller
