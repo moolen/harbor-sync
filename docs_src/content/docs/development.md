@@ -60,6 +60,9 @@ Please keep in mind:
 
 This projects follows the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0-beta.2/#summary) specification.
 
+### Documentation
+The documentation is hosted via GitHub pages. They are part of the repository and are located in the `docs` folder. If you change the documentation please regenerate the static site using `make docs` and include those changes in the PR too. You may find it useful to preview the compiled docs. Run `make docs-live` to view them in your browser.
+
 ### Reconciliation loop
 
 This is pretty straight-forward:
