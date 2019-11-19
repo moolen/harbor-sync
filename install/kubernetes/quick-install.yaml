@@ -73,7 +73,9 @@ spec:
               - Regex
               type: string
             webhook:
-              description: Webhook is WIP
+              description: Webhook contains a list of endpoints which will be called
+                if the robot account changes (e..g automatic rotation, expired account,
+                disabled...)
               items:
                 description: WebhookConfig defines how to call a webhook
                 properties:
