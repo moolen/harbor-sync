@@ -35,4 +35,5 @@ var (
 
 func init() {
 	metrics.Registry.Register(matchingProjectsGauge)
+	metrics.Registry.Register(webhookCounter)
 }
