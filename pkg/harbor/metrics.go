@@ -35,4 +35,5 @@ var (
 
 func init() {
 	metrics.Registry.Register(harborAPIRequestsHistogram)
+	metrics.Registry.Register(robotAccountExpiry)
 }
