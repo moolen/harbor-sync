@@ -154,7 +154,7 @@ func Reconcile(
 		if changed && len(cfg.Spec.Webhook) > 0 {
 			log.WithFields(log.Fields{
 				"robot_name": credential.Name,
-				"project": project.Name,
+				"project":    project.Name,
 			}).Info("robot account changed. sending webhook")
 			err = runWebhook(cfg.ObjectMeta.Name, cfg.Spec.Webhook, project, credential)
 			if err != nil {
