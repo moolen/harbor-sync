@@ -88,10 +88,6 @@ func (c *Client) CreateRobotAccount(name string, project Project) (*CreateRobotR
 				Resource: fmt.Sprintf("/project/%d/repository", project.ID),
 				Action:   "pull",
 			},
-			{
-				Resource: fmt.Sprintf("/project/%s/repository", project.Name),
-				Action:   "pull",
-			},
 		},
 	})
 
