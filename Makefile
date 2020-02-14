@@ -33,11 +33,11 @@ run: generate fmt vet manifests
 	go run ./main.go controller --store=bin/data
 
 # Install CRDs into a cluster
-install: kubectl-bin manifests
+install: bin/kubectl manifests
 	kustomize build config/crd | $(KUBECTL) apply -f -
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
-deploy: kubectl-bin manifests
+deploy: bin/kubectl manifests
 	cd config/manager && kustomize edit set image controller=${IMG}
 	kustomize build config/default | $(KUBECTL) apply -f -
 
