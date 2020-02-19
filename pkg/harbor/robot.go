@@ -21,6 +21,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"strings"
+
+	"github.com/blang/semver"
 )
 
 // Robot is the API response from Harbor
@@ -80,6 +83,18 @@ func (c *Client) GetRobotAccounts(project Project) ([]Robot, error) {
 
 // CreateRobotAccount creates a robot account and return the name and token
 func (c *Client) CreateRobotAccount(name string, pushAccess bool, project Project) (*CreateRobotResponse, error) {
+	// we have to check the api version before we make an API call
+	// there is a quirk with the harbor API w/ permissions
+	info, err := c.SystemInfo()
+	if err != nil {
+		return nil, fmt.Errorf("error calling system info: %s", err)
+	}
+	v, err := semver.Make(strings.TrimLeft(info.HarborVersion, "v"))
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse harbor version")
+	}
+	v.Pre = nil
+	v110 := semver.MustParse("1.10.0")
 	var robotResponse CreateRobotResponse
 	permissions := []CreateRobotRequestAccess{
 		{
@@ -88,11 +103,24 @@ func (c *Client) CreateRobotAccount(name string, pushAccess bool, project Projec
 		},
 	}
 
+	if v.LT(v110) {
+		permissions = append(permissions, CreateRobotRequestAccess{
+			Resource: fmt.Sprintf("/project/%s/repository", project.Name),
+			Action:   "pull",
+		})
+	}
+
 	if pushAccess {
 		permissions = append(permissions, CreateRobotRequestAccess{
 			Resource: fmt.Sprintf("/project/%d/repository", project.ID),
 			Action:   "push",
 		})
+		if v.LT(v110) {
+			permissions = append(permissions, CreateRobotRequestAccess{
+				Resource: fmt.Sprintf("/project/%s/repository", project.Name),
+				Action:   "push",
+			})
+		}
 	}
 
 	reqBody, err := json.Marshal(CreateRobotRequest{
