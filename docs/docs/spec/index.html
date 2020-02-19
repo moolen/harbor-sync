@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="/harbor-sync/book.min.6c7317d2e8552a0ac3ea8fd4ba500c3dfb1cc9c74e7afd73eee6d729751fad30.css" integrity="sha256-bHMX0uhVKgrD6o/UulAMPfscycdOev1z7ubXKXUfrTA=">
 
 
-<script defer src="/harbor-sync/search.min.bf977f26b69e5249f24685ae416d1e585c731068752326e3645d7e290acbc3bc.js" integrity="sha256-v5d/JraeUknyRoWuQW0eWFxzEGh1IybjZF1&#43;KQrLw7w="></script>
+<script defer src="/harbor-sync/search.min.61b1394f382f6dcbabcce46096ace6a172d7a04e65cb0cbb0a9f6419cf9e539e.js" integrity="sha256-YbE5TzgvbcurzORglqzmoXLXoE5lywy7Cp9kGc&#43;eU54="></script>
 
 
 
@@ -192,9 +192,12 @@ The <code>robotAccountSuffix</code> field defines what names the robot accounts 
 	<span style="color:#75715e">// ProjectName specifies the project name
 </span><span style="color:#75715e"></span>	<span style="color:#a6e22e">ProjectName</span> <span style="color:#66d9ef">string</span> <span style="color:#e6db74">`json:&#34;name&#34;`</span>
 
-	<span style="color:#75715e">// TODO:
-</span><span style="color:#75715e"></span>	<span style="color:#75715e">// AccessType: ReadOnly|ReadWrite
-</span><span style="color:#75715e"></span>
+	<span style="color:#75715e">// PushAccess allows the robot account to push images, too. defaults to false.
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">// As of now we can not tell what permissions a robot account has. The user
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">// has to wait for the next rotation until the robot account has the new permissions.
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">// Alternatively, you can re-create your HarborSync spec. This forces a rotation.
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">PushAccess</span> <span style="color:#66d9ef">bool</span> <span style="color:#e6db74">`json:&#34;pushAccess&#34;`</span>
+
 	<span style="color:#75715e">// The RobotAccountSuffix specifies the suffix to use when creating a new robot account
 </span><span style="color:#75715e"></span>	<span style="color:#75715e">// +kubebuilder:validation:MinLength=4
 </span><span style="color:#75715e"></span>	<span style="color:#a6e22e">RobotAccountSuffix</span> <span style="color:#66d9ef">string</span> <span style="color:#e6db74">`json:&#34;robotAccountSuffix&#34;`</span>
