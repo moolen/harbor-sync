@@ -17,7 +17,9 @@ limitations under the License.
 package harbor
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -34,17 +36,18 @@ func TestInfo(t *testing.T) {
 	if err == nil {
 		t.Errorf("client should not be constructed without user/password")
 	}
+	// info
+	response = `{"harbor_version":"1.9.3"}`
 	c, err := New(srv.URL, "foo", "bar", false)
 	if err != nil {
 		t.Fail()
 	}
-	// info
-	response = `{"harbor_version":"1.2.3"}`
+
 	info, err := c.SystemInfo()
 	if err != nil {
 		t.Fail()
 	}
-	if info.HarborVersion != "1.2.3" {
+	if info.HarborVersion != "1.9.3" {
 		t.Errorf("incorrect harbor version returned")
 	}
 }
@@ -77,11 +80,21 @@ func TestProjects(t *testing.T) {
 	}
 }
 
-func TestRobots(t *testing.T) {
+func TestRobotsPre110(t *testing.T) {
 	var srv *httptest.Server
 	srv = httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(201)
-		res.Write([]byte(`{"name":"foo","token":"bar"}`))
+		if req.URL.Path == "/api/systeminfo" {
+			res.Write([]byte(`{"harbor_version":"1.9.3"}`))
+		} else {
+			body, _ := ioutil.ReadAll(req.Body)
+			var r CreateRobotRequest
+			json.Unmarshal(body, &r)
+			if len(r.Access) != 2 {
+				t.Errorf("wrong number of permissions. expected 2, found %d. body: %#v", len(r.Access), r)
+			}
+			res.Write([]byte(`{"name":"foo","token":"bar"}`))
+		}
 	}))
 	defer srv.Close()
 	c, err := New(srv.URL, "foo", "bar", false)
@@ -89,6 +102,125 @@ func TestRobots(t *testing.T) {
 		t.Fail()
 	}
 	robot, err := c.CreateRobotAccount("foo", false, Project{Name: "example"})
+	fmt.Printf("vals: %#v %#v", robot, err)
+	if err != nil {
+		t.FailNow()
+	}
+	if robot.Name != "foo" {
+		t.Fail()
+	}
+	if robot.Token != "bar" {
+		t.Fail()
+	}
+}
+
+func TestRobotsPushPre110(t *testing.T) {
+	var srv *httptest.Server
+	srv = httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(201)
+		if req.URL.Path == "/api/systeminfo" {
+			res.Write([]byte(`{"harbor_version":"1.9.0"}`))
+		} else {
+			body, _ := ioutil.ReadAll(req.Body)
+			var r CreateRobotRequest
+			json.Unmarshal(body, &r)
+			if len(r.Access) != 4 {
+				t.Errorf("wrong number of permissions. expected 2, found %d. body: %#v", len(r.Access), r)
+			}
+			if r.Access[0].Action != "pull" {
+				t.Errorf("unexpected action: %#v", r.Access[0])
+			}
+			if r.Access[1].Action != "pull" {
+				t.Errorf("unexpected action: %#v", r.Access[1])
+			}
+			if r.Access[2].Action != "push" {
+				t.Errorf("unexpected action: %#v", r.Access[2])
+			}
+			if r.Access[3].Action != "push" {
+				t.Errorf("unexpected action: %#v", r.Access[3])
+			}
+			res.Write([]byte(`{"name":"foo","token":"bar"}`))
+		}
+	}))
+	defer srv.Close()
+	c, err := New(srv.URL, "foo", "bar", false)
+	if err != nil {
+		t.Fail()
+	}
+	robot, err := c.CreateRobotAccount("foo", true, Project{Name: "example"})
+	fmt.Printf("vals: %#v %#v", robot, err)
+	if err != nil {
+		t.FailNow()
+	}
+	if robot.Name != "foo" {
+		t.Fail()
+	}
+	if robot.Token != "bar" {
+		t.Fail()
+	}
+}
+
+func TestRobotsPost110(t *testing.T) {
+	var srv *httptest.Server
+	srv = httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(201)
+		if req.URL.Path == "/api/systeminfo" {
+			res.Write([]byte(`{"harbor_version":"1.10.0"}`))
+		} else {
+			body, _ := ioutil.ReadAll(req.Body)
+			var r CreateRobotRequest
+			json.Unmarshal(body, &r)
+			if len(r.Access) != 1 {
+				t.Errorf("wrong number of permissions. expected 2, found %d body: %#v", len(r.Access), r)
+			}
+			res.Write([]byte(`{"name":"foo","token":"bar"}`))
+		}
+	}))
+	defer srv.Close()
+	c, err := New(srv.URL, "foo", "bar", false)
+	if err != nil {
+		t.Fail()
+	}
+	robot, err := c.CreateRobotAccount("foo", false, Project{Name: "example"})
+	fmt.Printf("vals: %#v %#v", robot, err)
+	if err != nil {
+		t.FailNow()
+	}
+	if robot.Name != "foo" {
+		t.Fail()
+	}
+	if robot.Token != "bar" {
+		t.Fail()
+	}
+}
+func TestRobotsPushPost110(t *testing.T) {
+	var srv *httptest.Server
+	srv = httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(201)
+		if req.URL.Path == "/api/systeminfo" {
+			res.Write([]byte(`{"harbor_version":"1.10.0"}`))
+		} else {
+			body, _ := ioutil.ReadAll(req.Body)
+			var r CreateRobotRequest
+			json.Unmarshal(body, &r)
+			if len(r.Access) != 2 {
+				t.Errorf("wrong number of permissions. expected 2, found %d. body: %#v", len(r.Access), r)
+			}
+			if r.Access[0].Action != "pull" {
+				t.Errorf("unexpected action: %#v", r.Access[0])
+			}
+			if r.Access[1].Action != "push" {
+				t.Errorf("unexpected action: %#v", r.Access[1])
+			}
+			res.Write([]byte(`{"name":"foo","token":"bar"}`))
+		}
+	}))
+	defer srv.Close()
+	c, err := New(srv.URL, "foo", "bar", false)
+	if err != nil {
+		t.Fail()
+	}
+	robot, err := c.CreateRobotAccount("foo", true, Project{Name: "example"})
 	fmt.Printf("vals: %#v %#v", robot, err)
 	if err != nil {
 		t.FailNow()
