@@ -38,7 +38,7 @@ type Client struct {
 }
 
 // New constructs a new harbor API client
-func New(baseurl, username, password string, skipVerifyTls bool) (*Client, error) {
+func New(baseurl, username, password string, skipVerifyTLS bool) (*Client, error) {
 	if baseurl == "" {
 		return nil, fmt.Errorf("API baseurl can not be empty")
 	}
@@ -54,7 +54,7 @@ func New(baseurl, username, password string, skipVerifyTls bool) (*Client, error
 
 	c := &http.Client{}
 
-	if skipVerifyTls {
+	if skipVerifyTLS {
 		tr := &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		}
