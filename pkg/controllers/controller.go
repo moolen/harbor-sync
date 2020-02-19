@@ -144,6 +144,7 @@ func Reconcile(
 			store,
 			project,
 			selector.RobotAccountSuffix,
+			cfg.Spec.PushAccess,
 			rotationInterval,
 		)
 		if err != nil {

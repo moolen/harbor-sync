@@ -84,7 +84,7 @@ var _ = Describe("Controller", func() {
 		}
 
 		BeforeEach(func() {
-			fakeHarbor.CreateRobotAccountFunc = func(name string, project harbor.Project) (*harbor.CreateRobotResponse, error) {
+			fakeHarbor.CreateRobotAccountFunc = func(name string, pushAccess bool, project harbor.Project) (*harbor.CreateRobotResponse, error) {
 				return &harbor.CreateRobotResponse{
 					Name:  "robot$sync-bot",
 					Token: "1234",

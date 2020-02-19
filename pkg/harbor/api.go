@@ -21,7 +21,7 @@ package harbor
 type API interface {
 	ListProjects() ([]Project, error)
 	GetRobotAccounts(project Project) ([]Robot, error)
-	CreateRobotAccount(name string, project Project) (*CreateRobotResponse, error)
+	CreateRobotAccount(name string, pushAccess bool, project Project) (*CreateRobotResponse, error)
 	DeleteRobotAccount(project Project, robotID int) error
 	BaseURL() string
 }

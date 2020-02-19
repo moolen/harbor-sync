@@ -26,7 +26,7 @@ type Client struct {
 	BaseURLFunc            func() string
 	ListProjectsFunc       func() ([]harbor.Project, error)
 	GetRobotAccountsFunc   func(project harbor.Project) ([]harbor.Robot, error)
-	CreateRobotAccountFunc func(name string, project harbor.Project) (*harbor.CreateRobotResponse, error)
+	CreateRobotAccountFunc func(name string, pushAccess bool, project harbor.Project) (*harbor.CreateRobotResponse, error)
 	DeleteRobotAccountFunc func(project harbor.Project, robotID int) error
 }
 
@@ -47,9 +47,9 @@ func (f Client) GetRobotAccounts(project harbor.Project) ([]harbor.Robot, error)
 }
 
 // CreateRobotAccount ...
-func (f Client) CreateRobotAccount(name string, project harbor.Project) (*harbor.CreateRobotResponse, error) {
+func (f Client) CreateRobotAccount(name string, pushAccess bool, project harbor.Project) (*harbor.CreateRobotResponse, error) {
 	if f.CreateRobotAccountFunc != nil {
-		return f.CreateRobotAccountFunc(name, project)
+		return f.CreateRobotAccountFunc(name, pushAccess, project)
 	}
 	return &harbor.CreateRobotResponse{}, nil
 }

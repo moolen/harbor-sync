@@ -48,7 +48,7 @@ var _ = Describe("Controller", func() {
 
 	BeforeEach(func() {
 		harborClient = harborfake.Client{
-			CreateRobotAccountFunc: func(name string, project harbor.Project) (*harbor.CreateRobotResponse, error) {
+			CreateRobotAccountFunc: func(name string, pushAccess bool, project harbor.Project) (*harbor.CreateRobotResponse, error) {
 				return createdAccount, nil
 			},
 			GetRobotAccountsFunc: func(project harbor.Project) ([]harbor.Robot, error) {
@@ -78,6 +78,7 @@ var _ = Describe("Controller", func() {
 				credStore,
 				harborProject,
 				cfg.Spec.RobotAccountSuffix,
+				false,
 				time.Hour*1,
 			)
 			Expect(err).ToNot(HaveOccurred())
@@ -100,6 +101,7 @@ var _ = Describe("Controller", func() {
 				credStore,
 				harborProject,
 				cfg.Spec.RobotAccountSuffix,
+				false,
 				time.Hour*1,
 			)
 			Expect(err).ToNot(HaveOccurred())
@@ -125,6 +127,7 @@ var _ = Describe("Controller", func() {
 				credStore,
 				harborProject,
 				cfg.Spec.RobotAccountSuffix,
+				false,
 				time.Hour*1,
 			)
 			Expect(err).ToNot(HaveOccurred())
@@ -162,6 +165,7 @@ var _ = Describe("Controller", func() {
 				credStore,
 				harborProject,
 				cfg.Spec.RobotAccountSuffix,
+				false,
 				time.Hour*1,
 			)
 			Expect(err).ToNot(HaveOccurred())
@@ -198,6 +202,7 @@ var _ = Describe("Controller", func() {
 				credStore,
 				harborProject,
 				cfg.Spec.RobotAccountSuffix,
+				false,
 				time.Hour*1,
 			)
 			Expect(err).ToNot(HaveOccurred())
@@ -234,6 +239,7 @@ var _ = Describe("Controller", func() {
 				credStore,
 				harborProject,
 				cfg.Spec.RobotAccountSuffix,
+				false,
 				time.Hour*1,
 			)
 			Expect(err).ToNot(HaveOccurred())

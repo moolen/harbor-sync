@@ -79,16 +79,25 @@ func (c *Client) GetRobotAccounts(project Project) ([]Robot, error) {
 }
 
 // CreateRobotAccount creates a robot account and return the name and token
-func (c *Client) CreateRobotAccount(name string, project Project) (*CreateRobotResponse, error) {
+func (c *Client) CreateRobotAccount(name string, pushAccess bool, project Project) (*CreateRobotResponse, error) {
 	var robotResponse CreateRobotResponse
-	reqBody, err := json.Marshal(CreateRobotRequest{
-		Name: name,
-		Access: []CreateRobotRequestAccess{
-			{
-				Resource: fmt.Sprintf("/project/%d/repository", project.ID),
-				Action:   "pull",
-			},
+	permissions := []CreateRobotRequestAccess{
+		{
+			Resource: fmt.Sprintf("/project/%d/repository", project.ID),
+			Action:   "pull",
 		},
+	}
+
+	if pushAccess {
+		permissions = append(permissions, CreateRobotRequestAccess{
+			Resource: fmt.Sprintf("/project/%d/repository", project.ID),
+			Action:   "push",
+		})
+	}
+
+	reqBody, err := json.Marshal(CreateRobotRequest{
+		Name:   name,
+		Access: permissions,
 	})
 
 	if err != nil {

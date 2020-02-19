@@ -32,8 +32,11 @@ type HarborSyncSpec struct {
 	// ProjectName specifies the project name
 	ProjectName string `json:"name"`
 
-	// TODO:
-	// AccessType: ReadOnly|ReadWrite
+	// PushAccess allows the robot account to push images, too. defaults to false.
+	// As of now we can not tell what permissions a robot account has. The user
+	// has to wait for the next rotation until the robot account has the new permissions.
+	// Alternatively, you can re-create your HarborSync spec. This forces a rotation.
+	PushAccess bool `json:"pushAccess"`
 
 	// The RobotAccountSuffix specifies the suffix to use when creating a new robot account
 	// +kubebuilder:validation:MinLength=4

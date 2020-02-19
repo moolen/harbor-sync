@@ -42,6 +42,7 @@ func ReconcileRobotAccounts(
 	creds CredentialStore,
 	project harbor.Project,
 	accountSuffix string,
+	pushAccess bool,
 	rotationInterval time.Duration,
 ) (*crdv1.RobotAccountCredential, bool, error) {
 	robots, err := harborAPI.GetRobotAccounts(project)
@@ -88,6 +89,8 @@ func ReconcileRobotAccounts(
 				break
 			}
 
+			// we can not tell what permissions a robot account has
+			// hence we have to rely on a rotation of the robot
 			if shouldRotate(robot, rotationInterval) {
 				log.WithFields(log.Fields{
 					"project_name":  project.Name,
@@ -128,7 +131,7 @@ func ReconcileRobotAccounts(
 		"project_name":         project.Name,
 		"robot_account_suffix": accountSuffix,
 	}).Info("creating robot account")
-	res, err := harborAPI.CreateRobotAccount(accountSuffix, project)
+	res, err := harborAPI.CreateRobotAccount(accountSuffix, pushAccess, project)
 	if err != nil {
 		return nil, false, fmt.Errorf("could not create robot account")
 	}

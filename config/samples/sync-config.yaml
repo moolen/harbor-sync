@@ -6,6 +6,7 @@ spec:
   type: Regex
   name: team-(foo|bar|baz|bang)
   robotAccountSuffix: k8s-robot
+  pushAccess: true
   mapping:
   - type: Translate
     namespace: team-$1 # references harbor project name from above: team-foo, team-bar, ...

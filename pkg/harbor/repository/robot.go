@@ -26,8 +26,8 @@ func (r *Repository) GetRobotAccounts(project harbor.Project) ([]harbor.Robot, e
 }
 
 // CreateRobotAccount creates a robot account and updates the internal cache
-func (r *Repository) CreateRobotAccount(name string, project harbor.Project) (*harbor.CreateRobotResponse, error) {
-	res, err := r.Client.CreateRobotAccount(name, project)
+func (r *Repository) CreateRobotAccount(name string, pushAccess bool, project harbor.Project) (*harbor.CreateRobotResponse, error) {
+	res, err := r.Client.CreateRobotAccount(name, pushAccess, project)
 	if err != nil {
 		return res, err
 	}
