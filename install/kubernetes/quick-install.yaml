@@ -60,6 +60,13 @@ spec:
             name:
               description: ProjectName specifies the project name
               type: string
+            pushAccess:
+              description: PushAccess allows the robot account to push images, too.
+                defaults to false. As of now we can not tell what permissions a robot
+                account has. The user has to wait for the next rotation until the
+                robot account has the new permissions. Alternatively, you can re-create
+                your HarborSync spec. This forces a rotation.
+              type: boolean
             robotAccountSuffix:
               description: The RobotAccountSuffix specifies the suffix to use when
                 creating a new robot account
@@ -88,6 +95,7 @@ spec:
               type: array
           required:
           - name
+          - pushAccess
           - robotAccountSuffix
           - type
           type: object
