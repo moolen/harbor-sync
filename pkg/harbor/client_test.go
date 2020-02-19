@@ -88,7 +88,7 @@ func TestRobots(t *testing.T) {
 	if err != nil {
 		t.Fail()
 	}
-	robot, err := c.CreateRobotAccount("foo", Project{Name: "example"})
+	robot, err := c.CreateRobotAccount("foo", false, Project{Name: "example"})
 	fmt.Printf("vals: %#v %#v", robot, err)
 	if err != nil {
 		t.FailNow()
