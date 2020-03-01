@@ -43,6 +43,7 @@ if ! command -v kind --version &> /dev/null; then
 fi
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd $DIR
 export K8S_VERSION=${K8S_VERSION:-v1.17.2@sha256:59df31fc61d1da5f46e8a61ef612fa53d3f9140f82419d1ef1a6b9656c6b737c}
 export DOCKER_CLI_EXPERIMENTAL=enabled
 
@@ -64,7 +65,7 @@ echo "building container"
 
 docker build -t fake-harbor-api:dev ${DIR}/../fake-harbor-api
 make -C ${DIR}/../../ docker-build IMG=harbor-sync:dev
-make e2e-image IMG=harbor-sync-e2e:dev
+make -C ${DIR} e2e-image IMG=harbor-sync-e2e:dev
 
 echo "copying docker images to cluster..."
 kind load docker-image --name="${KIND_CLUSTER_NAME}" fake-harbor-api:dev
