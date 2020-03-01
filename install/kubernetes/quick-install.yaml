@@ -56,14 +56,10 @@ spec:
         status:
           description: HarborRobotAccountStatus defines the observed state of HarborRobotAccount
           properties:
-            last_status:
-              format: int64
-              type: integer
             last_sync:
               format: int64
               type: integer
           required:
-          - last_status
           - last_sync
           type: object
       type: object
