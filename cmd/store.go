@@ -3,9 +3,10 @@ package cmd
 import (
 	"os"
 
-	"github.com/moolen/harbor-sync/pkg/store"
+	store "github.com/moolen/harbor-sync/pkg/store/disk"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 func init() {
@@ -27,7 +28,7 @@ var listCmd = &cobra.Command{
 	Short: "Prints the store information",
 	Long:  `The store contains the robot accounts. This command outputs the contents of the store.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		store, err := store.New(storePath)
+		store, err := store.New(viper.GetString("store"))
 		if err != nil {
 			log.Errorf("unable to create credential store: %s", err)
 			os.Exit(1)

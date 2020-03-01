@@ -14,7 +14,7 @@ var rootCmd = &cobra.Command{
 	Short: "Harbor Sync allows you to synchronize your Harbor robot accounts with your Kubernetes cluster.",
 	Long:  `Harbor Sync may run inside the kubernetes cluster (use controller subcommand) or standalone.`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		lvl, err := log.ParseLevel(logLevel)
+		lvl, err := log.ParseLevel(viper.GetString("loglevel"))
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -25,15 +25,14 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-var (
-	storePath string
-	logLevel  string
-)
-
 func init() {
 	viper.AutomaticEnv()
-	rootCmd.PersistentFlags().StringVar(&logLevel, "loglevel", "debug", "set the loglevel")
-	rootCmd.PersistentFlags().StringVar(&storePath, "store", "/data", "path in which the credentials will be stored")
+	flags := rootCmd.PersistentFlags()
+	flags.String("loglevel", "info", "set the loglevel")
+	flags.String("store", "/data", "path in which the credentials will be stored")
+	viper.BindPFlags(flags)
+	viper.BindEnv("loglevel", "LOGLEVEL")
+	viper.BindEnv("store", "STORE")
 }
 
 // Execute runs the root command

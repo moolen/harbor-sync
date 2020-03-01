@@ -3,6 +3,7 @@
 # It should be run by config/default
 resources:
 - bases/crd.harborsync.k8s.io_harborsyncs.yaml
+- bases/crd.harborsync.k8s.io_harborrobotaccounts.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:

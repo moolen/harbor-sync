@@ -1,12 +1,17 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: harbor-sync
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: manager-rolebinding
+  name: harbor-sync-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: manager-role
+  name: harbor-sync
 subjects:
 - kind: ServiceAccount
-  name: default
-  namespace: system
+  name: harbor-sync
+  namespace: default

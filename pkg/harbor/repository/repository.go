@@ -20,15 +20,14 @@ import (
 	"sync"
 	"time"
 
-	Logr "github.com/go-logr/logr"
 	"github.com/mitchellh/hashstructure"
 	"github.com/moolen/harbor-sync/pkg/harbor"
+	log "github.com/sirupsen/logrus"
 )
 
 // Repository implements the harbor.API interface
 // it caches the API resources using a polling mechanism in the background
 type Repository struct {
-	Log          Logr.Logger
 	Client       harbor.API
 	PollInterval time.Duration
 
@@ -41,9 +40,8 @@ type Repository struct {
 }
 
 // New is the repository constructor
-func New(client harbor.API, logger Logr.Logger, interval time.Duration) (*Repository, error) {
+func New(client harbor.API, interval time.Duration) (*Repository, error) {
 	return &Repository{
-		Log:          logger,
 		Client:       client,
 		PollInterval: interval,
 		ProjectsCache: &ProjectsCache{
@@ -67,19 +65,31 @@ func (r *Repository) Update() error {
 	var err error
 	projects, err := r.Client.ListProjects()
 	if err != nil {
-		r.Log.Error(err, "error listing projects")
+		log.WithFields(log.Fields{
+			"component": "repository",
+			"action":    "update",
+		}).Errorf("error listing projects: %s", err)
 		return err
 	}
-	r.Log.V(1).Info("listing projects", "found_projects", len(projects))
+	log.WithFields(log.Fields{
+		"component":     "repository",
+		"action":        "update",
+		"project_count": len(projects),
+	}).Debug()
 
 	for _, project := range projects {
 		r.ProjectsCache.Set(project)
 		robotAccounts, err := r.Client.GetRobotAccounts(project)
 		if err != nil {
-			r.Log.Error(err, "error fetching robot account", "project_name", project.Name)
+			log.Errorf("error fetching robot accounts for %s: %s", project.Name, err)
 			return err
 		}
-		r.Log.V(1).Info("listing robot accounts", "found_robot_accouns", len(robotAccounts), "project_name", project.Name)
+		log.WithFields(log.Fields{
+			"component":   "repository",
+			"action":      "update",
+			"project":     project.Name,
+			"robot_count": len(robotAccounts),
+		}).Debug()
 		r.RobotsCache.Set(project.Name, robotAccounts)
 	}
 	return r.UpdateHash()
@@ -94,7 +104,10 @@ func (r *Repository) UpdateHash() error {
 		robotAccounts := r.RobotsCache.Get(project.Name)
 		rh, err := hashstructure.Hash(robotAccounts, nil)
 		if err != nil {
-			r.Log.Error(err, "could not hash robot accounts")
+			log.WithFields(log.Fields{
+				"component": "repository",
+				"action":    "updateHash",
+			}).Errorf("could not hash robot accounts: %s", err)
 			return err
 		}
 		robotsHash += rh
@@ -102,7 +115,10 @@ func (r *Repository) UpdateHash() error {
 
 	projectsHash, err := hashstructure.Hash(projects, nil)
 	if err != nil {
-		r.Log.Error(err, "could not hash projects")
+		log.WithFields(log.Fields{
+			"component": "repository",
+			"action":    "updateHash",
+		}).Errorf("could not hash projects: %s", err)
 		return err
 	}
 	r.StateHash = projectsHash + robotsHash
@@ -117,17 +133,28 @@ func (r *Repository) Sync() <-chan struct{} {
 	go func() {
 		for {
 			oldHash := r.StateHash
-			r.Log.V(1).Info("start sync")
+			log.WithFields(log.Fields{
+				"component": "repository",
+				"action":    "sync",
+			}).Infof("starting sync")
 			err := r.Update()
 			if err != nil {
-				r.Log.Error(err, "error syncing with harbor")
+				log.WithFields(log.Fields{
+					"component": "repository",
+					"action":    "sync",
+				}).Errorf("error running update: %s", err)
 			}
 			if r.StateHash != oldHash {
-				r.Log.V(1).Info("harbor repo state changed")
+				log.WithFields(log.Fields{
+					"component": "repository",
+					"action":    "sync",
+				}).Debugf("harbor repo state changed")
 				c <- struct{}{}
 			}
-
-			r.Log.V(1).Info("end sync")
+			log.WithFields(log.Fields{
+				"component": "repository",
+				"action":    "sync",
+			}).Infof("end sync")
 			<-time.After(r.PollInterval)
 		}
 	}()

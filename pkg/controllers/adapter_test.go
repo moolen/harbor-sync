@@ -22,7 +22,6 @@ import (
 	"github.com/moolen/harbor-sync/pkg/test"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
 var _ = Describe("Adapter", func() {
@@ -44,9 +43,7 @@ var _ = Describe("Adapter", func() {
 		input1 := make(chan struct{})
 		input := []<-chan struct{}{input1}
 
-		log := zap.Logger(false)
-
-		ad = NewAdapter(k8sClient, log, input)
+		ad = NewAdapter(k8sClient, input)
 		out := ad.Run()
 
 		input1 <- struct{}{}

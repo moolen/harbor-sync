@@ -1,2 +1,9 @@
 resources:
 - manager.yaml
+
+configMapGenerator:
+- name: harbor-sync-config
+  literals:
+  - HARBOR_API_ENDPOINT=http://harbor.example.com
+  - HARBOR_USERNAME=admin
+  - HARBOR_PASSWORD=Harbor12345
