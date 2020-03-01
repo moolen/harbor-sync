@@ -1,0 +1,29 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: harbor-sync
+spec:
+  replicas: 2
+  template:
+    spec:
+      serviceAccount: harbor-sync
+      containers:
+      - name: manager
+        image: quay.io/moolen/harbor-sync:latest
+        command:
+        - /harbor-sync
+        args:
+        - controller
+        - --store=/data
+        envFrom:
+        - configMapRef:
+            name: harbor-sync-config
+        resources:
+          limits:
+            cpu: 100m
+            memory: 50Mi
+          requests:
+            cpu: 10m
+            memory: 20Mi
+      terminationGracePeriodSeconds: 10

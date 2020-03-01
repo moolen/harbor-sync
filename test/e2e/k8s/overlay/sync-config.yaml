@@ -1,0 +1,13 @@
+apiVersion: crd.harborsync.k8s.io/v1
+kind: HarborSync
+metadata:
+  name: harborsync-sample
+spec:
+  type: Regex
+  name: proj-(.*)
+  robotAccountSuffix: k8s-robot
+  pushAccess: true
+  mapping:
+  - type: Translate
+    namespace: team-$1
+    secret: proj-$1-pull-secret

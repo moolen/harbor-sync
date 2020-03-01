@@ -1,0 +1,26 @@
+bases:
+- ../base/default
+
+resources:
+- fake-harbor-api.yaml
+
+images:
+- name: quay.io/moolen/harbor-sync
+  newTag: dev
+  newName: harbor-sync
+- name: fake-harbor-api
+  newTag: dev
+
+configMapGenerator:
+- name: harbor-sync-config
+  behavior: replace
+  literals:
+  - HARBOR_API_ENDPOINT=http://fake-harbor-api
+  - HARBOR_USERNAME=admin
+  - HARBOR_PASSWORD=Harbor12345
+  - FORCE_SYNC_INTERVAL=15s
+  - ROTATION_INTERVAL=15s
+  - HARBOR_POLL_INTERVAL=15s
+  - LEADER_ELECT=true
+  - LOGLEVEL=debug
+  - NAMESPACE=default
