@@ -25,7 +25,6 @@ import (
 	"github.com/moolen/harbor-sync/pkg/harbor/fake"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
 var errListProjects = fmt.Errorf("error listing projects")
@@ -34,8 +33,7 @@ var errListRobots = fmt.Errorf("error listing robots")
 var _ = Describe("Repository", func() {
 	It("should cache the state of projects and robot accounts", func() {
 		c := &fake.Client{}
-		log := zap.Logger(false)
-		rep, err := New(c, log, time.Second*500)
+		rep, err := New(c, time.Second*500)
 		Expect(err).ToNot(HaveOccurred())
 		c.BaseURLFunc = func() string { return "myurl" }
 		c.ListProjectsFunc = func() ([]harbor.Project, error) {
@@ -104,8 +102,7 @@ var _ = Describe("Repository", func() {
 		var projects []harbor.Project
 		var robots []harbor.Robot
 		c := &fake.Client{}
-		log := zap.Logger(false)
-		rep, err := New(c, log, time.Millisecond*10)
+		rep, err := New(c, time.Millisecond*10)
 		Expect(err).ToNot(HaveOccurred())
 		c.ListProjectsFunc = func() ([]harbor.Project, error) {
 			return projects, nil

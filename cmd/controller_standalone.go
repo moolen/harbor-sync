@@ -9,12 +9,11 @@ import (
 	"github.com/moolen/harbor-sync/pkg/controllers"
 	"github.com/moolen/harbor-sync/pkg/harbor"
 	"github.com/moolen/harbor-sync/pkg/harbor/repository"
-	"github.com/moolen/harbor-sync/pkg/store"
+	store "github.com/moolen/harbor-sync/pkg/store/disk"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
-	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 var standalonCfgPath string
@@ -29,7 +28,7 @@ var standaloneCmd = &cobra.Command{
 	Short: "Runs the controller in standalone mode. Does not require Kubernetes. It manages robot accounts and sends webhooks.",
 	Run: func(cmd *cobra.Command, args []string) {
 		//
-		store, err := store.New(storePath)
+		store, err := store.New(viper.GetString("store"))
 		if err != nil {
 			log.Error(err, "unable to create credential store")
 			os.Exit(1)
@@ -52,7 +51,7 @@ var standaloneCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		harborRepo, err := repository.New(harborClient, ctrl.Log.WithName("repository"), harborPollInterval)
+		harborRepo, err := repository.New(harborClient, viper.GetDuration("harbor-poll-interval"))
 		if err != nil {
 			log.Error(err, "unable to create harbor repository")
 			os.Exit(1)
@@ -74,12 +73,12 @@ var standaloneCmd = &cobra.Command{
 		<-harborRepo.Sync()
 
 		for {
-			err = controllers.Reconcile(*syncConfig, harborRepo, store, rotationInterval, nil)
+			err = controllers.Reconcile(*syncConfig, harborRepo, store, viper.GetDuration("rotation-interval"), nil)
 			if err != nil {
 				log.Error(err, "error reconciling")
 			}
 			log.Info("done recon")
-			<-time.After(forceSyncInterval)
+			<-time.After(viper.GetDuration("force-sync-interval"))
 		}
 	},
 }

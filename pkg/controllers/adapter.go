@@ -19,8 +19,8 @@ package controllers
 import (
 	"context"
 
-	"github.com/go-logr/logr"
 	crdv1 "github.com/moolen/harbor-sync/api/v1"
+	log "github.com/sirupsen/logrus"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 )
@@ -29,15 +29,13 @@ import (
 // and emits SyncConfig change Events using a GenericEvent on a different channel
 type Adapter struct {
 	client.Client
-	Log   logr.Logger
 	Input []<-chan struct{}
 }
 
 // NewAdapter creates a new adapter instance
-func NewAdapter(c client.Client, log logr.Logger, input []<-chan struct{}) Adapter {
+func NewAdapter(c client.Client, input []<-chan struct{}) Adapter {
 	return Adapter{
 		c,
-		log,
 		input,
 	}
 }
@@ -58,12 +56,18 @@ func (a Adapter) loop(c chan event.GenericEvent, input <-chan struct{}) {
 	for {
 		select {
 		case <-input:
-			a.Log.V(1).Info("received reconcile event from poller")
+			log.WithFields(log.Fields{
+				"component": "adapter",
+				"action":    "loop",
+			}).Debugf("received reconcile event from poller")
 			ctx := context.Background()
 			var cfgs crdv1.HarborSyncList
 			err := a.List(ctx, &cfgs)
 			if err != nil {
-				a.Log.Error(err, "error fetching harbor sync config")
+				log.WithFields(log.Fields{
+					"component": "adapter",
+					"action":    "loop",
+				}).Errorf("error fetching harbor sync config: %s", err)
 				continue
 			}
 			// emit events using generic Event

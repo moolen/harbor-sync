@@ -47,8 +47,11 @@ type HarborSyncConfigReconciler struct {
 	Harbor           harbor.API
 }
 
+// +kubebuilder:rbac:groups="coordination.k8s.io",resources=leases,verbs=create;get;update;patch;delete
 // +kubebuilder:rbac:groups="",resources=namespaces,verbs=get;list;watch
 // +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups="",resources=events,verbs=create
+// +kubebuilder:rbac:groups=crd.harborsync.k8s.io,resources=harborrobotaccounts,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=crd.harborsync.k8s.io,resources=harborsyncs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=crd.harborsync.k8s.io,resources=harborsyncs/status,verbs=get;update;patch
 

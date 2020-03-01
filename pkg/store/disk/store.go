@@ -1,4 +1,4 @@
-package store
+package disk
 
 import (
 	"encoding/json"
@@ -12,8 +12,8 @@ import (
 	"github.com/peterbourgon/diskv/v3"
 )
 
-// DiskStore is a cache on-disk
-type DiskStore struct {
+// Store is a cache on-disk
+type Store struct {
 	path string
 	c    *diskv.Diskv
 }
@@ -31,8 +31,8 @@ func inverseTransform(pathKey *diskv.PathKey) (key string) {
 	return path.Join(strings.Join(pathKey.Path, "/"), pathKey.FileName)
 }
 
-// New returns a new DiskStore
-func New(path string) (*DiskStore, error) {
+// New returns a new Store
+func New(path string) (*Store, error) {
 	c := diskv.New(diskv.Options{
 		BasePath:          path,
 		AdvancedTransform: transformFunc,
@@ -40,14 +40,14 @@ func New(path string) (*DiskStore, error) {
 		CacheSizeMax:      1024 * 1024,
 	})
 
-	return &DiskStore{
+	return &Store{
 		path: path,
 		c:    c,
 	}, nil
 }
 
-// NewTemp returns a new DiskStore
-func NewTemp() (*DiskStore, error) {
+// NewTemp returns a new Store
+func NewTemp() (*Store, error) {
 	tmp, err := ioutil.TempDir("", "diskstore")
 	if err != nil {
 		return nil, err
@@ -56,12 +56,12 @@ func NewTemp() (*DiskStore, error) {
 }
 
 // Has returns true if the item exists, false if not
-func (d *DiskStore) Has(project, name string) bool {
+func (d *Store) Has(project, name string) bool {
 	return d.c.Has(path.Join(project, name))
 }
 
 // Get returns a item
-func (d *DiskStore) Get(project, name string) (*crdv1.RobotAccountCredential, error) {
+func (d *Store) Get(project, name string) (*crdv1.RobotAccountCredential, error) {
 	var cred crdv1.RobotAccountCredential
 	rd, err := d.c.ReadStream(path.Join(project, name), true)
 	if err != nil {
@@ -76,7 +76,7 @@ func (d *DiskStore) Get(project, name string) (*crdv1.RobotAccountCredential, er
 }
 
 // Set writes data to the disk store
-func (d *DiskStore) Set(project string, cred crdv1.RobotAccountCredential) error {
+func (d *Store) Set(project string, cred crdv1.RobotAccountCredential) error {
 	err := os.MkdirAll(path.Join(d.path, project), os.ModePerm)
 	if err != nil {
 		return err
@@ -89,7 +89,7 @@ func (d *DiskStore) Set(project string, cred crdv1.RobotAccountCredential) error
 }
 
 // Keys returns all available keys
-func (d *DiskStore) Keys() [][]string {
+func (d *Store) Keys() [][]string {
 	var keys [][]string
 	files, err := ioutil.ReadDir(d.path)
 	if err != nil {
@@ -108,6 +108,6 @@ func (d *DiskStore) Keys() [][]string {
 }
 
 // Reset deletes all entries from the cache
-func (d *DiskStore) Reset() error {
+func (d *Store) Reset() error {
 	return d.c.EraseAll()
 }

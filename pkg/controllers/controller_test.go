@@ -27,7 +27,7 @@ import (
 	crdv1 "github.com/moolen/harbor-sync/api/v1"
 	"github.com/moolen/harbor-sync/pkg/harbor"
 	harborfake "github.com/moolen/harbor-sync/pkg/harbor/fake"
-	"github.com/moolen/harbor-sync/pkg/store"
+	store "github.com/moolen/harbor-sync/pkg/store/disk"
 	"github.com/moolen/harbor-sync/pkg/test"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -42,7 +42,7 @@ var _ = Describe("Controller", func() {
 
 	var fakeHarbor *harborfake.Client
 	var hscr *HarborSyncConfigReconciler
-	var credStore *store.DiskStore
+	var credStore *store.Store
 
 	BeforeEach(func() {
 		test.EnsureNamespace(k8sClient, "team-recon-foo")

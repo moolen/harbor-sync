@@ -14,7 +14,7 @@ all: controller
 
 # Run tests
 test: generate fmt vet manifests misspell
-	go test ./... -coverprofile cover.out
+	go test ./pkg/... -coverprofile cover.out
 
 .PHONY: docs
 docs: bin/hugo
@@ -109,5 +109,5 @@ bin/kubectl:
 # find or download controller-gen
 # download controller-gen if necessary
 bin/controller-gen:
-	go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.2.0
+	go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.2.5
 	mkdir bin; mv $(GOPATH)/bin/controller-gen bin/controller-gen

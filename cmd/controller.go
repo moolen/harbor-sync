@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	ctx "context"
 	"fmt"
 	"strings"
 	"time"
@@ -17,22 +18,25 @@ import (
 	"github.com/moolen/harbor-sync/pkg/controllers"
 	"github.com/moolen/harbor-sync/pkg/harbor"
 	"github.com/moolen/harbor-sync/pkg/harbor/repository"
-	"github.com/moolen/harbor-sync/pkg/store"
+	store "github.com/moolen/harbor-sync/pkg/store/crd"
+	"github.com/moolen/harbor-sync/pkg/util"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/tools/leaderelection"
+	"k8s.io/client-go/tools/leaderelection/resourcelock"
+	componentbaseconfig "k8s.io/component-base/config"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 var (
-	scheme             *runtime.Scheme
-	metricsAddr        *string
-	harborPollInterval time.Duration
-	forceSyncInterval  time.Duration
-	rotationInterval   time.Duration
-	harborAPIEndpoint  *string
-	harborAPIUsername  *string
-	harborAPIPassword  *string
-	skipVerifyTls      *bool
+	scheme            *runtime.Scheme
+	metricsAddr       *string
+	harborAPIEndpoint *string
+	harborAPIUsername *string
+	harborAPIPassword *string
+	skipVerifyTLS     *bool
 )
 
 func init() {
@@ -50,15 +54,22 @@ func init() {
 	harborAPIEndpoint = flags.String("harbor-api-endpoint", "", "URL to the Harbor API Endpoint")
 	harborAPIUsername = flags.String("harbor-username", "", "Harbor username to use for authentication")
 	harborAPIPassword = flags.String("harbor-password", "", "Harbor password to use for authentication")
-	skipVerifyTls = flags.Bool("skip-tls-verification", false, "Skip TLS certificate verification")
+	skipVerifyTLS = flags.Bool("skip-tls-verification", false, "Skip TLS certificate verification")
 	metricsAddr = flags.String("metrics-addr", ":8080", "The address the metric endpoint binds to.")
-	flags.DurationVar(&harborPollInterval, "harbor-poll-interval", time.Minute*5, "poll interval to update harbor projects & robot accounts")
-	flags.DurationVar(&forceSyncInterval, "force-sync-interval", time.Minute*10, "set this to force reconciliation after a certain time")
-	flags.DurationVar(&rotationInterval, "rotation-interval", time.Minute*60, "set this to rotate the credentials after the specified time")
+	flags.Duration("harbor-poll-interval", time.Minute*5, "poll interval to update harbor projects & robot accounts")
+	flags.Duration("force-sync-interval", time.Minute*10, "set this to force reconciliation after a certain time")
+	flags.Duration("rotation-interval", time.Minute*60, "set this to rotate the credentials after the specified time")
+	flags.Bool("leader-elect", false, "enable leader election")
+	flags.String("namespace", "kube-system", "namespace in which harbor-sync runs (used for leader-election)")
 	viper.BindPFlags(flags)
 	viper.BindEnv("harbor-username", "HARBOR_USERNAME")
 	viper.BindEnv("harbor-password", "HARBOR_PASSWORD")
 	viper.BindEnv("harbor-api-endpoint", "HARBOR_API_ENDPOINT")
+	viper.BindEnv("leader-elect", "LEADER_ELECT")
+	viper.BindEnv("namespace", "NAMESPACE")
+	viper.BindEnv("harbor-poll-interval", "HARBOR_POLL_INTERVAL")
+	viper.BindEnv("force-sync-interval", "FORCE_SYNC_INTERVAL")
+	viper.BindEnv("rotation-interval", "ROTATION_INTERVAL")
 	rootCmd.AddCommand(controllerCmd)
 }
 
@@ -66,11 +77,22 @@ var controllerCmd = &cobra.Command{
 	Use:   "controller",
 	Short: "Controller should run inside Kubernetes. It reconciles the desired state by managing the robot accounts in Harbor.",
 	Run: func(cmd *cobra.Command, args []string) {
-		store, err := store.New(storePath)
-		if err != nil {
-			log.Error(err, "unable to create credential store")
-			os.Exit(1)
-		}
+		// store, err := store.New(viper.GetString("store"))
+		// if err != nil {
+		// 	log.Error(err, "unable to create credential store")
+		// 	os.Exit(1)
+		// }
+
+		// dump cfg
+		log.WithFields(log.Fields{
+			"harbor-api-endpoint":  viper.GetBool("harbor-api-endpoint"),
+			"leader-elect":         viper.GetBool("leader-elect"),
+			"loglevel":             viper.GetString("loglevel"),
+			"namespace":            viper.GetDuration("namespace"),
+			"force-sync-interval":  viper.GetDuration("force-sync-interval"),
+			"rotation-interval":    viper.GetDuration("rotation-interval"),
+			"harbor-poll-interval": viper.GetDuration("harbor-poll-interval"),
+		}).Info()
 
 		harborClient, err := harbor.New(
 			viper.GetString("harbor-api-endpoint"),
@@ -89,7 +111,7 @@ var controllerCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		harborRepo, err := repository.New(harborClient, ctrl.Log.WithName("repository"), harborPollInterval)
+		harborRepo, err := repository.New(harborClient, viper.GetDuration("harbor-poll-interval"))
 		if err != nil {
 			log.Error(err, "unable to create harbor repository")
 			os.Exit(1)
@@ -108,19 +130,24 @@ var controllerCmd = &cobra.Command{
 		forceSyncChan := make(chan struct{})
 		go func() {
 			for {
-				<-time.After(forceSyncInterval)
+				<-time.After(viper.GetDuration("force-sync-interval"))
 				forceSyncChan <- struct{}{}
 			}
 		}()
 
 		harborProjectChanges := harborRepo.Sync()
 		syncChannels := []<-chan struct{}{forceSyncChan, harborProjectChanges}
-		adapter := controllers.NewAdapter(mgr.GetClient(), ctrl.Log.WithName("adapter"), syncChannels)
+		adapter := controllers.NewAdapter(mgr.GetClient(), syncChannels)
 		syncCfgChanges := adapter.Run()
 
+		crdStore, err := store.New(mgr.GetClient())
+		if err != nil {
+			log.Fatal(err, "unable to create store")
+		}
+
 		if err = (&controllers.HarborSyncConfigReconciler{
-			CredCache:        store,
-			RotationInterval: rotationInterval,
+			CredCache:        crdStore,
+			RotationInterval: viper.GetDuration("rotation-interval"),
 			Client:           mgr.GetClient(),
 			Harbor:           harborRepo,
 		}).SetupWithManager(mgr, syncCfgChanges); err != nil {
@@ -128,13 +155,65 @@ var controllerCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		// +kubebuilder:scaffold:builder
-		log.Info("starting manager")
-		if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
-			log.Error(err, "problem running manager")
-			os.Exit(1)
+		leaderElection := componentbaseconfig.LeaderElectionConfiguration{
+			LeaderElect:   viper.GetBool("leader-elect"),
+			LeaseDuration: metav1.Duration{Duration: 15 * time.Second},
+			RenewDeadline: metav1.Duration{Duration: 10 * time.Second},
+			RetryPeriod:   metav1.Duration{Duration: 2 * time.Second},
+			ResourceLock:  resourcelock.LeasesResourceLock,
 		}
 
+		run := func() {
+			if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
+				log.Error(err, "problem running manager")
+				os.Exit(1)
+			}
+		}
+
+		if !leaderElection.LeaderElect {
+			log.Info("leader-election disabled, starting manager")
+			run()
+			return
+		}
+
+		kubeClient, err := kubernetes.NewForConfig(mgr.GetConfig())
+		if err != nil {
+			log.Fatalf("unable to get client: %v", err)
+		}
+		id, err := os.Hostname()
+		if err != nil {
+			log.Fatalf("Unable to get hostname: %v", err)
+		}
+		lock, err := resourcelock.New(
+			leaderElection.ResourceLock,
+			viper.GetString("namespace"),
+			"harbor-sync",
+			kubeClient.CoreV1(),
+			kubeClient.CoordinationV1(),
+			resourcelock.ResourceLockConfig{
+				Identity:      id,
+				EventRecorder: util.CreateEventRecorder(kubeClient),
+			},
+		)
+		if err != nil {
+			log.Fatalf("Unable to create leader election lock: %v", err)
+		}
+
+		leaderelection.RunOrDie(ctx.TODO(), leaderelection.LeaderElectionConfig{
+			Lock:          lock,
+			LeaseDuration: leaderElection.LeaseDuration.Duration,
+			RenewDeadline: leaderElection.RenewDeadline.Duration,
+			RetryPeriod:   leaderElection.RetryPeriod.Duration,
+			Callbacks: leaderelection.LeaderCallbacks{
+				OnStartedLeading: func(_ ctx.Context) {
+					log.Info("started leading, starting manager")
+					run()
+				},
+				OnStoppedLeading: func() {
+					log.Fatalf("lost master")
+				},
+			},
+		})
 	},
 }
 
