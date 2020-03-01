@@ -1,0 +1,76 @@
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: harbor-sync
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - create
+  - delete
+  - get
+  - patch
+  - update
+- apiGroups:
+  - crd.harborsync.k8s.io
+  resources:
+  - harborrobotaccounts
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - crd.harborsync.k8s.io
+  resources:
+  - harborsyncs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - crd.harborsync.k8s.io
+  resources:
+  - harborsyncs/status
+  verbs:
+  - get
+  - patch
+  - update

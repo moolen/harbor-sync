@@ -1,0 +1,7 @@
+commonLabels:
+  app: harbor-sync
+
+bases:
+- ../crd
+- ../rbac
+- ../manager

@@ -1,0 +1,9 @@
+apiVersion: crd.harborsync.k8s.io/v1
+kind: HarborRobotAccount
+metadata:
+  name: harborrobotaccount-sample
+spec:
+  credential:
+    token: "1234"
+    created_at: 1234
+    name: foo-bar
