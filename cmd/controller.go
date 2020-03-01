@@ -77,12 +77,6 @@ var controllerCmd = &cobra.Command{
 	Use:   "controller",
 	Short: "Controller should run inside Kubernetes. It reconciles the desired state by managing the robot accounts in Harbor.",
 	Run: func(cmd *cobra.Command, args []string) {
-		// store, err := store.New(viper.GetString("store"))
-		// if err != nil {
-		// 	log.Error(err, "unable to create credential store")
-		// 	os.Exit(1)
-		// }
-
 		// dump cfg
 		log.WithFields(log.Fields{
 			"harbor-api-endpoint":  viper.GetBool("harbor-api-endpoint"),
