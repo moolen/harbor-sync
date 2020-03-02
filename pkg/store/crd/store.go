@@ -3,7 +3,7 @@ package crd
 import (
 	"context"
 	"fmt"
-	"strings"
+	"regexp"
 	"time"
 
 	crdv1 "github.com/moolen/harbor-sync/api/v1"
@@ -17,6 +17,8 @@ import (
 type Store struct {
 	kubeClient client.Client
 }
+
+var reg = regexp.MustCompile("[^a-zA-Z0-9-]+")
 
 // New returns a new Store
 func New(kubeClient client.Client) (*Store, error) {
@@ -35,9 +37,12 @@ func (s *Store) Has(project, name string) bool {
 
 func (s *Store) Get(project, name string) (*crdv1.RobotAccountCredential, error) {
 	ctx := context.Background()
-	rname := buildResourceName(project, name)
+	rname, err := buildResourceName(project, name)
+	if err != nil {
+		return nil, err
+	}
 	var r crdv1.HarborRobotAccount
-	err := s.kubeClient.Get(ctx, types.NamespacedName{Name: rname}, &r)
+	err = s.kubeClient.Get(ctx, types.NamespacedName{Name: rname}, &r)
 	if err != nil {
 		log.Errorf("error getting robot account %s: %s", rname, err)
 		return nil, err
@@ -47,7 +52,10 @@ func (s *Store) Get(project, name string) (*crdv1.RobotAccountCredential, error)
 
 func (s *Store) Set(project string, cred crdv1.RobotAccountCredential) error {
 	ctx := context.Background()
-	rname := buildResourceName(project, cred.Name)
+	rname, err := buildResourceName(project, cred.Name)
+	if err != nil {
+		return err
+	}
 	r := crdv1.HarborRobotAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: rname,
@@ -59,7 +67,7 @@ func (s *Store) Set(project string, cred crdv1.RobotAccountCredential) error {
 			LastSync: time.Now().Unix(),
 		},
 	}
-	err := s.kubeClient.Create(ctx, &r)
+	err = s.kubeClient.Create(ctx, &r)
 	if apierrs.IsAlreadyExists(err) {
 		err = s.kubeClient.Get(ctx, types.NamespacedName{Name: rname}, &r)
 		if err != nil {
@@ -88,7 +96,20 @@ func (s *Store) Reset() error {
 	return nil
 }
 
-func buildResourceName(project, robot string) string {
-	in := fmt.Sprintf("%s-%s", project, robot)
-	return strings.ReplaceAll(in, "$", "-")
+func buildResourceName(project, robot string) (string, error) {
+	in := fmt.Sprintf("%s-%s-%d", project, robot, hash(project, robot))
+	out := reg.ReplaceAllString(in, "-")
+	if len(out) > 63 {
+		return "", fmt.Errorf("resource name too long (%s / %s): %s", project, robot, out)
+	}
+	return out, nil
+}
+
+func hash(project, robot string) int {
+	h := 0
+	r := []rune(fmt.Sprintf("%s|%s", project, robot))
+	for i, n := range r {
+		h += i * int(n)
+	}
+	return h
 }
