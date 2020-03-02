@@ -13,6 +13,11 @@ func TestResourceNames(t *testing.T) {
 		err     string
 	}{
 		{
+			project: "proj-e2e-log-z7ls2-foo",
+			robot:   "bar-pull-secret",
+			out:     "proj-e2e-log-z7ls2-foo-bar-pull-secret-68120",
+		},
+		{
 			project: "voo-faa",
 			robot:   "foo$bar/baz",
 			out:     "voo-faa-foo-bar-baz-16283",
@@ -42,7 +47,7 @@ func TestResourceNames(t *testing.T) {
 	}
 
 	for i, item := range tbl {
-		out, err := buildResourceName(item.project, item.robot)
+		out, err := BuildResourceName(item.project, item.robot)
 		if err != nil && !strings.Contains(err.Error(), item.err) {
 			t.Errorf("[%d] expected err %s, found %s", i, item.err, err)
 		}

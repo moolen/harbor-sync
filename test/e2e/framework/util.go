@@ -64,10 +64,9 @@ func CreateNamespace(name string, c kubernetes.Interface) (string, error) {
 
 // CreateKubeNamespace creates a new namespace in the cluster
 func CreateKubeNamespace(baseName string, c kubernetes.Interface) (string, error) {
-	ts := time.Now().UnixNano()
 	ns := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: fmt.Sprintf("e2e-tests-%v-%v-", baseName, ts),
+			GenerateName: fmt.Sprintf("e2e-%v-", baseName),
 		},
 	}
 	// Be robust about making the namespace creation call.

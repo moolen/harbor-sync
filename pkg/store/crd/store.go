@@ -37,7 +37,7 @@ func (s *Store) Has(project, name string) bool {
 
 func (s *Store) Get(project, name string) (*crdv1.RobotAccountCredential, error) {
 	ctx := context.Background()
-	rname, err := buildResourceName(project, name)
+	rname, err := BuildResourceName(project, name)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func (s *Store) Get(project, name string) (*crdv1.RobotAccountCredential, error)
 
 func (s *Store) Set(project string, cred crdv1.RobotAccountCredential) error {
 	ctx := context.Background()
-	rname, err := buildResourceName(project, cred.Name)
+	rname, err := BuildResourceName(project, cred.Name)
 	if err != nil {
 		return err
 	}
@@ -96,7 +96,7 @@ func (s *Store) Reset() error {
 	return nil
 }
 
-func buildResourceName(project, robot string) (string, error) {
+func BuildResourceName(project, robot string) (string, error) {
 	in := fmt.Sprintf("%s-%s-%d", project, robot, hash(project, robot))
 	out := reg.ReplaceAllString(in, "-")
 	if len(out) > 63 {
