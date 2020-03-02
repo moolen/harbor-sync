@@ -15,7 +15,6 @@ spec:
         - /harbor-sync
         args:
         - controller
-        - --store=/data
         envFrom:
         - configMapRef:
             name: harbor-sync-config

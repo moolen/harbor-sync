@@ -34,7 +34,7 @@ controller: generate fmt vet
 # Run against the configured Kubernetes cluster in ~/.kube/config
 run: generate fmt vet manifests
 	mkdir -p bin/data
-	go run ./main.go controller --store=bin/data
+	go run ./main.go controller
 
 # Install CRDs into a cluster
 install: bin/kubectl manifests
