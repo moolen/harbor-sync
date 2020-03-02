@@ -59,7 +59,7 @@ func init() {
 	flags.Duration("harbor-poll-interval", time.Minute*5, "poll interval to update harbor projects & robot accounts")
 	flags.Duration("force-sync-interval", time.Minute*10, "set this to force reconciliation after a certain time")
 	flags.Duration("rotation-interval", time.Minute*60, "set this to rotate the credentials after the specified time")
-	flags.Bool("leader-elect", false, "enable leader election")
+	flags.Bool("leader-elect", true, "enable leader election")
 	flags.String("namespace", "kube-system", "namespace in which harbor-sync runs (used for leader-election)")
 	viper.BindPFlags(flags)
 	viper.BindEnv("harbor-username", "HARBOR_USERNAME")
