@@ -29,7 +29,7 @@ replace (
 require (
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/mitchellh/hashstructure v1.0.0
-	github.com/onsi/ginkgo v1.11.0
+	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.8.1
 	github.com/peterbourgon/diskv/v3 v3.0.0
 	github.com/prometheus/client_golang v1.0.0
@@ -38,6 +38,7 @@ require (
 	github.com/spf13/viper v1.3.2
 	github.com/stretchr/testify v1.4.0
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
+	golang.org/x/sys v0.0.0-20200301204400-5d559ad92b82 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	k8s.io/api v0.17.3
 	k8s.io/apiextensions-apiserver v0.17.2

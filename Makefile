@@ -17,6 +17,7 @@ test: generate fmt vet manifests misspell
 	go test ./pkg/... -coverprofile cover.out
 
 e2e:
+	go mod download
 	./test/e2e/run.sh
 
 .PHONY: docs

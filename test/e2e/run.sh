@@ -30,9 +30,9 @@ cleanup() {
     kind "export" logs --name ${KIND_CLUSTER_NAME} "${ARTIFACTS}/logs" || true
   fi
 
-  # kind delete cluster \
-  #   --verbosity=${KIND_LOG_LEVEL} \
-  #   --name ${KIND_CLUSTER_NAME}
+  kind delete cluster \
+    --verbosity=${KIND_LOG_LEVEL} \
+    --name ${KIND_CLUSTER_NAME}
 }
 
 trap cleanup EXIT
@@ -51,12 +51,12 @@ KIND_CLUSTER_NAME="harbor-sync-dev"
 echo "creating Kubernetes cluster with kind"
 
 export KUBECONFIG="${HOME}/.kube/kind-config-${KIND_CLUSTER_NAME}"
-# kind create cluster \
-#   --verbosity=${KIND_LOG_LEVEL} \
-#   --name ${KIND_CLUSTER_NAME} \
-#   --config ${DIR}/kind.yaml \
-#   --retain \
-#   --image "kindest/node:${K8S_VERSION}"
+kind create cluster \
+  --verbosity=${KIND_LOG_LEVEL} \
+  --name ${KIND_CLUSTER_NAME} \
+  --config ${DIR}/kind.yaml \
+  --retain \
+  --image "kindest/node:${K8S_VERSION}"
 
 echo "Kubernetes cluster:"
 kubectl get nodes -o wide
