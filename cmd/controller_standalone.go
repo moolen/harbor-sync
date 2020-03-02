@@ -16,10 +16,11 @@ import (
 	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
 )
 
-var standalonCfgPath string
-
 func init() {
-	standaloneCmd.Flags().StringVar(&standalonCfgPath, "config", "", "path to the config file which contains the mapping. This file should be a manifest of kind: HarborSync")
+	flags := standaloneCmd.PersistentFlags()
+	flags.String("store", "/data", "path in which the credentials will be stored")
+	flags.String("config", "", "path to the config file which contains the mapping. This file should be a manifest of kind: HarborSync")
+	viper.BindEnv("store", "STORE")
 	controllerCmd.AddCommand(standaloneCmd)
 }
 
@@ -57,7 +58,7 @@ var standaloneCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		data, err := ioutil.ReadFile(standalonCfgPath)
+		data, err := ioutil.ReadFile(viper.GetString("config"))
 		if err != nil {
 			log.Error(err, "unable to read config path")
 			os.Exit(1)
