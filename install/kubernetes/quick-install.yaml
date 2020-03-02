@@ -325,7 +325,6 @@ spec:
       containers:
       - args:
         - controller
-        - --store=/data
         command:
         - /harbor-sync
         envFrom:
