@@ -34,10 +34,9 @@ Also, take a look at the [kustomize setup](https://github.com/moolen/harbor-sync
 
 ## Important Notes
 
-Harbor Sync Controller is **stateful**. Right now, it stores the credentials for the robot accounts on disk. This is necessary because there is no way to retrieve the token from the harbor API.
-But using a dedicated volume to store the credentials is not strictly necessary. If the reconciler does not find the credentials, it will simply re-create the account and distribute the credentials to the respective namespaces.
+Harbor Sync Controller is **stateless**. Right now, harbor-sync stores the credentials for the robot accounts in a crd. This is necessary because there is no way to retrieve the token from the harbor API.
 
-So in a worst-case scenario (pod dies, credentials lost) the robot accounts will be recreated.
+You can inspect the robot account credentials using: `kubectl get harborrobotaccount`.
 
 ## Next steps
 

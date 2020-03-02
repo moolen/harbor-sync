@@ -29,10 +29,8 @@ func init() {
 	viper.AutomaticEnv()
 	flags := rootCmd.PersistentFlags()
 	flags.String("loglevel", "info", "set the loglevel")
-	flags.String("store", "/data", "path in which the credentials will be stored")
 	viper.BindPFlags(flags)
 	viper.BindEnv("loglevel", "LOGLEVEL")
-	viper.BindEnv("store", "STORE")
 }
 
 // Execute runs the root command

@@ -55,6 +55,7 @@ Please keep in mind:
 
 * if you add a feature, please add documentation about the usage and write tests that cover at least the happy path
 
+* run `make e2e` to run e2e tests
 
 ### Commit Messages
 

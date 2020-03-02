@@ -120,7 +120,7 @@ var controllerCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		// we want to force a reconciliation
+		// we want to force reconciliation after a certain interval
 		forceSyncChan := make(chan struct{})
 		go func() {
 			for {

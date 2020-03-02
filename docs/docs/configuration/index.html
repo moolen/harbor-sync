@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="/harbor-sync/book.min.6c7317d2e8552a0ac3ea8fd4ba500c3dfb1cc9c74e7afd73eee6d729751fad30.css" integrity="sha256-bHMX0uhVKgrD6o/UulAMPfscycdOev1z7ubXKXUfrTA=">
 
 
-<script defer src="/harbor-sync/search.min.61b1394f382f6dcbabcce46096ace6a172d7a04e65cb0cbb0a9f6419cf9e539e.js" integrity="sha256-YbE5TzgvbcurzORglqzmoXLXoE5lywy7Cp9kGc&#43;eU54="></script>
+<script defer src="/harbor-sync/search.min.e3e8ed43210a2adfc00eec82c73e080641f9a242232ffc616136d5e66eca710c.js" integrity="sha256-4&#43;jtQyEKKt/ADuyCxz4IBkH5okIjL/xhYTbV5m7KcQw="></script>
 
 
 
@@ -196,16 +196,46 @@ https://github.com/alex-shpak/hugo-book
 <td>-</td>
 <td>password for harbor authentication</td>
 </tr>
+
+<tr>
+<td><code>LEADER_ELECT</code></td>
+<td>true</td>
+<td>enable/disable leader election</td>
+</tr>
+
+<tr>
+<td><code>NAMESPACE</code></td>
+<td>kube-system</td>
+<td>namespace in which harbor-sync runs (used for leader-election)</td>
+</tr>
+
+<tr>
+<td><code>HARBOR_POLL_INTERVAL</code></td>
+<td>5m</td>
+<td>poll interval to update harbor projects &amp; robot accounts</td>
+</tr>
+
+<tr>
+<td><code>FORCE_SYNC_INTERVAL</code></td>
+<td>10m</td>
+<td>set this to force reconciliation after a certain time</td>
+</tr>
+
+<tr>
+<td><code>ROTATION_INTERVAL</code></td>
+<td>60m</td>
+<td>set this to rotate the credentials after the specified time</td>
+</tr>
 </tbody>
 </table>
 
 <h2 id="command-line-interface">Command Line Interface</h2>
 
-<p>The harbor-sync binary has two subcommands: <code>store</code> and <code>controller</code>. Store is for dumping the credentials on disk. Controller runs the controller.</p>
+<p>The harbor-sync binary has a subcommand that starts sync process: <code>controller</code>.</p>
 
 <h3 id="standalone-mode">Standalone mode</h3>
 
-<p>The controller may run in <code>standalone</code> mode: This removes the necessity to run inside the Kubernetes cluster. In this mode <code>harbor-sync</code> reads a config file (see <code>kind: HarborSync</code>) and reconciles the robot accounts in Harbor. Webhooks will be called to propagate the credentials into other subsystems. The <code>mappings</code> field will have not effect - this is specific to Kubernetes.</p>
+<p>The controller may run in <code>standalone</code> mode: This removes the necessity to run inside the Kubernetes cluster. In this mode <code>harbor-sync</code> reads a config file (see <code>kind: HarborSync</code> and <code>kind: HarborRobotAccount</code>) and reconciles the robot accounts in Harbor. Webhooks will be called to propagate the credentials into other subsystems. The <code>mappings</code> field will have not effect - this is specific to Kubernetes. In standalone mode state (i.e. the credentials for the robot accounts) is stored on disk.</p>
 
 <pre><code>Controller should run inside Kubernetes. It reconciles the desired state by managing the robot accounts in Harbor.
 
@@ -220,16 +250,17 @@ Flags:
       --force-sync-interval duration    set this to force reconciliation after a certain time (default 10m0s)
       --harbor-api-endpoint string      URL to the Harbor API Endpoint
       --harbor-password string          Harbor password to use for authentication
-      --skip-tls-verification boolean   Enables or disables secure TLS certificate verification (default &quot;false&quot;)
       --harbor-poll-interval duration   poll interval to update harbor projects &amp; robot accounts (default 5m0s)
       --harbor-username string          Harbor username to use for authentication
   -h, --help                            help for controller
+      --leader-elect                    enable leader election (default true)
       --metrics-addr string             The address the metric endpoint binds to. (default &quot;:8080&quot;)
+      --namespace string                namespace in which harbor-sync runs (used for leader-election) (default &quot;kube-system&quot;)
       --rotation-interval duration      set this to rotate the credentials after the specified time (default 1h0m0s)
+      --skip-tls-verification           Skip TLS certificate verification
 
 Global Flags:
-      --loglevel string   set the loglevel (default &quot;debug&quot;)
-      --store string      path in which the credentials will be stored (default &quot;/data&quot;)
+      --loglevel string   set the loglevel (default &quot;info&quot;)
 
 </code></pre>
 </article>
