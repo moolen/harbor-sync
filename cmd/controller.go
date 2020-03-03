@@ -111,6 +111,7 @@ var controllerCmd = &cobra.Command{
 			Scheme:             scheme,
 			MetricsBindAddress: *metricsAddr,
 			LeaderElection:     viper.GetBool("leader-elect"),
+			LeaderElectionID:   "harbor-sync-leader-election",
 			LeaseDuration:      &leaseDuration,
 			RenewDeadline:      &renewDeadline,
 			RetryPeriod:        &retryPeriod,
