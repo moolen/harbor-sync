@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	ctx "context"
 	"fmt"
 	"strings"
 	"time"
@@ -19,14 +18,8 @@ import (
 	"github.com/moolen/harbor-sync/pkg/harbor"
 	"github.com/moolen/harbor-sync/pkg/harbor/repository"
 	store "github.com/moolen/harbor-sync/pkg/store/crd"
-	"github.com/moolen/harbor-sync/pkg/util"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/kubernetes"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/client-go/tools/leaderelection"
-	"k8s.io/client-go/tools/leaderelection/resourcelock"
-	componentbaseconfig "k8s.io/component-base/config"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
@@ -111,9 +104,16 @@ var controllerCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
+		leaseDuration := 100 * time.Second
+		renewDeadline := 80 * time.Second
+		retryPeriod := 20 * time.Second
 		mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 			Scheme:             scheme,
 			MetricsBindAddress: *metricsAddr,
+			LeaderElection:     viper.GetBool("leader-elect"),
+			LeaseDuration:      &leaseDuration,
+			RenewDeadline:      &renewDeadline,
+			RetryPeriod:        &retryPeriod,
 		})
 		if err != nil {
 			log.Error(err, "unable to start manager")
@@ -148,66 +148,13 @@ var controllerCmd = &cobra.Command{
 			log.Error(err, "unable to create controller")
 			os.Exit(1)
 		}
-
-		leaderElection := componentbaseconfig.LeaderElectionConfiguration{
-			LeaderElect:   viper.GetBool("leader-elect"),
-			LeaseDuration: metav1.Duration{Duration: 15 * time.Second},
-			RenewDeadline: metav1.Duration{Duration: 10 * time.Second},
-			RetryPeriod:   metav1.Duration{Duration: 2 * time.Second},
-			ResourceLock:  resourcelock.LeasesResourceLock,
+		// +kubebuilder:scaffold:builder
+		log.Info("starting manager")
+		if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
+			log.Error(err, "problem running manager")
+			os.Exit(1)
 		}
 
-		run := func() {
-			if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
-				log.Error(err, "problem running manager")
-				os.Exit(1)
-			}
-		}
-
-		if !leaderElection.LeaderElect {
-			log.Info("leader-election disabled, starting manager")
-			run()
-			return
-		}
-
-		kubeClient, err := kubernetes.NewForConfig(mgr.GetConfig())
-		if err != nil {
-			log.Fatalf("unable to get client: %v", err)
-		}
-		id, err := os.Hostname()
-		if err != nil {
-			log.Fatalf("Unable to get hostname: %v", err)
-		}
-		lock, err := resourcelock.New(
-			leaderElection.ResourceLock,
-			viper.GetString("namespace"),
-			"harbor-sync",
-			kubeClient.CoreV1(),
-			kubeClient.CoordinationV1(),
-			resourcelock.ResourceLockConfig{
-				Identity:      id,
-				EventRecorder: util.CreateEventRecorder(kubeClient),
-			},
-		)
-		if err != nil {
-			log.Fatalf("Unable to create leader election lock: %v", err)
-		}
-
-		leaderelection.RunOrDie(ctx.TODO(), leaderelection.LeaderElectionConfig{
-			Lock:          lock,
-			LeaseDuration: leaderElection.LeaseDuration.Duration,
-			RenewDeadline: leaderElection.RenewDeadline.Duration,
-			RetryPeriod:   leaderElection.RetryPeriod.Duration,
-			Callbacks: leaderelection.LeaderCallbacks{
-				OnStartedLeading: func(_ ctx.Context) {
-					log.Info("started leading, starting manager")
-					run()
-				},
-				OnStoppedLeading: func() {
-					log.Fatalf("lost master")
-				},
-			},
-		})
 	},
 }
 
