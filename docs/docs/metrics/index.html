@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="/harbor-sync/book.min.6c7317d2e8552a0ac3ea8fd4ba500c3dfb1cc9c74e7afd73eee6d729751fad30.css" integrity="sha256-bHMX0uhVKgrD6o/UulAMPfscycdOev1z7ubXKXUfrTA=">
 
 
-<script defer src="/harbor-sync/search.min.e3e8ed43210a2adfc00eec82c73e080641f9a242232ffc616136d5e66eca710c.js" integrity="sha256-4&#43;jtQyEKKt/ADuyCxz4IBkH5okIjL/xhYTbV5m7KcQw="></script>
+<script defer src="/harbor-sync/search.min.4146b4f07c5c9959393e9933aaef01c1462a4ea4847468eef7e63b291feff8be.js" integrity="sha256-QUa08HxcmVk5Ppkzqu8BwUYqTqSEdGju9&#43;Y7KR/v&#43;L4="></script>
 
 
 
@@ -208,7 +208,28 @@ The following metrics are available:</p>
 </tr>
 </tbody>
 </table>
-</article>
+
+<h2 id="alerts">Alerts</h2>
+
+<p>Here are example alerts</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">groups:
+- name: harbor_rules
+  rules:
+  - alert: HarborAccountExpires
+    expr: (harbor_robot_account_expiry - time()) / <span style="color:#ae81ff">86400</span> &lt; <span style="color:#ae81ff">14</span>
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: <span style="color:#e6db74">&#34;CRITICAL: harbor robot account &#39;{{ $labels.robot }}&#39; in project &#39;{{ $labels.project }}&#39; expires in less than 14d&#34;</span>
+      description: <span style="color:#e6db74">&#34;harbor robot account expires soon&#34;</span>
+  - alert: HarborOutgoingWebhooksFailed
+    expr: sum(increase(harbor_sync_sent_webhooks{status_code!=<span style="color:#e6db74">&#34;200&#34;</span>}[1h])) by (target) &gt; <span style="color:#ae81ff">0</span>
+    labels:
+      severity: critical
+    annotations:
+      summary: <span style="color:#e6db74">&#34;CRITICAL: harbor outgoing webhook failed: &#39;{{ $labels.target }}&#39;&#34;</span>
+      description: <span style="color:#e6db74">&#34;harbor does not deliver the robot account information correctly&#34;</span></code></pre></div></article>
 
       
 
@@ -221,7 +242,10 @@ The following metrics are available:</p>
   <aside class="book-toc level-6 fixed">
     <nav id="TableOfContents">
 <ul>
-<li><a href="#metrics">Metrics</a></li>
+<li><a href="#metrics">Metrics</a>
+<ul>
+<li><a href="#alerts">Alerts</a></li>
+</ul></li>
 </ul>
 </nav>
   </aside>
