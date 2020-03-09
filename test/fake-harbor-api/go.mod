@@ -1,6 +1,6 @@
 module github.com/moolen/harbor-sync/test/fake-harbor-api
 
-go 1.13
+go 1.14
 
 require (
 	github.com/gorilla/handlers v1.4.2
