@@ -68,9 +68,6 @@ func (s *Store) Set(project string, cred crdv1.RobotAccountCredential) error {
 		},
 	}
 	err = s.kubeClient.Create(ctx, &r)
-	if err != nil {
-		return nil
-	}
 	if apierrs.IsAlreadyExists(err) {
 		err = s.kubeClient.Get(ctx, types.NamespacedName{Name: rname}, &r)
 		if err != nil {
