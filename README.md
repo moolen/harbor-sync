@@ -15,8 +15,7 @@ A `HarborSync` defines which Harbor projects should be synced with which namespa
 You can find the documentation [here](http://moolen.github.io/harbor-sync).
 
 ## Status
-This project is in alpha state, we do not offer strong guarantees for our API interface.
-We will introduce breaking changes before the 1.0 release.
+This project is running in production. The API interface is considered stable.
 
 ### Contributions
 
