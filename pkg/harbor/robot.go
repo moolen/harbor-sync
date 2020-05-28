@@ -78,6 +78,17 @@ func (c *Client) GetRobotAccounts(project Project) ([]Robot, error) {
 		robotAccountExpiry.WithLabelValues(project.Name, acc.Name).Set(float64(acc.ExpiresAt))
 	}
 
+	// remove labels for non-existent robots
+	c.mu.Lock()
+	if last, ok := c.lastRobotAccounts[project.Name]; ok {
+		diff := diffRobotAccounts(last, robotAccounts)
+		for _, rname := range diff {
+			robotAccountExpiry.DeleteLabelValues(project.Name, rname)
+		}
+	}
+	c.lastRobotAccounts[project.Name] = toRobotNames(robotAccounts)
+	c.mu.Unlock()
+
 	return robotAccounts, nil
 }
 
@@ -159,4 +170,35 @@ func (c *Client) DeleteRobotAccount(project Project, robotID int) error {
 	}
 	defer resp.Body.Close()
 	return nil
+}
+
+// diffRobotAccounts returns the difference between last and currently observed robot accounts
+func diffRobotAccounts(last []string, current []Robot) []string {
+	var diff []string
+	c := toMap(current)
+	for _, l := range last {
+		if !c[l] {
+			// old entry is missing now
+			diff = append(diff, l)
+		}
+	}
+	return diff
+}
+
+// toMap transforms a robot list to a map
+func toMap(rr []Robot) map[string]bool {
+	m := make(map[string]bool)
+	for _, r := range rr {
+		m[r.Name] = true
+	}
+	return m
+}
+
+// toRobotNames returns a list of robot account names
+func toRobotNames(rr []Robot) []string {
+	var out []string
+	for _, r := range rr {
+		out = append(out, r.Name)
+	}
+	return out
 }

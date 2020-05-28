@@ -23,6 +23,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"sync"
 	"time"
 
 	"github.com/tomnomnom/linkheader"
@@ -35,6 +36,10 @@ type Client struct {
 	Password   string
 	UserAgent  string
 	HTTPClient *http.Client
+	// we need to keep track of robot accounts that were
+	// returned previously to get proper metrics (e.g. robot account gets deleted)
+	mu                *sync.Mutex
+	lastRobotAccounts map[string][]string
 }
 
 // New constructs a new harbor API client
@@ -62,11 +67,13 @@ func New(baseurl, username, password string, skipVerifyTLS bool) (*Client, error
 	}
 
 	return &Client{
-		APIBaseURL: parsedBaseURL,
-		Username:   username,
-		Password:   password,
-		UserAgent:  "harbor-sync",
-		HTTPClient: c,
+		APIBaseURL:        parsedBaseURL,
+		Username:          username,
+		Password:          password,
+		UserAgent:         "harbor-sync",
+		HTTPClient:        c,
+		mu:                &sync.Mutex{},
+		lastRobotAccounts: make(map[string][]string),
 	}, nil
 }
 
