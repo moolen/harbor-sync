@@ -151,6 +151,7 @@ var controllerCmd = &cobra.Command{
 		}
 		// +kubebuilder:scaffold:builder
 		log.Info("starting manager")
+		mgr.Add(harborRepo)
 		if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 			log.Error(err, "problem running manager")
 			os.Exit(1)

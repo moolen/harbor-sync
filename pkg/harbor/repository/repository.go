@@ -37,6 +37,7 @@ type Repository struct {
 	StateHash     uint64
 	ProjectsCache *ProjectsCache
 	RobotsCache   *RobotsCache
+	syncChan      chan struct{}
 }
 
 // New is the repository constructor
@@ -52,6 +53,7 @@ func New(client harbor.API, interval time.Duration) (*Repository, error) {
 			mu:   &sync.RWMutex{},
 			data: make(map[string][]harbor.Robot),
 		},
+		syncChan: make(chan struct{}),
 	}, nil
 }
 
@@ -125,13 +127,15 @@ func (r *Repository) UpdateHash() error {
 	return nil
 }
 
-// Sync returns a channel which notifies the user
-// when the underlying data has changed
-// It starts a goroutine which polls the API for changes
-func (r *Repository) Sync() <-chan struct{} {
-	c := make(chan struct{})
-	go func() {
-		for {
+// Start starts the goroutine which polls the API for changes
+// The component will stop running when the channel is closed.
+// Start blocks until the channel is closed
+func (r *Repository) Start(stop <-chan struct{}) error {
+	for {
+		select {
+		case <-stop:
+			return nil
+		default:
 			oldHash := r.StateHash
 			log.WithFields(log.Fields{
 				"component": "repository",
@@ -149,7 +153,7 @@ func (r *Repository) Sync() <-chan struct{} {
 					"component": "repository",
 					"action":    "sync",
 				}).Debugf("harbor repo state changed")
-				c <- struct{}{}
+				r.syncChan <- struct{}{}
 			}
 			log.WithFields(log.Fields{
 				"component": "repository",
@@ -157,6 +161,11 @@ func (r *Repository) Sync() <-chan struct{} {
 			}).Infof("end sync")
 			<-time.After(r.PollInterval)
 		}
-	}()
-	return c
+	}
+}
+
+// Sync returns a channel which notifies the user
+// when the underlying data has changed
+func (r *Repository) Sync() <-chan struct{} {
+	return r.syncChan
 }
