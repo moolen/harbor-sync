@@ -53,7 +53,7 @@ type ClairVulnerabilityDetail struct {
 
 // SystemInfo calls /systeminfo and returns the response
 func (c *Client) SystemInfo() (*SystemInfoResponse, error) {
-	resp, err := c.newRequest("GET", "/api/systeminfo", nil)
+	resp, err := c.newRequest("GET", "systeminfo", nil)
 	if err != nil {
 		return nil, err
 	}

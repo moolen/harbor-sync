@@ -23,8 +23,11 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/tomnomnom/linkheader"
 )
@@ -32,6 +35,7 @@ import (
 // Client implements the harbor.API interface. Each func call issues a HTTP requsts to harbor
 type Client struct {
 	APIBaseURL *url.URL
+	APIPath    string
 	Username   string
 	Password   string
 	UserAgent  string
@@ -43,7 +47,7 @@ type Client struct {
 }
 
 // New constructs a new harbor API client
-func New(baseurl, username, password string, skipVerifyTLS bool) (*Client, error) {
+func New(baseurl, apiPath, username, password string, skipVerifyTLS bool) (*Client, error) {
 	if baseurl == "" {
 		return nil, fmt.Errorf("API baseurl can not be empty")
 	}
@@ -68,6 +72,7 @@ func New(baseurl, username, password string, skipVerifyTLS bool) (*Client, error
 
 	return &Client{
 		APIBaseURL:        parsedBaseURL,
+		APIPath:           apiPath,
 		Username:          username,
 		Password:          password,
 		UserAgent:         "harbor-sync",
@@ -83,7 +88,12 @@ func (c *Client) BaseURL() string {
 }
 
 func (c *Client) newRequest(method string, path string, body io.Reader) (*http.Response, error) {
-	u, err := url.ParseRequestURI(path)
+	// if relative path: prepend API path segment
+	// CAUTION: pagination gives us an absolute path already
+	if !strings.HasPrefix(path, "/") {
+		path = c.APIPath + path
+	}
+	u, err := url.Parse(path)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +115,7 @@ func (c *Client) newRequest(method string, path string, body io.Reader) (*http.R
 		httpDuration := time.Since(start)
 		harborAPIRequestsHistogram.WithLabelValues(fmt.Sprintf("%d", code), method, u.Path).Observe(httpDuration.Seconds())
 	}()
-
+	log.Debugf("issuing request: %s %s", req.Method, req.URL.String())
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return nil, err

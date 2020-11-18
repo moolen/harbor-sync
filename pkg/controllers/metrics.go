@@ -31,9 +31,14 @@ var (
 		Name: "harbor_sync_sent_webhooks",
 		Help: "The number of webhooks sent",
 	}, []string{"config", "target", "status_code"})
+	robotChangedCounter = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "harbor_sync_robot_updated",
+		Help: "The number of robot account updates",
+	}, []string{"config", "project", "suffix"})
 )
 
 func init() {
 	metrics.Registry.Register(matchingProjectsGauge)
 	metrics.Registry.Register(webhookCounter)
+	metrics.Registry.Register(robotChangedCounter)
 }

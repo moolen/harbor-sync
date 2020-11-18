@@ -133,7 +133,7 @@ func ReconcileRobotAccounts(
 	}).Info("creating robot account")
 	res, err := harborAPI.CreateRobotAccount(accountSuffix, pushAccess, project)
 	if err != nil {
-		return nil, false, fmt.Errorf("could not create robot account: %s", err)
+		return nil, false, fmt.Errorf("could not create robot account: %w", err)
 	}
 
 	// check if old token exists: update it or append it to list

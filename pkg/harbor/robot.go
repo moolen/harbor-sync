@@ -60,7 +60,7 @@ type CreateRobotResponse struct {
 // GetRobotAccounts returns all robot accounts for the given project
 func (c *Client) GetRobotAccounts(project Project) ([]Robot, error) {
 	var robotAccounts []Robot
-	resp, err := c.newRequest("GET", fmt.Sprintf("/api/projects/%d/robots", project.ID), nil)
+	resp, err := c.newRequest("GET", fmt.Sprintf("projects/%d/robots", project.ID), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +142,7 @@ func (c *Client) CreateRobotAccount(name string, pushAccess bool, project Projec
 	if err != nil {
 		return nil, err
 	}
-	resp, err := c.newRequest("POST", fmt.Sprintf("/api/projects/%d/robots", project.ID), bytes.NewReader(reqBody))
+	resp, err := c.newRequest("POST", fmt.Sprintf("projects/%d/robots", project.ID), bytes.NewReader(reqBody))
 	if err != nil {
 		return nil, fmt.Errorf("could not create new http request: %s", err.Error())
 	}
@@ -164,7 +164,7 @@ func (c *Client) CreateRobotAccount(name string, pushAccess bool, project Projec
 
 // DeleteRobotAccount deletes the specified robot account
 func (c *Client) DeleteRobotAccount(project Project, robotID int) error {
-	resp, err := c.newRequest("DELETE", fmt.Sprintf("/api/projects/%d/robots/%d", project.ID, robotID), nil)
+	resp, err := c.newRequest("DELETE", fmt.Sprintf("projects/%d/robots/%d", project.ID, robotID), nil)
 	if err != nil {
 		return err
 	}

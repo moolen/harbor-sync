@@ -17,7 +17,7 @@
       
       <guid>http://moolen.github.io/harbor-sync/docs/configuration/</guid>
       <description>Configuration The harbor-sync binary
-Environment Variables    ENV DEFAULT DESCRIPTION     HARBOR_API_ENDPOINT - specify the harbor URL   HARBOR_USERNAME - set the username used for authenticating with harbor   HARBOR_PASSWORD - password for harbor authentication   LEADER_ELECT true enable/disable leader election   NAMESPACE kube-system namespace in which harbor-sync runs (used for leader-election)   HARBOR_POLL_INTERVAL 5m poll interval to update harbor projects &amp;amp; robot accounts   FORCE_SYNC_INTERVAL 10m set this to force reconciliation after a certain time   ROTATION_INTERVAL 60m set this to rotate the credentials after the specified time    Command Line Interface The harbor-sync binary has a subcommand that starts sync process: controller.</description>
+Environment Variables    ENV DEFAULT DESCRIPTION     HARBOR_API_ENDPOINT - specify the harbor URL   HARBOR_API_PREFIX - Prefix of the Harbor API. For Harbor v2 set this to &amp;lsquo;/api/v2.0/&amp;rsquo;   HARBOR_USERNAME - set the username used for authenticating with harbor   HARBOR_PASSWORD - password for harbor authentication   LEADER_ELECT true enable/disable leader election   NAMESPACE kube-system namespace in which harbor-sync runs (used for leader-election)   HARBOR_POLL_INTERVAL 5m poll interval to update harbor projects &amp;amp; robot accounts   FORCE_SYNC_INTERVAL 10m set this to force reconciliation after a certain time   ROTATION_INTERVAL 60m set this to rotate the credentials after the specified time    Running Harbor v2 This project supports harbor v2.</description>
     </item>
     
     <item>
