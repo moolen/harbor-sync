@@ -37,6 +37,7 @@ var standaloneCmd = &cobra.Command{
 
 		harborClient, err := harbor.New(
 			viper.GetString("harbor-api-endpoint"),
+			viper.GetString("harbor-api-prefix"),
 			viper.GetString("harbor-username"),
 			viper.GetString("harbor-password"),
 			viper.GetBool("skip-tls-verification"),

@@ -83,7 +83,7 @@ func (s *Store) Set(project string, cred crdv1.RobotAccountCredential) error {
 		}
 		return nil
 	}
-	return fmt.Errorf("could not create robot account %s: %s", rname, err)
+	return err
 }
 
 func (s *Store) Reset() error {

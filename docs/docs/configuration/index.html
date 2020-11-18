@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="/harbor-sync/book.min.6c7317d2e8552a0ac3ea8fd4ba500c3dfb1cc9c74e7afd73eee6d729751fad30.css" integrity="sha256-bHMX0uhVKgrD6o/UulAMPfscycdOev1z7ubXKXUfrTA=">
 
 
-<script defer src="/harbor-sync/search.min.4146b4f07c5c9959393e9933aaef01c1462a4ea4847468eef7e63b291feff8be.js" integrity="sha256-QUa08HxcmVk5Ppkzqu8BwUYqTqSEdGju9&#43;Y7KR/v&#43;L4="></script>
+<script defer src="/harbor-sync/search.min.77eb1646c8a0d1cf6c613146e8a71edc371aa1cf8ac9be680f5c6a5d5f2552bd.js" integrity="sha256-d&#43;sWRsig0c9sYTFG6Kce3Dcaoc&#43;Kyb5oD1xqXV8lUr0="></script>
 
 
 
@@ -186,6 +186,12 @@ https://github.com/alex-shpak/hugo-book
 </tr>
 
 <tr>
+<td><code>HARBOR_API_PREFIX</code></td>
+<td>-</td>
+<td>Prefix of the Harbor API. For Harbor v2 set this to &lsquo;/api/v2.0/&rsquo;</td>
+</tr>
+
+<tr>
 <td><code>HARBOR_USERNAME</code></td>
 <td>-</td>
 <td>set the username used for authenticating with harbor</td>
@@ -229,6 +235,10 @@ https://github.com/alex-shpak/hugo-book
 </tbody>
 </table>
 
+<h2 id="running-harbor-v2">Running Harbor v2</h2>
+
+<p>This project supports harbor v2. You must set <code>HARBOR_API_PREFIX</code> to <code>/api/v2.0/</code> to point the controller to the correct API endpoint</p>
+
 <h2 id="command-line-interface">Command Line Interface</h2>
 
 <p>The harbor-sync binary has a subcommand that starts sync process: <code>controller</code>.</p>
@@ -249,6 +259,7 @@ Available Commands:
 Flags:
       --force-sync-interval duration    set this to force reconciliation after a certain time (default 10m0s)
       --harbor-api-endpoint string      URL to the Harbor API Endpoint
+      --harbor-api-prefix string        Prefix of the Harbor API. For Harbor v2 set this to '/api/v2.0/' (default /api/)
       --harbor-password string          Harbor password to use for authentication
       --harbor-poll-interval duration   poll interval to update harbor projects &amp; robot accounts (default 5m0s)
       --harbor-username string          Harbor username to use for authentication
@@ -279,6 +290,7 @@ Global Flags:
 <li><a href="#configuration">Configuration</a>
 <ul>
 <li><a href="#environment-variables">Environment Variables</a></li>
+<li><a href="#running-harbor-v2">Running Harbor v2</a></li>
 <li><a href="#command-line-interface">Command Line Interface</a>
 <ul>
 <li><a href="#standalone-mode">Standalone mode</a></li>

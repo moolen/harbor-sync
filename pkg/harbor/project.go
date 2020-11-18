@@ -25,7 +25,7 @@ import (
 func (c *Client) ListProjects() ([]Project, error) {
 
 	var allProjects []Project
-	next := "/api/projects?page=1&page_size=10"
+	next := "projects?page=1&page_size=10"
 
 	for {
 		var body []byte

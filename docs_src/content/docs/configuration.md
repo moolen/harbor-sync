@@ -4,18 +4,20 @@ The harbor-sync binary
 
 ## Environment Variables
 
-| ENV | DEFAULT | DESCRIPTION |
-|---|---|---|
-| `HARBOR_API_ENDPOINT` | - | specify the harbor URL |
-| `HARBOR_USERNAME` | - | set the username used for authenticating with harbor |
-| `HARBOR_PASSWORD` | - | password for harbor authentication |
-| `LEADER_ELECT` | true | enable/disable leader election |
-| `NAMESPACE` | kube-system | namespace in which harbor-sync runs (used for leader-election) |
-| `HARBOR_POLL_INTERVAL` | 5m | poll interval to update harbor projects & robot accounts |
-| `FORCE_SYNC_INTERVAL` | 10m | set this to force reconciliation after a certain time |
-| `ROTATION_INTERVAL` | 60m | set this to rotate the credentials after the specified time |
+| ENV                    | DEFAULT     | DESCRIPTION                                                                      |
+| ---------------------- | ----------- | -------------------------------------------------------------------------------- |
+| `HARBOR_API_ENDPOINT`  | -           | specify the harbor URL                                                           |
+| `HARBOR_API_PREFIX`    | -           | Prefix of the Harbor API. For Harbor v2 set this to '/api/v2.0/' |
+| `HARBOR_USERNAME`      | -           | set the username used for authenticating with harbor                             |
+| `HARBOR_PASSWORD`      | -           | password for harbor authentication                                               |
+| `LEADER_ELECT`         | true        | enable/disable leader election                                                   |
+| `NAMESPACE`            | kube-system | namespace in which harbor-sync runs (used for leader-election)                   |
+| `HARBOR_POLL_INTERVAL` | 5m          | poll interval to update harbor projects & robot accounts                         |
+| `FORCE_SYNC_INTERVAL`  | 10m         | set this to force reconciliation after a certain time                            |
+| `ROTATION_INTERVAL`    | 60m         | set this to rotate the credentials after the specified time                      |
 
-
+## Running Harbor v2
+This project supports harbor v2. You must set `HARBOR_API_PREFIX` to `/api/v2.0/` to point the controller to the correct API endpoint
 
 ## Command Line Interface
 
@@ -38,6 +40,7 @@ Available Commands:
 Flags:
       --force-sync-interval duration    set this to force reconciliation after a certain time (default 10m0s)
       --harbor-api-endpoint string      URL to the Harbor API Endpoint
+      --harbor-api-prefix string        Prefix of the Harbor API. For Harbor v2 set this to '/api/v2.0/' (default /api/)
       --harbor-password string          Harbor password to use for authentication
       --harbor-poll-interval duration   poll interval to update harbor projects & robot accounts (default 5m0s)
       --harbor-username string          Harbor username to use for authentication

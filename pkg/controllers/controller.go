@@ -156,6 +156,10 @@ func Reconcile(
 			continue
 		}
 
+		if changed {
+			robotChangedCounter.WithLabelValues(cfg.ObjectMeta.Name, project.Name, selector.RobotAccountSuffix).Inc()
+		}
+
 		if changed && len(cfg.Spec.Webhook) > 0 {
 			log.WithFields(log.Fields{
 				"robot_name": credential.Name,

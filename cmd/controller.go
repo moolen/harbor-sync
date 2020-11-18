@@ -27,6 +27,7 @@ var (
 	scheme            *runtime.Scheme
 	metricsAddr       *string
 	harborAPIEndpoint *string
+	harborAPIPrefix   *string
 	harborAPIUsername *string
 	harborAPIPassword *string
 	skipVerifyTLS     *bool
@@ -45,6 +46,7 @@ func init() {
 
 	flags := controllerCmd.PersistentFlags()
 	harborAPIEndpoint = flags.String("harbor-api-endpoint", "", "URL to the Harbor API Endpoint")
+	harborAPIPrefix = flags.String("harbor-api-prefix", "/api/", "Prefix of the Harbor API. For Harbor v2 set this to '/api/v2.0/'")
 	harborAPIUsername = flags.String("harbor-username", "", "Harbor username to use for authentication")
 	harborAPIPassword = flags.String("harbor-password", "", "Harbor password to use for authentication")
 	skipVerifyTLS = flags.Bool("skip-tls-verification", false, "Skip TLS certificate verification")
@@ -58,6 +60,7 @@ func init() {
 	viper.BindEnv("harbor-username", "HARBOR_USERNAME")
 	viper.BindEnv("harbor-password", "HARBOR_PASSWORD")
 	viper.BindEnv("harbor-api-endpoint", "HARBOR_API_ENDPOINT")
+	viper.BindEnv("harbor-api-prefix", "HARBOR_API_PREFIX")
 	viper.BindEnv("leader-elect", "LEADER_ELECT")
 	viper.BindEnv("namespace", "NAMESPACE")
 	viper.BindEnv("harbor-poll-interval", "HARBOR_POLL_INTERVAL")
@@ -73,6 +76,7 @@ var controllerCmd = &cobra.Command{
 		// dump cfg
 		log.WithFields(log.Fields{
 			"harbor-api-endpoint":  viper.GetBool("harbor-api-endpoint"),
+			"harbor-api-prefix":    viper.GetBool("harbor-api-prefix"),
 			"leader-elect":         viper.GetBool("leader-elect"),
 			"loglevel":             viper.GetString("loglevel"),
 			"namespace":            viper.GetDuration("namespace"),
@@ -83,6 +87,7 @@ var controllerCmd = &cobra.Command{
 
 		harborClient, err := harbor.New(
 			viper.GetString("harbor-api-endpoint"),
+			viper.GetString("harbor-api-prefix"),
 			viper.GetString("harbor-username"),
 			viper.GetString("harbor-password"),
 			viper.GetBool("skip-tls-verification"),
@@ -163,12 +168,12 @@ var controllerCmd = &cobra.Command{
 func checkHarbor(client *harbor.Client) error {
 	info, err := client.SystemInfo()
 	if err != nil {
-		return fmt.Errorf("unable to get harbor system info")
+		return fmt.Errorf("unable to get harbor system info: %w", err)
 	}
 	check, _ := semver.Make("1.8.0")
 	v, err := semver.Make(strings.TrimLeft(info.HarborVersion, "v"))
 	if err != nil {
-		return fmt.Errorf("unable to validate harbor version")
+		return fmt.Errorf("unable to validate harbor version: %w", err)
 	}
 	v.Pre = nil // pre-releases are OK, too
 	if v.LT(check) {
