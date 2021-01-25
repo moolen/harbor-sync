@@ -12,7 +12,7 @@ COPY main.go main.go
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -a -o harbor-sync main.go
 
-FROM alpine:3.10
+FROM alpine:3.12
 WORKDIR /
 RUN apk add --update ca-certificates
 COPY --from=builder /workspace/harbor-sync .
