@@ -44,7 +44,7 @@ fi
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $DIR
-export K8S_VERSION=${K8S_VERSION:-v1.20.4}
+export K8S_VERSION=${K8S_VERSION:-v1.20.2}
 export DOCKER_CLI_EXPERIMENTAL=enabled
 
 KIND_CLUSTER_NAME="harbor-sync-dev"
