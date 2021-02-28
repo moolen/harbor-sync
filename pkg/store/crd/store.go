@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strings"
 	"time"
 
 	crdv1 "github.com/moolen/harbor-sync/api/v1"
@@ -59,6 +60,10 @@ func (s *Store) Set(project string, cred crdv1.RobotAccountCredential) error {
 	r := crdv1.HarborRobotAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: rname,
+			Annotations: map[string]string{
+				"project": project,
+				"robot":   cred.Name,
+			},
 		},
 		Spec: crdv1.HarborRobotAccountSpec{
 			Credential: cred,
@@ -97,6 +102,11 @@ func (s *Store) Reset() error {
 }
 
 func BuildResourceName(project, robot string) (string, error) {
+	// 2.2.0 introduces "global" robot accounts
+	// when using the old API they get created
+	// with a different name: robot${project-name}+{provided-name}
+	// on the GET side we map them back to robot${provided-name}
+	robot = strings.TrimPrefix(robot, fmt.Sprintf("robot$%s+", project))
 	in := fmt.Sprintf("%s-%s-%d", project, robot, hash(project, robot))
 	out := reg.ReplaceAllString(in, "-")
 	if len(out) > 63 {

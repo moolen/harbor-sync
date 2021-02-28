@@ -50,18 +50,27 @@ func ReconcileRobotAccounts(
 		return nil, false, fmt.Errorf("could not get robot accounts from harbor")
 	}
 
+	log.WithFields(log.Fields{
+		"project_name":   project.Name,
+		"robot_accounts": len(robots),
+	}).Info("found robot accounts")
 	// check if we manage the credentials for this robot account
 	// if we do not have them we first delete, then re-create the robot account
 	for _, robot := range robots {
+		log.WithFields(log.Fields{
+			"project_name":   project.Name,
+			"robot_account":  robot.Name,
+			"account_suffix": accountSuffix,
+		}).Info("trying to match robot account")
 
 		// only one robot account will match
-		if robot.Name == addPrefix(accountSuffix) {
+		if matchRobotAccount(robot, project, accountSuffix) {
 			log.WithFields(log.Fields{
 				"project_name":  project.Name,
 				"robot_account": robot.Name,
 			}).Info("robot account already exists")
-			haveCredentials := creds.Has(project.Name, addPrefix(accountSuffix))
-			existingCreds, _ := creds.Get(project.Name, addPrefix(accountSuffix))
+			haveCredentials := creds.Has(project.Name, robot.Name)
+			existingCreds, _ := creds.Get(project.Name, robot.Name)
 
 			// case: robot account exists in harbor, but we do not have the credentials: re-create!
 			if !haveCredentials {
@@ -156,6 +165,21 @@ func ReconcileRobotAccounts(
 
 func addPrefix(str string) string {
 	return robotPrefix + str
+}
+
+func matchRobotAccount(robot harbor.Robot, project harbor.Project, accountSuffix string) bool {
+	// pre global-robot-accounts (2.2.0+)
+	if robot.Name == addPrefix(accountSuffix) {
+		return true
+	}
+	// 2.2.0 introduces "global" robot accounts
+	// when using the old API they get created
+	// with a different name: robot${project-name}+{provided-name}
+	// on the GET side we map them back to robot${provided-name}
+	if robot.Name == addPrefix(fmt.Sprintf("%s+%s", project.Name, accountSuffix)) {
+		return true
+	}
+	return false
 }
 
 func shouldRotate(robot harbor.Robot, interval time.Duration) bool {
