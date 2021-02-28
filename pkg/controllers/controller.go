@@ -57,8 +57,7 @@ type HarborSyncConfigReconciler struct {
 // +kubebuilder:rbac:groups=crd.harborsync.k8s.io,resources=harborsyncs/status,verbs=get;update;patch
 
 // Reconcile reconciles the desired state in the cluster
-func (r *HarborSyncConfigReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	ctx := context.Background()
+func (r *HarborSyncConfigReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	var syncConfig crdv1.HarborSync
 	if err := r.Get(ctx, req.NamespacedName, &syncConfig); err != nil {
 		if apierrs.IsNotFound(err) {

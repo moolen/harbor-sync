@@ -113,5 +113,5 @@ bin/kubectl:
 # find or download controller-gen
 # download controller-gen if necessary
 bin/controller-gen:
-	go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.2.5
+	go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.5.0
 	mkdir bin; mv $(GOPATH)/bin/controller-gen bin/controller-gen

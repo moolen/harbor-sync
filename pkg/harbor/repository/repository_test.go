@@ -17,6 +17,7 @@ limitations under the License.
 package repository
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -115,8 +116,8 @@ var _ = Describe("Repository", func() {
 		err = rep.Update()
 		Expect(err).ToNot(HaveOccurred())
 
-		stop := make(chan struct{})
-		go rep.Start(stop)
+		ctx, cancel := context.WithCancel(context.Background())
+		go rep.Start(ctx)
 		changeChan := rep.Sync()
 
 		// change the repo state
@@ -126,7 +127,7 @@ var _ = Describe("Repository", func() {
 		}()
 
 		<-changeChan
-		stop <- struct{}{}
+		cancel()
 	})
 })
 

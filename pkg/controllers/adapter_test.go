@@ -17,8 +17,6 @@ limitations under the License.
 package controllers
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"github.com/moolen/harbor-sync/pkg/test"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -52,9 +50,9 @@ var _ = Describe("Adapter", func() {
 		evt2 := <-out
 		evt3 := <-out
 
-		Expect(evt1.Meta.(*metav1.ObjectMeta).Name).To(Equal("bar"))
-		Expect(evt2.Meta.(*metav1.ObjectMeta).Name).To(Equal("baz"))
-		Expect(evt3.Meta.(*metav1.ObjectMeta).Name).To(Equal("foo"))
+		Expect(evt1.Object.GetName()).To(Equal("bar"))
+		Expect(evt2.Object.GetName()).To(Equal("baz"))
+		Expect(evt3.Object.GetName()).To(Equal("foo"))
 		close(done)
 	})
 })
