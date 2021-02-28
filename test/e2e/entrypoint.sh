@@ -37,6 +37,7 @@ ginkgo_args=(
   "-flakeAttempts=2"
   "-p"
   "-trace"
+  "-v"
   "-slowSpecThreshold=${SLOW_E2E_THRESHOLD}"
   "-r"
   "-timeout=45m" # Suite timeout should be lower than Prow job timeout to avoid abrupt termination

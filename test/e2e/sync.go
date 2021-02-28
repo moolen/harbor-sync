@@ -5,27 +5,18 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/moolen/harbor-sync/pkg/harbor"
 	"github.com/moolen/harbor-sync/test/e2e/framework"
 	"github.com/onsi/ginkgo"
 )
 
 var _ = ginkgo.Describe("[Sync]", func() {
-	f := framework.NewDefaultFramework("log")
+	f := framework.NewDefaultFramework("sync")
 
 	ginkgo.BeforeEach(func() {
-		f.Harbor.EnsureUpdate(f.Namespace, harbor.SystemInfoResponse{
-			HarborVersion: "1.10.1",
-		}, []harbor.Project{
-			{
-				Name: fmt.Sprintf("proj-%s-foo", f.Namespace),
-				ID:   0,
-			},
-			{
-				Name: fmt.Sprintf("proj-%s-bar", f.Namespace),
-				ID:   100,
-			},
-		}, map[string][]harbor.Robot{})
+		f.EnsureProjects([]string{
+			fmt.Sprintf("proj-%s-foo", f.Namespace),
+			fmt.Sprintf("proj-%s-bar", f.Namespace),
+		})
 		_, err := framework.CreateNamespace(fmt.Sprintf("team-%s-foo", f.Namespace), f.KubeClientSet)
 		assert.Nil(ginkgo.GinkgoT(), err, "error creating team namespace")
 
@@ -40,7 +31,6 @@ var _ = ginkgo.Describe("[Sync]", func() {
 
 		err = framework.DeleteKubeNamespace(f.KubeClientSet, fmt.Sprintf("team-%s-bar", f.Namespace))
 		assert.Nil(ginkgo.GinkgoT(), err, "error creating team namespace")
-
 	})
 
 	ginkgo.It("should do sync robot accounts", func() {

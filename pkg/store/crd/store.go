@@ -82,7 +82,7 @@ func (s *Store) Set(project string, cred crdv1.RobotAccountCredential) error {
 		r.Status = crdv1.HarborRobotAccountStatus{
 			LastSync: time.Now().Unix(),
 		}
-		err = s.kubeClient.Update(context.TODO(), &r)
+		err = s.kubeClient.Update(context.Background(), &r)
 		if err != nil {
 			return fmt.Errorf("could not update robot account %s: %s", rname, err)
 		}
