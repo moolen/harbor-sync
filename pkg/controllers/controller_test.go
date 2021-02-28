@@ -31,7 +31,7 @@ import (
 	"github.com/moolen/harbor-sync/pkg/test"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
@@ -108,7 +108,7 @@ var _ = Describe("Controller", func() {
 				Secret:    "$1-pull-secret",
 				Type:      crdv1.MatchMappingType,
 			}, nil)
-			_, err := hscr.Reconcile(ctrl.Request{
+			_, err := hscr.Reconcile(context.Background(), ctrl.Request{
 				NamespacedName: types.NamespacedName{
 					Name: "my-recon-cfg",
 				},
@@ -155,13 +155,13 @@ var _ = Describe("Controller", func() {
 			close(done)
 		})
 
-		It("should reconcile robot accounts by translating", func(done Done) {
+		It("should reconcile robot accounts by translating", func() {
 			test.EnsureHarborSyncConfigWithParams(k8sClient, "my-recon-cfg", "team-(.*)", &crdv1.ProjectMapping{
 				Namespace: "team-recon-$1",
 				Secret:    "default-pull-secret",
 				Type:      crdv1.TranslateMappingType,
 			}, nil)
-			_, err := hscr.Reconcile(ctrl.Request{
+			_, err := hscr.Reconcile(context.Background(), ctrl.Request{
 				NamespacedName: types.NamespacedName{
 					Name: "my-recon-cfg",
 				},
@@ -184,17 +184,19 @@ var _ = Describe("Controller", func() {
 				},
 			}
 
-			for _, expect := range expected {
-				var secret v1.Secret
-				err := k8sClient.Get(context.Background(), types.NamespacedName{
-					Namespace: expect.ns,
-					Name:      expect.secret,
-				}, &secret)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(secret.Data[v1.DockerConfigJsonKey]).ToNot(BeNil())
-				Expect(string(secret.Data[v1.DockerConfigJsonKey])).To(Equal(defaultRobotSecretData))
-			}
-			close(done)
+			Eventually(func() bool {
+				for _, expect := range expected {
+					var secret v1.Secret
+					err := k8sClient.Get(context.Background(), types.NamespacedName{
+						Namespace: expect.ns,
+						Name:      expect.secret,
+					}, &secret)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(secret.Data[v1.DockerConfigJsonKey]).ToNot(BeNil())
+					Expect(string(secret.Data[v1.DockerConfigJsonKey])).To(Equal(defaultRobotSecretData))
+				}
+				return true
+			})
 		})
 
 		It("should call the webhook", func(done Done) {
@@ -235,7 +237,7 @@ var _ = Describe("Controller", func() {
 					Endpoint: srv.URL,
 				},
 			})
-			_, err := hscr.Reconcile(ctrl.Request{
+			_, err := hscr.Reconcile(context.Background(), ctrl.Request{
 				NamespacedName: types.NamespacedName{
 					Name: "my-recon-cfg",
 				},
@@ -281,7 +283,7 @@ var _ = Describe("Controller", func() {
 					Endpoint: srv.URL,
 				},
 			})
-			_, err := hscr.Reconcile(ctrl.Request{
+			_, err := hscr.Reconcile(context.Background(), ctrl.Request{
 				NamespacedName: types.NamespacedName{
 					Name: "my-recon-cfg",
 				},

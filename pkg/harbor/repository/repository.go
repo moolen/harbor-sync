@@ -17,6 +17,7 @@ limitations under the License.
 package repository
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -130,10 +131,10 @@ func (r *Repository) UpdateHash() error {
 // Start starts the goroutine which polls the API for changes
 // The component will stop running when the channel is closed.
 // Start blocks until the channel is closed
-func (r *Repository) Start(stop <-chan struct{}) error {
+func (r *Repository) Start(ctx context.Context) error {
 	for {
 		select {
-		case <-stop:
+		case <-ctx.Done():
 			return nil
 		default:
 			oldHash := r.StateHash

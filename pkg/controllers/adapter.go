@@ -73,7 +73,6 @@ func (a Adapter) loop(c chan event.GenericEvent, input <-chan struct{}) {
 			// emit events using generic Event
 			for i := range cfgs.Items {
 				c <- event.GenericEvent{
-					Meta:   &cfgs.Items[i].ObjectMeta,
 					Object: &cfgs.Items[i],
 				}
 			}
