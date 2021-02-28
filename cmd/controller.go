@@ -30,6 +30,7 @@ var (
 	harborAPIPrefix   *string
 	harborAPIUsername *string
 	harborAPIPassword *string
+	harborAPIDebug    *bool
 	skipVerifyTLS     *bool
 )
 
@@ -47,6 +48,7 @@ func init() {
 	flags := controllerCmd.PersistentFlags()
 	harborAPIEndpoint = flags.String("harbor-api-endpoint", "", "URL to the Harbor API Endpoint")
 	harborAPIPrefix = flags.String("harbor-api-prefix", "/api/", "Prefix of the Harbor API. For Harbor v2 set this to '/api/v2.0/'")
+	harborAPIDebug = flags.Bool("harbor-api-debug", false, "dumps requests and responses to harbor")
 	harborAPIUsername = flags.String("harbor-username", "", "Harbor username to use for authentication")
 	harborAPIPassword = flags.String("harbor-password", "", "Harbor password to use for authentication")
 	skipVerifyTLS = flags.Bool("skip-tls-verification", false, "Skip TLS certificate verification")
@@ -61,6 +63,7 @@ func init() {
 	viper.BindEnv("harbor-password", "HARBOR_PASSWORD")
 	viper.BindEnv("harbor-api-endpoint", "HARBOR_API_ENDPOINT")
 	viper.BindEnv("harbor-api-prefix", "HARBOR_API_PREFIX")
+	viper.BindEnv("harbor-api-debug", "HARBOR_API_DEBUG")
 	viper.BindEnv("leader-elect", "LEADER_ELECT")
 	viper.BindEnv("namespace", "NAMESPACE")
 	viper.BindEnv("harbor-poll-interval", "HARBOR_POLL_INTERVAL")
@@ -91,6 +94,7 @@ var controllerCmd = &cobra.Command{
 			viper.GetString("harbor-username"),
 			viper.GetString("harbor-password"),
 			viper.GetBool("skip-tls-verification"),
+			viper.GetBool("harbor-api-debug"),
 		)
 		if err != nil {
 			log.Error(err, "unable to create harbor client")
