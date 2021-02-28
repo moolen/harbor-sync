@@ -6,9 +6,9 @@ metadata:
   creationTimestamp: null
   labels:
     app: harbor-sync
-  name: harborrobotaccounts.crd.harborsync.k8s.io
+  name: harborrobotaccounts.crd.harborsync.io
 spec:
-  group: crd.harborsync.k8s.io
+  group: crd.harborsync.io
   names:
     kind: HarborRobotAccount
     listKind: HarborRobotAccountList
@@ -83,9 +83,9 @@ metadata:
   creationTimestamp: null
   labels:
     app: harbor-sync
-  name: harborsyncs.crd.harborsync.k8s.io
+  name: harborsyncs.crd.harborsync.io
 spec:
-  group: crd.harborsync.k8s.io
+  group: crd.harborsync.io
   names:
     kind: HarborSync
     listKind: HarborSyncList
@@ -257,7 +257,7 @@ rules:
   - patch
   - update
 - apiGroups:
-  - crd.harborsync.k8s.io
+  - crd.harborsync.io
   resources:
   - harborrobotaccounts
   verbs:
@@ -269,7 +269,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - crd.harborsync.k8s.io
+  - crd.harborsync.io
   resources:
   - harborsyncs
   verbs:
@@ -281,7 +281,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - crd.harborsync.k8s.io
+  - crd.harborsync.io
   resources:
   - harborsyncs/status
   verbs:

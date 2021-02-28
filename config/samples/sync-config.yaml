@@ -1,4 +1,4 @@
-apiVersion: crd.harborsync.k8s.io/v1
+apiVersion: crd.harborsync.io/v1
 kind: HarborSync
 metadata:
   name: harborsync-sample
@@ -12,7 +12,7 @@ spec:
     namespace: team-$1 # references harbor project name from above: team-foo, team-bar, ...
     secret: $1-pull-secret # foo-pull-secret, bar-pull-secret, ...
 ---
-apiVersion: crd.harborsync.k8s.io/v1
+apiVersion: crd.harborsync.io/v1
 kind: HarborSync
 metadata:
   name: all-teams

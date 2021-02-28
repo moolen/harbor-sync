@@ -6,9 +6,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.2.5
   creationTimestamp: null
-  name: harborrobotaccounts.crd.harborsync.k8s.io
+  name: harborrobotaccounts.crd.harborsync.io
 spec:
-  group: crd.harborsync.k8s.io
+  group: crd.harborsync.io
   names:
     kind: HarborRobotAccount
     listKind: HarborRobotAccountList
