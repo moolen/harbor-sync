@@ -44,6 +44,12 @@ func TestResourceNames(t *testing.T) {
 			robot:   "foo-foo$barbaz[]/=FFF",
 			out:     "team-foo-foo-barbaz-FFF-27825",
 		},
+		// v2.2.0 introduces global robot accounts with a different naming scheme
+		{
+			project: "team-foo",
+			robot:   "robot$team-foo+fart",
+			out:     "team-foo-fart-8281",
+		},
 	}
 
 	for i, item := range tbl {
