@@ -22,6 +22,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"strings"
 	"sync"
@@ -44,10 +45,11 @@ type Client struct {
 	// returned previously to get proper metrics (e.g. robot account gets deleted)
 	mu                *sync.Mutex
 	lastRobotAccounts map[string][]string
+	debug             bool
 }
 
 // New constructs a new harbor API client
-func New(baseurl, apiPath, username, password string, skipVerifyTLS bool) (*Client, error) {
+func New(baseurl, apiPath, username, password string, skipVerifyTLS, debug bool) (*Client, error) {
 	if baseurl == "" {
 		return nil, fmt.Errorf("API baseurl can not be empty")
 	}
@@ -78,6 +80,7 @@ func New(baseurl, apiPath, username, password string, skipVerifyTLS bool) (*Clie
 		UserAgent:         "harbor-sync",
 		HTTPClient:        c,
 		mu:                &sync.Mutex{},
+		debug:             debug,
 		lastRobotAccounts: make(map[string][]string),
 	}, nil
 }
@@ -116,9 +119,17 @@ func (c *Client) newRequest(method string, path string, body io.Reader) (*http.R
 		harborAPIRequestsHistogram.WithLabelValues(fmt.Sprintf("%d", code), method, u.Path).Observe(httpDuration.Seconds())
 	}()
 	log.Debugf("issuing request: %s %s", req.Method, req.URL.String())
+	if c.debug {
+		rd, _ := httputil.DumpRequestOut(req, true)
+		log.Debugf(string(rd))
+	}
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return nil, err
+	}
+	if c.debug {
+		rd, _ := httputil.DumpResponse(resp, true)
+		log.Debugf(string(rd))
 	}
 	code = resp.StatusCode
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
