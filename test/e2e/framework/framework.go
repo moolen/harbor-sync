@@ -1,17 +1,21 @@
 package framework
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 
+	"github.com/mittwald/goharbor-client/apiv1/project"
+	harborclient "github.com/mittwald/goharbor-client/v3/apiv2"
 	"github.com/onsi/ginkgo"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	apiextcs "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
+
 	"k8s.io/client-go/tools/clientcmd"
 )
 
@@ -29,7 +33,7 @@ type Framework struct {
 	KubeConfig             *restclient.Config
 	APIExtensionsClientSet apiextcs.Interface
 
-	Harbor *FakeHarbor
+	Harbor *harborclient.RESTClient
 
 	Namespace string
 }
@@ -55,11 +59,14 @@ func NewDefaultFramework(baseName string) *Framework {
 	kubeClient, err := kubernetes.NewForConfig(kubeConfig)
 	assert.Nil(ginkgo.GinkgoT(), err, "creating Kubernetes API client")
 
+	harborClient, err := harborclient.NewRESTClientForHost("http://harbor.default.svc.cluster.local/api", "admin", "Harbor12345")
+	assert.Nil(ginkgo.GinkgoT(), err, "creating harbor client")
+
 	f := &Framework{
 		BaseName:      baseName,
 		KubeConfig:    kubeConfig,
 		KubeClientSet: kubeClient,
-		Harbor:        &FakeHarbor{},
+		Harbor:        harborClient,
 	}
 	ginkgo.BeforeEach(f.BeforeEach)
 	ginkgo.AfterEach(f.AfterEach)
@@ -75,16 +82,6 @@ func (f *Framework) BeforeEach() {
 	log.Infof("creating harbor-sync controller")
 	err = f.createHarborSyncController(f.Namespace)
 	assert.Nil(ginkgo.GinkgoT(), err, "creating harbor-sync")
-
-	err = WaitForPodsReady(f.KubeClientSet, DefaultTimeout, 2, f.Namespace, metav1.ListOptions{
-		LabelSelector: "app=harbor-sync",
-	})
-	assert.Nil(ginkgo.GinkgoT(), err, "waiting for harbor-sync pods to be ready")
-
-	err = WaitForPodsReady(f.KubeClientSet, DefaultTimeout, 1, f.Namespace, metav1.ListOptions{
-		LabelSelector: "app=fake-harbor-api",
-	})
-	assert.Nil(ginkgo.GinkgoT(), err, "waiting for fake-harbor-api pods to be ready")
 }
 
 // AfterEach deletes the namespace, after reading its events.
@@ -97,13 +94,35 @@ func (f *Framework) AfterEach() {
 	assert.Nil(ginkgo.GinkgoT(), err, "deleting namespace %v", f.Namespace)
 }
 
+// EnsureProjects creates projects if they do not exist yet
+func (f *Framework) EnsureProjects(projects []string) {
+	for _, projectName := range projects {
+		p, err := f.Harbor.GetProjectByName(context.Background(), projectName)
+		if err != nil {
+			if err.Error() != project.ErrProjectNotFoundMsg {
+				log.Errorf("unable to get project: %s", err)
+				assert.Nil(ginkgo.GinkgoT(), err, "get fetch %s", projectName)
+			}
+		}
+		if p != nil {
+			log.Infof("project already exists: %s", p.Name)
+			continue
+		}
+		log.Infof("creating project %s", projectName)
+		p, err = f.Harbor.NewProject(context.Background(), projectName, nil)
+		if err != nil {
+			assert.Nil(ginkgo.GinkgoT(), err, "create project %s", projectName)
+		}
+		log.Infof("created project %s / id %d", p.Name, p.ProjectID)
+	}
+}
+
 func (f *Framework) createHarborSyncController(namespace string) error {
-	cmd := exec.Command("/deploy.sh", namespace)
+	cmdRoot := os.Getenv("E2E_EXEC_ROOT")
+	cmd := exec.Command(filepath.Join(cmdRoot, "/deploy.sh"), namespace)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("unexpected error waiting for harbor-sync deployment: %v.\nLogs:\n%v", err, string(out))
 	}
-
 	return nil
-
 }

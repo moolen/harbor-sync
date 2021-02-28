@@ -24,7 +24,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	crdv1 "github.com/moolen/harbor-sync/api/v1"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -49,7 +49,7 @@ func MakeSecret(namespace, name string, baseURL string, credentials crdv1.RobotA
 func UpsertSecret(cl client.Client, secret v1.Secret) error {
 	err := cl.Create(context.Background(), &secret)
 	if apierrs.IsAlreadyExists(err) {
-		err = cl.Update(context.TODO(), &secret)
+		err = cl.Update(context.Background(), &secret)
 		if err != nil {
 			return fmt.Errorf("could not update secret: %s/%s", secret.ObjectMeta.Namespace, secret.ObjectMeta.Name)
 		}

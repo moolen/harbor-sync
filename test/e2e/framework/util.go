@@ -13,6 +13,7 @@ limitations under the License.
 package framework
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -49,7 +50,7 @@ func CreateNamespace(name string, c kubernetes.Interface) (string, error) {
 	var err error
 
 	err = wait.PollImmediate(Poll, DefaultTimeout, func() (bool, error) {
-		got, err = c.CoreV1().Namespaces().Create(ns)
+		got, err = c.CoreV1().Namespaces().Create(context.Background(), ns, metav1.CreateOptions{})
 		if err != nil {
 			log.Errorf("Unexpected error while creating namespace: %v", err)
 			return false, nil
@@ -74,7 +75,7 @@ func CreateKubeNamespace(baseName string, c kubernetes.Interface) (string, error
 	var err error
 
 	err = wait.PollImmediate(Poll, DefaultTimeout, func() (bool, error) {
-		got, err = c.CoreV1().Namespaces().Create(ns)
+		got, err = c.CoreV1().Namespaces().Create(context.Background(), ns, metav1.CreateOptions{})
 		if err != nil {
 			log.Errorf("Unexpected error while creating namespace: %v", err)
 			return false, nil
@@ -91,7 +92,7 @@ func CreateKubeNamespace(baseName string, c kubernetes.Interface) (string, error
 func DeleteKubeNamespace(c kubernetes.Interface, namespace string) error {
 	grace := int64(0)
 	pb := metav1.DeletePropagationBackground
-	return c.CoreV1().Namespaces().Delete(namespace, &metav1.DeleteOptions{
+	return c.CoreV1().Namespaces().Delete(context.Background(), namespace, metav1.DeleteOptions{
 		GracePeriodSeconds: &grace,
 		PropagationPolicy:  &pb,
 	})
@@ -104,7 +105,7 @@ func WaitForKubeNamespaceNotExist(c kubernetes.Interface, namespace string) erro
 
 func namespaceNotExist(c kubernetes.Interface, namespace string) wait.ConditionFunc {
 	return func() (bool, error) {
-		_, err := c.CoreV1().Namespaces().Get(namespace, metav1.GetOptions{})
+		_, err := c.CoreV1().Namespaces().Get(context.Background(), namespace, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
 			return true, nil
 		}
