@@ -30,7 +30,7 @@ func TestInfo(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.Write([]byte(response))
 	}))
-	_, err := New(srv.URL, "/api/", "", "", false)
+	_, err := New(srv.URL, "/api/", "", "", false, false)
 	defer srv.Close()
 
 	if err == nil {
@@ -38,7 +38,7 @@ func TestInfo(t *testing.T) {
 	}
 	// info
 	response = `{"harbor_version":"1.9.3"}`
-	c, err := New(srv.URL, "/api/", "foo", "bar", false)
+	c, err := New(srv.URL, "/api/", "foo", "bar", false, false)
 	if err != nil {
 		t.Fail()
 	}
@@ -57,7 +57,7 @@ func TestBaseURL(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		res.Write([]byte(response))
 	}))
-	_, err := New(srv.URL, "/api/", "", "", false)
+	_, err := New(srv.URL, "/api/", "", "", false, false)
 	defer srv.Close()
 
 	if err == nil {
@@ -65,7 +65,7 @@ func TestBaseURL(t *testing.T) {
 	}
 	// info
 	response = `{"harbor_version":"1.9.3"}`
-	c, err := New(srv.URL, "/api/", "foo", "bar", false)
+	c, err := New(srv.URL, "/api/", "foo", "bar", false, false)
 	if err != nil {
 		t.Fail()
 	}
@@ -91,7 +91,7 @@ func TestProjects(t *testing.T) {
 		}
 	}))
 	defer srv.Close()
-	c, err := New(srv.URL, "/api/", "foo", "bar", false)
+	c, err := New(srv.URL, "/api/", "foo", "bar", false, false)
 	if err != nil {
 		t.Fail()
 	}
@@ -121,7 +121,7 @@ func TestRobotsPre110(t *testing.T) {
 		}
 	}))
 	defer srv.Close()
-	c, err := New(srv.URL, "/api/", "foo", "bar", false)
+	c, err := New(srv.URL, "/api/", "foo", "bar", false, false)
 	if err != nil {
 		t.Fail()
 	}
@@ -167,7 +167,7 @@ func TestRobotsPushPre110(t *testing.T) {
 		}
 	}))
 	defer srv.Close()
-	c, err := New(srv.URL, "/api/", "foo", "bar", false)
+	c, err := New(srv.URL, "/api/", "foo", "bar", false, false)
 	if err != nil {
 		t.Fail()
 	}
@@ -201,7 +201,7 @@ func TestRobotsPost110(t *testing.T) {
 		}
 	}))
 	defer srv.Close()
-	c, err := New(srv.URL, "/api/", "foo", "bar", false)
+	c, err := New(srv.URL, "/api/", "foo", "bar", false, false)
 	if err != nil {
 		t.Fail()
 	}
@@ -240,7 +240,7 @@ func TestRobotsPushPost110(t *testing.T) {
 		}
 	}))
 	defer srv.Close()
-	c, err := New(srv.URL, "/api/", "foo", "bar", false)
+	c, err := New(srv.URL, "/api/", "foo", "bar", false, false)
 	if err != nil {
 		t.Fail()
 	}
