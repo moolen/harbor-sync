@@ -52,9 +52,9 @@ type HarborSyncConfigReconciler struct {
 // +kubebuilder:rbac:groups="",resources=namespaces,verbs=get;list;watch
 // +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups="",resources=events,verbs=create
-// +kubebuilder:rbac:groups=crd.harborsync.k8s.io,resources=harborrobotaccounts,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=crd.harborsync.k8s.io,resources=harborsyncs,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=crd.harborsync.k8s.io,resources=harborsyncs/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=crd.harborsync.io,resources=harborrobotaccounts,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=crd.harborsync.io,resources=harborsyncs,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=crd.harborsync.io,resources=harborsyncs/status,verbs=get;update;patch
 
 // Reconcile reconciles the desired state in the cluster
 func (r *HarborSyncConfigReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {

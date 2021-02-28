@@ -6,9 +6,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.2.5
   creationTimestamp: null
-  name: harborsyncs.crd.harborsync.k8s.io
+  name: harborsyncs.crd.harborsync.io
 spec:
-  group: crd.harborsync.k8s.io
+  group: crd.harborsync.io
   names:
     kind: HarborSync
     listKind: HarborSyncList

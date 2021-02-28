@@ -52,7 +52,7 @@ rules:
   - patch
   - update
 - apiGroups:
-  - crd.harborsync.k8s.io
+  - crd.harborsync.io
   resources:
   - harborrobotaccounts
   verbs:
@@ -64,7 +64,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - crd.harborsync.k8s.io
+  - crd.harborsync.io
   resources:
   - harborsyncs
   verbs:
@@ -76,7 +76,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - crd.harborsync.k8s.io
+  - crd.harborsync.io
   resources:
   - harborsyncs/status
   verbs:

@@ -1,4 +1,4 @@
-apiVersion: crd.harborsync.k8s.io/v1
+apiVersion: crd.harborsync.io/v1
 kind: HarborSync
 metadata:
   name: harborsync-sample
