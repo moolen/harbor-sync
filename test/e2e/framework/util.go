@@ -32,7 +32,7 @@ const (
 	Poll = 2 * time.Second
 
 	// DefaultTimeout time to wait for operations to complete
-	DefaultTimeout = 90 * time.Second
+	DefaultTimeout = 5 * time.Minute
 )
 
 // RunID unique identifier of the e2e run
