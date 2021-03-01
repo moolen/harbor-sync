@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        harbor_version: [v2.2.0, v2.0.6, v1.10.6]
+        harbor_version: [v2.2.0, v2.0.6]
     steps:
       - name: Checkout secret-manger
         uses: actions/checkout@v2
