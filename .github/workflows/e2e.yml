@@ -1,0 +1,52 @@
+name: e2e
+on:
+  push:
+    branches:
+    - master
+    tags:
+      - 'v*.*.*'
+    paths:
+      - 'cmd/**'
+      - 'pkg/**'
+      - 'test/e2e/**'
+      - 'go.mod'
+      - 'go.sum'
+      - 'Dockerfile'
+  pull_request:
+    branches:
+      - master
+    tags:
+    paths:
+      - 'cmd/**'
+      - 'pkg/**'
+      - 'test/e2e/**'
+      - 'go.mod'
+      - 'go.sum'
+      - 'Dockerfile'
+jobs:
+  test-e2e:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        harbor_version: [v2.2.0, v2.0.6, v1.10.6]
+    steps:
+      - name: Checkout secret-manger
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Create kind cluster
+        uses: helm/kind-action@v1.0.0
+        with:
+          version: v0.10.0
+          node_image: kindest/node:v1.20.2
+          cluster_name: harbor-sync
+      - name: Run e2e tests
+        timeout-minutes: 30
+        env:
+          HARBOR_VERSION: ${{ matrix.harbor_version }}
+          KIND_CLUSTER_NAME: harbor-sync
+        run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          go get github.com/onsi/ginkgo/ginkgo
+          curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 && chmod 700 get_helm.sh && ./get_helm.sh
+          make e2e

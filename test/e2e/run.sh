@@ -13,29 +13,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-KIND_LOG_LEVEL="1"
-
-if ! [ -z $DEBUG ]; then
-  set -x
-  KIND_LOG_LEVEL="6"
-fi
-
 set -o errexit
 set -o nounset
 set -o pipefail
-
-cleanup() {
-  if [[ "${KUBETEST_IN_DOCKER:-}" == "true" ]]; then
-    kind "export" logs --name ${KIND_CLUSTER_NAME} "${ARTIFACTS}/logs" || true
-  fi
-
-  kind delete cluster \
-    --verbosity=${KIND_LOG_LEVEL} \
-    --name ${KIND_CLUSTER_NAME}
-}
-
-trap cleanup EXIT
 
 if ! command -v kind --version &> /dev/null; then
   echo "kind is not installed. Use the package manager or visit the official site https://kind.sigs.k8s.io/"
@@ -45,24 +25,8 @@ fi
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $DIR
 export K8S_VERSION=${K8S_VERSION:-v1.20.2}
-export DOCKER_CLI_EXPERIMENTAL=enabled
-
-KIND_CLUSTER_NAME="harbor-sync-dev"
-echo "creating Kubernetes cluster with kind"
-
-export KUBECONFIG="${HOME}/.kube/kind-config-${KIND_CLUSTER_NAME}"
-kind create cluster \
-  --verbosity=${KIND_LOG_LEVEL} \
-  --name ${KIND_CLUSTER_NAME} \
-  --config ${DIR}/kind.yaml \
-  --retain \
-  --image "kindest/node:${K8S_VERSION}"
-
-echo "Kubernetes cluster:"
-kubectl get nodes -o wide
 
 echo "building container"
-
 make -C ${DIR}/../../ docker-build IMG=harbor-sync:dev
 make -C ${DIR} e2e-image IMG=harbor-sync-e2e:dev
 
@@ -88,8 +52,20 @@ echo -e "Starting the e2e test pod"
 FOCUS=${FOCUS:-.*}
 export FOCUS
 
+HARBOR_VERSION=${HARBOR_VERSION:-v2.2.0}
+
 helm repo add harbor https://helm.goharbor.io || true
-helm upgrade --wait --install harbor harbor/harbor -f ./helm-values.yaml
+helm upgrade \
+  --wait \
+  --install harbor harbor/harbor \
+  --set nginx.image.tag=${HARBOR_VERSION} \
+  --set portal.image.tag=${HARBOR_VERSION} \
+  --set core.image.tag=${HARBOR_VERSION} \
+  --set jobservice.image.tag=${HARBOR_VERSION} \
+  --set registry.image.tag=${HARBOR_VERSION} \
+  --set database.internal.image.tag=${HARBOR_VERSION} \
+  --set redis.internal.image.tag=${HARBOR_VERSION} \
+  -f ./helm-values.yaml
 
 kubectl run --rm \
   --attach \

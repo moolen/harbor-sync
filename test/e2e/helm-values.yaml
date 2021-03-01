@@ -10,34 +10,10 @@ persistence:
 logLevel: info
 harborAdminPassword: "Harbor12345"
 
-nginx:
-  image:
-    tag: v2.2.0
-portal:
-  image:
-    tag: v2.2.0
-core:
-  image:
-    tag: v2.2.0
-jobservice:
-  image:
-    repository: goharbor/harbor-jobservice
-    tag: v2.2.0
-registry:
-  registry:
-    image:
-      repository: goharbor/registry-photon
-      tag: v2.2.0
 database:
   type: internal
-  internal:
-    image:
-      tag: v2.2.0
 redis:
   type: internal
-  internal:
-    image:
-      tag: v2.2.0
 
 chartmuseum:
   enabled: false
