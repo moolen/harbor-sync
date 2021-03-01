@@ -57,6 +57,12 @@ type CreateRobotResponse struct {
 	Token string `json:"token"`
 }
 
+// CreateRobotResponseV22 is the API response from a creating a robot
+type CreateRobotResponseV22 struct {
+	Name   string `json:"name"`
+	Secret string `json:"secret"`
+}
+
 // GetRobotAccounts returns all robot accounts for the given project
 func (c *Client) GetRobotAccounts(project Project) ([]Robot, error) {
 	var robotAccounts []Robot
@@ -106,7 +112,6 @@ func (c *Client) CreateRobotAccount(name string, pushAccess bool, project Projec
 	}
 	v.Pre = nil
 	v110 := semver.MustParse("1.10.0")
-	var robotResponse CreateRobotResponse
 	permissions := []CreateRobotRequestAccess{
 		{
 			Resource: fmt.Sprintf("/project/%d/repository", project.ID),
@@ -153,6 +158,21 @@ func (c *Client) CreateRobotAccount(name string, pushAccess bool, project Projec
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("could not read response body: %s", err.Error())
+	}
+
+	// robot api has changed in v2.2.0
+	var robotResponse CreateRobotResponse
+	v220 := semver.MustParse("2.2.0")
+	if v.GTE(v220) {
+		var r22 CreateRobotResponseV22
+		err = json.NewDecoder(bytes.NewReader(body)).Decode(&r22)
+		if err != nil {
+			return nil, fmt.Errorf("could not decode response body: %s", err.Error())
+		}
+		return &CreateRobotResponse{
+			Name:  r22.Name,
+			Token: r22.Secret,
+		}, nil
 	}
 	err = json.NewDecoder(bytes.NewReader(body)).Decode(&robotResponse)
 	if err != nil {
