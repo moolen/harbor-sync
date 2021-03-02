@@ -17,6 +17,7 @@ limitations under the License.
 package v1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -100,9 +101,35 @@ type WebhookUpdatePayload struct {
 }
 
 // HarborSyncStatus defines the observed state of HarborSync
-type HarborSyncStatus struct{}
+type HarborSyncStatus struct {
+	ProjectList []string `json:"managedProjects,omitempty"`
+
+	// +optional
+	Conditions []HarborSyncStatusCondition `json:"conditions,omitempty"`
+}
+
+type HarborSyncConditionType string
+
+const (
+	HarborSyncReady HarborSyncConditionType = "Ready"
+)
+
+type HarborSyncStatusCondition struct {
+	Type   HarborSyncConditionType `json:"type"`
+	Status corev1.ConditionStatus  `json:"status"`
+
+	// +optional
+	Reason string `json:"reason,omitempty"`
+
+	// +optional
+	Message string `json:"message,omitempty"`
+
+	// +optional
+	LastTransitionTime metav1.Time `json:"lastTransitionTime,omitempty"`
+}
 
 // RobotAccountCredential holds the robot account name & token to access the harbor API
+// this is also part of the webhook API change here might impact downstream users
 type RobotAccountCredential struct {
 	Name      string `json:"name"`
 	CreatedAt int64  `json:"created_at"`

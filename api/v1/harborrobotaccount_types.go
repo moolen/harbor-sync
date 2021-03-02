@@ -17,17 +17,13 @@ limitations under the License.
 package v1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // HarborRobotAccountSpec defines the desired state of HarborRobotAccount
 type HarborRobotAccountSpec struct {
 	Credential RobotAccountCredential `json:"credential"`
-}
-
-// HarborRobotAccountStatus defines the observed state of HarborRobotAccount
-type HarborRobotAccountStatus struct {
-	LastSync int64 `json:"last_sync"`
 }
 
 // +kubebuilder:object:root=true
@@ -41,6 +37,37 @@ type HarborRobotAccount struct {
 
 	Spec   HarborRobotAccountSpec   `json:"spec,omitempty"`
 	Status HarborRobotAccountStatus `json:"status,omitempty"`
+}
+
+// HarborRobotAccountStatus defines the observed state of HarborRobotAccount
+type HarborRobotAccountStatus struct {
+	// +nullable
+	// refreshTime is the time and date the robot account was fetched and
+	// the target secret updated
+	RefreshTime metav1.Time `json:"refreshTime,omitempty"`
+
+	// +optional
+	Conditions []RobotAccountStatusCondition `json:"conditions,omitempty"`
+}
+
+type HarborRobotAccountConditionType string
+
+const (
+	RobotAccountReady HarborRobotAccountConditionType = "Ready"
+)
+
+type RobotAccountStatusCondition struct {
+	Type   HarborRobotAccountConditionType `json:"type"`
+	Status corev1.ConditionStatus          `json:"status"`
+
+	// +optional
+	Reason string `json:"reason,omitempty"`
+
+	// +optional
+	Message string `json:"message,omitempty"`
+
+	// +optional
+	LastTransitionTime metav1.Time `json:"lastTransitionTime,omitempty"`
 }
 
 // +kubebuilder:object:root=true
