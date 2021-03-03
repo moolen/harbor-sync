@@ -15,6 +15,8 @@ spec:
     plural: harborrobotaccounts
     singular: harborrobotaccount
   scope: Cluster
+  subresources:
+    status: {}
   validation:
     openAPIV3Schema:
       description: HarborRobotAccount is the Schema for the harborrobotaccounts API
@@ -36,7 +38,8 @@ spec:
           properties:
             credential:
               description: RobotAccountCredential holds the robot account name & token
-                to access the harbor API
+                to access the harbor API this is also part of the webhook API change
+                here might impact downstream users
               properties:
                 created_at:
                   format: int64
@@ -56,11 +59,31 @@ spec:
         status:
           description: HarborRobotAccountStatus defines the observed state of HarborRobotAccount
           properties:
-            last_sync:
-              format: int64
-              type: integer
-          required:
-          - last_sync
+            conditions:
+              items:
+                properties:
+                  lastTransitionTime:
+                    format: date-time
+                    type: string
+                  message:
+                    type: string
+                  reason:
+                    type: string
+                  status:
+                    type: string
+                  type:
+                    type: string
+                required:
+                - status
+                - type
+                type: object
+              type: array
+            refreshTime:
+              description: refreshTime is the time and date the robot account was
+                fetched and the target secret updated
+              format: date-time
+              nullable: true
+              type: string
           type: object
       type: object
   version: v1

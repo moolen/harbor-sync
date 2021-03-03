@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-	"time"
 
 	crdv1 "github.com/moolen/harbor-sync/api/v1"
 	log "github.com/sirupsen/logrus"
@@ -69,7 +68,7 @@ func (s *Store) Set(project string, cred crdv1.RobotAccountCredential) error {
 			Credential: cred,
 		},
 		Status: crdv1.HarborRobotAccountStatus{
-			LastSync: time.Now().Unix(),
+			RefreshTime: metav1.Now(),
 		},
 	}
 	err = s.kubeClient.Create(ctx, &r)
@@ -80,7 +79,7 @@ func (s *Store) Set(project string, cred crdv1.RobotAccountCredential) error {
 		}
 		r.Spec.Credential = cred
 		r.Status = crdv1.HarborRobotAccountStatus{
-			LastSync: time.Now().Unix(),
+			RefreshTime: metav1.Now(),
 		}
 		err = s.kubeClient.Update(context.Background(), &r)
 		if err != nil {

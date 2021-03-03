@@ -25,6 +25,7 @@ fi
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $DIR
 export K8S_VERSION=${K8S_VERSION:-v1.20.2}
+KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-harbor-sync}
 
 echo "building container"
 make -C ${DIR}/../../ docker-build IMG=harbor-sync:dev

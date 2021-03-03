@@ -32,6 +32,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
@@ -45,8 +46,6 @@ var _ = Describe("Controller", func() {
 	var credStore *store.Store
 
 	BeforeEach(func() {
-		test.EnsureNamespace(k8sClient, "team-recon-foo")
-		test.EnsureNamespace(k8sClient, "team-recon-bar")
 		fakeHarbor = &harborfake.Client{}
 		credStore, _ = store.NewTemp()
 		hscr = &HarborSyncConfigReconciler{
@@ -58,8 +57,6 @@ var _ = Describe("Controller", func() {
 	})
 
 	AfterEach(func() {
-		test.DeleteNamespace(k8sClient, "team-recon-foo")
-		test.DeleteNamespace(k8sClient, "team-recon-bar")
 		credStore.Reset()
 	})
 
@@ -98,19 +95,22 @@ var _ = Describe("Controller", func() {
 			}
 		})
 
-		AfterEach(func() {
-			test.DeleteHarborSyncConfig(k8sClient, "my-recon-cfg")
-		})
+		It("should reconcile robot accounts by matching", func() {
+			test.EnsureNamespace(k8sClient, "team-rcm-foo")
+			test.EnsureNamespace(k8sClient, "team-rcm-bar")
+			defer test.DeleteNamespace(k8sClient, "team-rcm-foo")
+			defer test.DeleteNamespace(k8sClient, "team-rcm-bar")
 
-		It("should reconcile robot accounts by matching", func(done Done) {
-			test.EnsureHarborSyncConfigWithParams(k8sClient, "my-recon-cfg", "team-(.*)", &crdv1.ProjectMapping{
-				Namespace: "team-recon-.*",
+			test.EnsureHarborSyncConfigWithParams(k8sClient, "my-rcm-cfg", "team-(.*)", &crdv1.ProjectMapping{
+				Namespace: "team-rcm-.*",
 				Secret:    "$1-pull-secret",
 				Type:      crdv1.MatchMappingType,
 			}, nil)
+			defer test.DeleteHarborSyncConfig(k8sClient, "my-rcm-cfg")
+
 			_, err := hscr.Reconcile(context.Background(), ctrl.Request{
 				NamespacedName: types.NamespacedName{
-					Name: "my-recon-cfg",
+					Name: "my-rcm-cfg",
 				},
 			})
 
@@ -122,48 +122,79 @@ var _ = Describe("Controller", func() {
 				secret string
 			}{
 				{
-					ns:     "team-recon-foo",
+					ns:     "team-rcm-foo",
 					secret: "foo-pull-secret",
 				},
 				{
-					ns:     "team-recon-foo",
+					ns:     "team-rcm-foo",
 					secret: "bar-pull-secret",
 				},
 				{
-					ns:     "team-recon-bar",
+					ns:     "team-rcm-bar",
 					secret: "foo-pull-secret",
 				},
 				{
-					ns:     "team-recon-bar",
+					ns:     "team-rcm-bar",
 					secret: "bar-pull-secret",
 				},
 			}
 
-			for _, expect := range expected {
-				var secret v1.Secret
-				err := k8sClient.Get(context.Background(), types.NamespacedName{
-					Namespace: expect.ns,
-					Name:      expect.secret,
-				}, &secret)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(secret.Data[v1.DockerConfigJsonKey]).ToNot(BeNil())
-				Expect(string(secret.Data[v1.DockerConfigJsonKey])).To(Equal(defaultRobotSecretData))
+			Eventually(func() bool {
+				for _, expect := range expected {
+					var secret v1.Secret
+					err := k8sClient.Get(context.Background(), types.NamespacedName{
+						Namespace: expect.ns,
+						Name:      expect.secret,
+					}, &secret)
+					if err != nil {
+						return false
+					}
+					if secret.Data[v1.DockerConfigJsonKey] == nil {
+						return false
+					}
+					if string(secret.Data[v1.DockerConfigJsonKey]) != defaultRobotSecretData {
+						return false
+					}
+				}
+				return true
+			}, time.Second*15, time.Second).Should(BeTrue())
 
-				test.DeleteSecret(k8sClient, expect.ns, expect.secret)
-			}
-
-			close(done)
+			// check status spec
+			var hs crdv1.HarborSync
+			Eventually(func() bool {
+				err = k8sClient.Get(context.Background(), types.NamespacedName{Name: "my-rcm-cfg"}, &hs)
+				if errors.IsNotFound(err) {
+					return false
+				}
+				c := GetSyncCondition(hs.Status, crdv1.HarborSyncReady)
+				if c == nil || c.Status != v1.ConditionTrue {
+					return false
+				}
+				if len(hs.Status.ProjectList) != 2 {
+					return false
+				}
+				return test.CheckProjects(map[string][]string{
+					"team-foo": {"team-rcm-foo", "team-rcm-bar"},
+					"team-bar": {"team-rcm-bar", "team-rcm-foo"},
+				}, hs.Status)
+			}, time.Second*15, time.Second).Should(BeTrue())
 		})
 
 		It("should reconcile robot accounts by translating", func() {
-			test.EnsureHarborSyncConfigWithParams(k8sClient, "my-recon-cfg", "team-(.*)", &crdv1.ProjectMapping{
-				Namespace: "team-recon-$1",
+			test.EnsureNamespace(k8sClient, "team-rt-foo")
+			test.EnsureNamespace(k8sClient, "team-rt-bar")
+			defer test.DeleteNamespace(k8sClient, "team-rt-foo")
+			defer test.DeleteNamespace(k8sClient, "team-rt-bar")
+
+			test.EnsureHarborSyncConfigWithParams(k8sClient, "my-rt-cfg", "team-(.*)", &crdv1.ProjectMapping{
+				Namespace: "team-rt-$1",
 				Secret:    "default-pull-secret",
 				Type:      crdv1.TranslateMappingType,
 			}, nil)
+			defer test.DeleteHarborSyncConfig(k8sClient, "my-rt-cfg")
 			_, err := hscr.Reconcile(context.Background(), ctrl.Request{
 				NamespacedName: types.NamespacedName{
-					Name: "my-recon-cfg",
+					Name: "my-rt-cfg",
 				},
 			})
 
@@ -175,15 +206,16 @@ var _ = Describe("Controller", func() {
 				secret string
 			}{
 				{
-					ns:     "team-recon-foo",
+					ns:     "team-rt-foo",
 					secret: "default-pull-secret",
 				},
 				{
-					ns:     "team-recon-bar",
+					ns:     "team-rt-bar",
 					secret: "default-pull-secret",
 				},
 			}
 
+			// check that secrets get created
 			Eventually(func() bool {
 				for _, expect := range expected {
 					var secret v1.Secret
@@ -197,9 +229,29 @@ var _ = Describe("Controller", func() {
 				}
 				return true
 			})
+
+			// check status spec
+			var hs crdv1.HarborSync
+			Eventually(func() bool {
+				err = k8sClient.Get(context.Background(), types.NamespacedName{Name: "my-rt-cfg"}, &hs)
+				if errors.IsNotFound(err) {
+					return false
+				}
+				c := GetSyncCondition(hs.Status, crdv1.HarborSyncReady)
+				if c == nil || c.Status != v1.ConditionTrue {
+					return false
+				}
+				if len(hs.Status.ProjectList) != 2 {
+					return false
+				}
+				return test.CheckProjects(map[string][]string{
+					"team-foo": {"team-rt-foo"},
+					"team-bar": {"team-rt-bar"},
+				}, hs.Status)
+			}, time.Second*15, time.Second).Should(BeTrue())
 		})
 
-		It("should call the webhook", func(done Done) {
+		It("should call the webhook", func() {
 			var fooWebhookCalled bool
 			var barWebhookCalled bool
 
@@ -227,8 +279,9 @@ var _ = Describe("Controller", func() {
 				}
 				Fail("unexpected webhook payload")
 			}))
-
-			test.EnsureHarborSyncConfigWithParams(k8sClient, "my-recon-cfg", "team-(.*)", &crdv1.ProjectMapping{
+			test.EnsureNamespace(k8sClient, "team-wh-foo")
+			defer test.DeleteNamespace(k8sClient, "team-wh-foo")
+			test.EnsureHarborSyncConfigWithParams(k8sClient, "my-wh-cfg", "team-(.*)", &crdv1.ProjectMapping{
 				Namespace: "team-recon-$1",
 				Secret:    "default-pull-secret",
 				Type:      crdv1.TranslateMappingType,
@@ -237,19 +290,19 @@ var _ = Describe("Controller", func() {
 					Endpoint: srv.URL,
 				},
 			})
+			defer test.DeleteHarborSyncConfig(k8sClient, "my-wh-cfg")
 			_, err := hscr.Reconcile(context.Background(), ctrl.Request{
 				NamespacedName: types.NamespacedName{
-					Name: "my-recon-cfg",
+					Name: "my-wh-cfg",
 				},
 			})
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(fooWebhookCalled).To(BeTrue())
 			Expect(barWebhookCalled).To(BeTrue())
-			close(done)
 		})
 
-		It("should call the webhook even without mapping", func(done Done) {
+		It("should call the webhook even without mapping", func() {
 			var fooWebhookCalled bool
 			var barWebhookCalled bool
 
@@ -277,23 +330,23 @@ var _ = Describe("Controller", func() {
 				}
 				Fail("unexpected webhook payload")
 			}))
-
-			test.EnsureHarborSyncConfigWithParams(k8sClient, "my-recon-cfg", "team-(.*)", nil, []crdv1.WebhookConfig{
+			test.EnsureNamespace(k8sClient, "team-whmp-foo")
+			defer test.DeleteNamespace(k8sClient, "team-whmp-foo")
+			test.EnsureHarborSyncConfigWithParams(k8sClient, "my-whmp-cfg", "team-(.*)", nil, []crdv1.WebhookConfig{
 				{
 					Endpoint: srv.URL,
 				},
 			})
+			defer test.DeleteHarborSyncConfig(k8sClient, "my-whmp-cfg")
 			_, err := hscr.Reconcile(context.Background(), ctrl.Request{
 				NamespacedName: types.NamespacedName{
-					Name: "my-recon-cfg",
+					Name: "my-whmp-cfg",
 				},
 			})
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(fooWebhookCalled).To(BeTrue())
 			Expect(barWebhookCalled).To(BeTrue())
-			close(done)
 		})
 	})
-
 })

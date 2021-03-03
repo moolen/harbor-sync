@@ -27,6 +27,7 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
+	v1 "k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -81,21 +82,33 @@ func (r *HarborSyncConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 		err = f(r, mapping, syncConfig, project, *credential, baseURL)
 		if err != nil {
+			c := NewSyncCondition(crdv1.HarborSyncReady, v1.ConditionFalse, "Mapping failed", err.Error())
+			SetSyncCondition(&syncConfig.Status, *c)
+			err = r.Status().Update(context.Background(), &syncConfig)
+			if err != nil {
+				log.Errorf("unable to update status mapping func: %s", err.Error())
+			}
 			log.Error(err, "mapping failed")
 			return
 		}
 	}
-	err := Reconcile(syncConfig, r.Harbor, r.CredCache, r.RotationInterval, mappingFunc)
+	err := Reconcile(&syncConfig, r.Harbor, r.CredCache, r.RotationInterval, mappingFunc)
 	if err != nil {
 		log.Error(err)
+		c := NewSyncCondition(crdv1.HarborSyncReady, v1.ConditionFalse, "Error Reconciling", err.Error())
+		SetSyncCondition(&syncConfig.Status, *c)
+		err = r.Status().Update(context.Background(), &syncConfig)
+		if err != nil {
+			log.Errorf("unable to update status after reconcile error: %s", err.Error())
+		}
 		return ctrl.Result{Requeue: true, RequeueAfter: time.Second * 30}, nil
 	}
-	err = r.Update(context.Background(), &syncConfig)
+	c := NewSyncCondition(crdv1.HarborSyncReady, v1.ConditionTrue, "Successfully reconciled", "Successfully reconciled")
+	SetSyncCondition(&syncConfig.Status, *c)
+	err = r.Status().Update(context.Background(), &syncConfig)
 	if err != nil {
-		log.Error(err, "could not update syncConfig status field", "sync_config_name", syncConfig.Name)
-		return ctrl.Result{Requeue: true, RequeueAfter: time.Second * 15}, nil
+		log.Errorf("unable to update status after reconcile: %s", err.Error())
 	}
-
 	log.Info("successfully reconciled")
 	return ctrl.Result{}, nil
 }
@@ -112,7 +125,7 @@ func (r *HarborSyncConfigReconciler) SetupWithManager(mgr ctrl.Manager, input <-
 // Reconcile is a Kubernetes-agnostic function that matches the projects,
 // reconciles the robot accounts and calls mappingFunc if specified.
 func Reconcile(
-	cfg crdv1.HarborSync,
+	cfg *crdv1.HarborSync,
 	harbor harbor.API,
 	store reconciler.CredentialStore,
 	rotationInterval time.Duration,
@@ -127,7 +140,7 @@ func Reconcile(
 		"config": cfg.ObjectMeta.Name,
 	}).Info("starting reconcile loop")
 	selector := cfg.Spec
-	matches, err := findMatches(cfg, harbor)
+	matches, err := findMatches(*cfg, harbor)
 	if err != nil {
 		return fmt.Errorf("unable to find matches: %s", err.Error())
 	}
@@ -150,10 +163,13 @@ func Reconcile(
 			cfg.Spec.PushAccess,
 			rotationInterval,
 		)
+		// set last reconciliation
 		if err != nil {
 			log.Error(err, "error reconciling robot accounts")
 			continue
 		}
+
+		UpdateProjectStatusLastReconciliation(&cfg.Status, project)
 
 		if changed {
 			robotChangedCounter.WithLabelValues(cfg.ObjectMeta.Name, project.Name, selector.RobotAccountSuffix).Inc()
@@ -173,7 +189,7 @@ func Reconcile(
 		// reconcile secrets in namespaces
 		for _, mapping := range selector.Mapping {
 			if mappingFunc != nil {
-				mappingFunc(mapping, cfg, project, credential, harbor.BaseURL())
+				mappingFunc(mapping, *cfg, project, credential, harbor.BaseURL())
 			}
 		}
 	}

@@ -102,10 +102,18 @@ type WebhookUpdatePayload struct {
 
 // HarborSyncStatus defines the observed state of HarborSync
 type HarborSyncStatus struct {
-	ProjectList []string `json:"managedProjects,omitempty"`
+	// +optional
+	ProjectList []ProjectStatus `json:"projectStatus,omitempty"`
 
 	// +optional
 	Conditions []HarborSyncStatusCondition `json:"conditions,omitempty"`
+}
+
+type ProjectStatus struct {
+	Name                    string      `json:"projectName"`
+	LastRobotReconciliation metav1.Time `json:"lastRobotReconciliation,omitempty"`
+	// +optional
+	ManagedNamespaces []string `json:"managedNamespaces,omitempty"`
 }
 
 type HarborSyncConditionType string
@@ -138,6 +146,7 @@ type RobotAccountCredential struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:resource:scope=Cluster
+// +kubebuilder:subresource:status
 
 // HarborSync is the Schema for the harborsyncs API
 type HarborSync struct {
