@@ -14,7 +14,7 @@ all: controller
 
 # Run tests
 test: generate fmt vet manifests misspell
-	go test ./pkg/... -coverprofile cover.out
+	go test -v ./pkg/... -coverprofile cover.out
 
 e2e: generate manifests
 	go mod download

@@ -41,6 +41,11 @@ type Robot struct {
 
 // CreateRobotRequest is the request payload for creating a robot account
 type CreateRobotRequest struct {
+	// TODO(mj): these are only available in v2.2.0+
+	//           they are not yet used
+	Kind      string `json:"kind"`
+	Namespace string `json:"namespace"`
+
 	Name   string                     `json:"name"`
 	Access []CreateRobotRequestAccess `json:"access"`
 }

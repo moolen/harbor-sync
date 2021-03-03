@@ -15,6 +15,8 @@ spec:
     plural: harborsyncs
     singular: harborsync
   scope: Cluster
+  subresources:
+    status: {}
   validation:
     openAPIV3Schema:
       description: HarborSync is the Schema for the harborsyncs API
@@ -105,6 +107,42 @@ spec:
           type: object
         status:
           description: HarborSyncStatus defines the observed state of HarborSync
+          properties:
+            conditions:
+              items:
+                properties:
+                  lastTransitionTime:
+                    format: date-time
+                    type: string
+                  message:
+                    type: string
+                  reason:
+                    type: string
+                  status:
+                    type: string
+                  type:
+                    type: string
+                required:
+                - status
+                - type
+                type: object
+              type: array
+            projectStatus:
+              items:
+                properties:
+                  lastRobotReconciliation:
+                    format: date-time
+                    type: string
+                  managedNamespaces:
+                    items:
+                      type: string
+                    type: array
+                  projectName:
+                    type: string
+                required:
+                - projectName
+                type: object
+              type: array
           type: object
       type: object
   version: v1

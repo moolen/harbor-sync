@@ -6,14 +6,22 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httputil"
+	"time"
 
+	crdv1 "github.com/moolen/harbor-sync/api/v1"
+	"github.com/moolen/harbor-sync/pkg/controllers"
+	"github.com/moolen/harbor-sync/pkg/test"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/kubernetes/pkg/credentialprovider"
 
 	"github.com/stretchr/testify/assert"
 
 	"github.com/moolen/harbor-sync/test/e2e/framework"
 	"github.com/onsi/ginkgo"
+	"github.com/onsi/gomega"
 )
 
 var _ = ginkgo.Describe("[Sync]", func() {
@@ -87,5 +95,25 @@ var _ = ginkgo.Describe("[Sync]", func() {
 				res.Body.Close()
 			}
 		}
+
+		// check status spec
+		var hs crdv1.HarborSync
+		gomega.Eventually(func() bool {
+			err := cl.Get(context.Background(), types.NamespacedName{Name: "harborsync-sample"}, &hs)
+			if errors.IsNotFound(err) {
+				return false
+			}
+			c := controllers.GetSyncCondition(hs.Status, crdv1.HarborSyncReady)
+			if c == nil || c.Status != v1.ConditionTrue {
+				return false
+			}
+			if len(hs.Status.ProjectList) < 2 {
+				return false
+			}
+			return test.CheckProjects(map[string][]string{
+				fmt.Sprintf("proj-%s-foo", f.Namespace): {fmt.Sprintf("team-%s-foo", f.Namespace)},
+				fmt.Sprintf("proj-%s-bar", f.Namespace): {fmt.Sprintf("team-%s-bar", f.Namespace)},
+			}, hs.Status)
+		}, time.Second*15, time.Second).Should(gomega.BeTrue())
 	})
 })

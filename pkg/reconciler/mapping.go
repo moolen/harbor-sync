@@ -90,6 +90,7 @@ func mapByMatching(
 				errs = append(errs, err.Error())
 				continue
 			}
+			UpdateProjectStatusNamespace(&syncConfig.Status, project, ns.Name)
 		}
 	}
 	if len(errs) == 0 {
@@ -120,8 +121,13 @@ func mapByTranslating(
 		return fmt.Errorf("error fetching namespace %s: %s", proposedNamespace, err.Error())
 	}
 
+	UpdateProjectStatusNamespace(&syncConfig.Status, project, ns.Name)
 	// propose a secret name for this project
 	proposedSecret := matcher.ReplaceAllString(project.Name, mapping.Secret)
 	secret := util.MakeSecret(proposedNamespace, proposedSecret, harborURL, credential)
-	return util.UpsertSecret(cl, secret)
+	err = util.UpsertSecret(cl, secret)
+	if err != nil {
+		return err
+	}
+	return nil
 }
