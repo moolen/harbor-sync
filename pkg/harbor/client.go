@@ -66,6 +66,7 @@ func New(baseurl, apiPath, username, password string, skipVerifyTLS, debug bool)
 	c := &http.Client{}
 
 	if skipVerifyTLS {
+		log.Warnf("skipping TLS verification towards harbor")
 		tr := &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		}

@@ -53,14 +53,17 @@ var _ = ginkgo.Describe("[Sync]", func() {
 		for _, row := range []struct {
 			name      string
 			namespace string
+			project   string
 		}{
 			{
 				name:      fmt.Sprintf("proj-%s-foo-pull-secret", f.Namespace),
 				namespace: fmt.Sprintf("team-%s-foo", f.Namespace),
+				project:   fmt.Sprintf("proj-%s-foo", f.Namespace),
 			},
 			{
 				name:      fmt.Sprintf("proj-%s-bar-pull-secret", f.Namespace),
 				namespace: fmt.Sprintf("team-%s-bar", f.Namespace),
+				project:   fmt.Sprintf("proj-%s-bar", f.Namespace),
 			},
 		} {
 			err := framework.WaitForSecret(
@@ -94,6 +97,14 @@ var _ = ginkgo.Describe("[Sync]", func() {
 				assert.Equal(ginkgo.GinkgoT(), http.StatusOK, res.StatusCode)
 				res.Body.Close()
 			}
+			image := "alpine:3.4"
+			// check if we can actually pull an image
+			f.EnsureImages(map[string][]string{
+				row.project: {
+					image,
+				},
+			})
+			f.TestPullSecret(cred, fmt.Sprintf("harbor.default.svc.cluster.local/%s/%s", row.project, image))
 		}
 
 		// check status spec

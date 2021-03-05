@@ -55,6 +55,7 @@ export FOCUS
 
 HARBOR_VERSION=${HARBOR_VERSION:-v2.2.0}
 
+kubectl apply -f ./harbor-secret.yaml
 helm repo add harbor https://helm.goharbor.io || true
 helm upgrade \
   --wait \

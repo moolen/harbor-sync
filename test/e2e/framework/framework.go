@@ -10,11 +10,13 @@ import (
 	"github.com/mittwald/goharbor-client/apiv1/project"
 	harborclient "github.com/mittwald/goharbor-client/v3/apiv2"
 	"github.com/onsi/ginkgo"
+	"github.com/onsi/gomega"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	apiextcs "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
+	"k8s.io/kubernetes/pkg/credentialprovider"
 
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -38,6 +40,12 @@ type Framework struct {
 	Namespace string
 }
 
+const (
+	harborService  = "harbor.default.svc.cluster.local"
+	harborUser     = "admin"
+	harborPassword = "Harbor12345"
+)
+
 // NewDefaultFramework makes a new framework and sets up a BeforeEach/AfterEach for
 // you (you can write additional before/after each functions).
 func NewDefaultFramework(baseName string) *Framework {
@@ -59,7 +67,8 @@ func NewDefaultFramework(baseName string) *Framework {
 	kubeClient, err := kubernetes.NewForConfig(kubeConfig)
 	assert.Nil(ginkgo.GinkgoT(), err, "creating Kubernetes API client")
 
-	harborClient, err := harborclient.NewRESTClientForHost("http://harbor.default.svc.cluster.local/api", "admin", "Harbor12345")
+	harborClient, err := harborclient.NewRESTClientForHost(
+		fmt.Sprintf("https://%s/api", harborService), harborUser, harborPassword)
 	assert.Nil(ginkgo.GinkgoT(), err, "creating harbor client")
 
 	f := &Framework{
@@ -114,6 +123,55 @@ func (f *Framework) EnsureProjects(projects []string) {
 			assert.Nil(ginkgo.GinkgoT(), err, "create project %s", projectName)
 		}
 		log.Infof("created project %s / id %d", p.Name, p.ProjectID)
+	}
+}
+
+// EnsureImages ...
+func (f *Framework) EnsureImages(projectImageMap map[string][]string) {
+	out, err := exec.Command(
+		"crane",
+		"auth",
+		"login",
+		harborService,
+		"-u", harborUser,
+		"-p", harborPassword,
+	).CombinedOutput()
+	log.Infof("out: %s", out)
+	gomega.Expect(err).ToNot(gomega.HaveOccurred())
+	for project, images := range projectImageMap {
+		for _, image := range images {
+			log.Infof("pushing image %s into project %s", image, project)
+			out, err := exec.Command(
+				"crane",
+				"cp",
+				image,
+				fmt.Sprintf("%s/%s/%s", harborService, project, image),
+			).CombinedOutput()
+			gomega.Expect(err).ToNot(gomega.HaveOccurred(), "stdout: %s", out)
+		}
+	}
+}
+
+// TestPullSecret uses the provided credentials to pull img
+func (f *Framework) TestPullSecret(creds credentialprovider.DockerConfigJSON, img string) {
+	for _, auth := range creds.Auths {
+		log.Infof("logging in at %s as %s with %s", harborService, auth.Username, auth.Password)
+		out, err := exec.Command(
+			"crane",
+			"auth",
+			"login",
+			harborService,
+			"-u", auth.Username,
+			"-p", auth.Password,
+		).CombinedOutput()
+		gomega.Expect(err).ToNot(gomega.HaveOccurred(), "stdout: %s", out)
+		out, err = exec.Command(
+			"crane",
+			"pull",
+			img,
+			"example.tgz",
+		).CombinedOutput()
+		gomega.Expect(err).ToNot(gomega.HaveOccurred(), "stdout: %s", out)
 	}
 }
 

@@ -65,6 +65,7 @@ func init() {
 	viper.BindEnv("harbor-api-prefix", "HARBOR_API_PREFIX")
 	viper.BindEnv("harbor-api-debug", "HARBOR_API_DEBUG")
 	viper.BindEnv("leader-elect", "LEADER_ELECT")
+	viper.BindEnv("skip-tls-verification", "SKIP_TLS_VERIFICATION")
 	viper.BindEnv("namespace", "NAMESPACE")
 	viper.BindEnv("harbor-poll-interval", "HARBOR_POLL_INTERVAL")
 	viper.BindEnv("force-sync-interval", "FORCE_SYNC_INTERVAL")
@@ -78,14 +79,16 @@ var controllerCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		// dump cfg
 		log.WithFields(log.Fields{
-			"harbor-api-endpoint":  viper.GetBool("harbor-api-endpoint"),
-			"harbor-api-prefix":    viper.GetBool("harbor-api-prefix"),
-			"leader-elect":         viper.GetBool("leader-elect"),
-			"loglevel":             viper.GetString("loglevel"),
-			"namespace":            viper.GetDuration("namespace"),
-			"force-sync-interval":  viper.GetDuration("force-sync-interval"),
-			"rotation-interval":    viper.GetDuration("rotation-interval"),
-			"harbor-poll-interval": viper.GetDuration("harbor-poll-interval"),
+			"harbor-api-endpoint":   viper.GetBool("harbor-api-endpoint"),
+			"harbor-api-prefix":     viper.GetBool("harbor-api-prefix"),
+			"leader-elect":          viper.GetBool("leader-elect"),
+			"loglevel":              viper.GetString("loglevel"),
+			"namespace":             viper.GetDuration("namespace"),
+			"force-sync-interval":   viper.GetDuration("force-sync-interval"),
+			"rotation-interval":     viper.GetDuration("rotation-interval"),
+			"harbor-poll-interval":  viper.GetDuration("harbor-poll-interval"),
+			"skip-tls-verification": viper.GetDuration("skip-tls-verification"),
+			"harbor-api-debug":      viper.GetDuration("harbor-api-debug"),
 		}).Info()
 
 		harborClient, err := harbor.New(

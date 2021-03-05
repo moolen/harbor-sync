@@ -1,9 +1,12 @@
 expose:
   type: clusterIP
   tls:
-    enabled: false
+    enabled: true
+    certSource: secret
+    secret:
+      secretName: harbor-ssl
 
-externalURL: http://localhost:8888
+externalURL: http://harbor.default.svc.cluster.local
 persistence:
   enabled: false
 
