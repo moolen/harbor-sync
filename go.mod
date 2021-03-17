@@ -34,7 +34,7 @@ require (
 	github.com/mitchellh/hashstructure v1.0.0
 	github.com/mittwald/goharbor-client v1.0.7
 	github.com/mittwald/goharbor-client/v3 v3.2.0
-	github.com/onsi/ginkgo v1.14.1
+	github.com/onsi/ginkgo v1.15.2
 	github.com/onsi/gomega v1.10.2
 	github.com/peterbourgon/diskv/v3 v3.0.0
 	github.com/prometheus/client_golang v1.7.1
