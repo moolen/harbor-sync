@@ -33,7 +33,7 @@ require (
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/mitchellh/hashstructure v1.1.0
 	github.com/mittwald/goharbor-client v1.0.7
-	github.com/mittwald/goharbor-client/v3 v3.2.0
+	github.com/mittwald/goharbor-client/v3 v3.2.1
 	github.com/onsi/ginkgo v1.15.2
 	github.com/onsi/gomega v1.10.2
 	github.com/peterbourgon/diskv/v3 v3.0.0
