@@ -106,7 +106,7 @@ bin/hugo:
 	mkdir bin; cp /tmp/hugo bin/hugo
 
 bin/kubectl:
-	curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.15.0/bin/linux/amd64/kubectl
+	curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.21.2/bin/linux/amd64/kubectl
 	chmod +x ./kubectl
 	mkdir bin; mv kubectl bin/kubectl
 
