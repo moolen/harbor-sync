@@ -16,6 +16,8 @@ limitations under the License.
 package controllers
 
 import (
+	"time"
+
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -25,15 +27,14 @@ import (
 
 // UpdateProjectStatusLastReconciliation sets the time when the robot was synced
 func UpdateProjectStatusLastReconciliation(status *crdv1.HarborSyncStatus, project harbor.Project) {
-	for i, p := range status.ProjectList {
+	for _, p := range status.ProjectList {
 		if p.Name == project.Name {
-			status.ProjectList[i].LastRobotReconciliation = metav1.Now()
 			return
 		}
 	}
 	status.ProjectList = append(status.ProjectList, crdv1.ProjectStatus{
 		Name:                    project.Name,
-		LastRobotReconciliation: metav1.Now(),
+		LastRobotReconciliation: metav1.NewTime(time.Date(1970, 1, 1, 12, 0, 0, 0, time.UTC)),
 		ManagedNamespaces:       []string{},
 	})
 }

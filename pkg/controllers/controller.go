@@ -68,6 +68,12 @@ func (r *HarborSyncConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		log.Error(err, "unable to fetch sync config")
 		return ctrl.Result{Requeue: true, RequeueAfter: time.Second * 15}, err
 	}
+
+	statusProjectList := []crdv1.ProjectStatus{}
+	for _, statusProject := range syncConfig.Status.ProjectList {
+		statusProjectList = append(statusProjectList, *statusProject.DeepCopy())
+	}
+
 	// mappingFunc calls the Kubernetes-specific mapping functions
 	mappingFunc := func(
 		mapping crdv1.ProjectMapping,
@@ -103,11 +109,34 @@ func (r *HarborSyncConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 		return ctrl.Result{Requeue: true, RequeueAfter: time.Second * 30}, nil
 	}
-	c := NewSyncCondition(crdv1.HarborSyncReady, v1.ConditionTrue, "Successfully reconciled", "Successfully reconciled")
-	SetSyncCondition(&syncConfig.Status, *c)
-	err = r.Status().Update(context.Background(), &syncConfig)
-	if err != nil {
-		log.Errorf("unable to update status after reconcile: %s", err.Error())
+
+	statusChanged := len(statusProjectList) != len(syncConfig.Status.ProjectList)
+	if !statusChanged {
+		for i, statusProject := range syncConfig.Status.ProjectList {
+			if statusProjectList[i].Name != statusProject.Name {
+				statusChanged = true
+				break
+			}
+			for n, namespace := range statusProjectList[i].ManagedNamespaces {
+				if namespace != statusProject.ManagedNamespaces[n] {
+					statusChanged = true
+					break
+				}
+			}
+			if statusChanged {
+				break
+			}
+		}
+	}
+
+	c := GetSyncCondition(syncConfig.Status, crdv1.HarborSyncReady)
+	if statusChanged || c == nil || c.Status != v1.ConditionTrue {
+		c = NewSyncCondition(crdv1.HarborSyncReady, v1.ConditionTrue, "Successfully reconciled", "Successfully reconciled")
+		SetSyncCondition(&syncConfig.Status, *c)
+		err = r.Status().Update(context.Background(), &syncConfig)
+		if err != nil {
+			log.Errorf("unable to update status after reconcile: %s", err.Error())
+		}
 	}
 	log.Info("successfully reconciled")
 	return ctrl.Result{}, nil

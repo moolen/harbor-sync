@@ -61,7 +61,7 @@ func ReconcileRobotAccounts(
 			"project_name":   project.Name,
 			"robot_account":  robot.Name,
 			"account_suffix": accountSuffix,
-		}).Info("trying to match robot account")
+		}).Debug("trying to match robot account")
 
 		// only one robot account will match
 		if matchRobotAccount(robot, project, accountSuffix) {
