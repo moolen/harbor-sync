@@ -22,7 +22,7 @@ import (
 	crdv1 "github.com/moolen/harbor-sync/api/v1"
 	"github.com/moolen/harbor-sync/pkg/harbor"
 	"github.com/moolen/harbor-sync/pkg/test"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -48,7 +48,7 @@ var _ = Describe("Mapping", func() {
 			test.DeleteHarborSyncConfig(k8sClient, "my-match-cfg")
 		})
 
-		It("should create secrets in namespace", func(done Done) {
+		It("should create secrets in namespace", func() {
 			var err error
 			mapping := crdv1.ProjectMapping{
 				Type:      crdv1.MatchMappingType,
@@ -85,8 +85,6 @@ var _ = Describe("Mapping", func() {
 			Expect(string(teamASecret.Data[v1.DockerConfigJsonKey])).To(Equal(`{"auths":{"my-registry-url":{"username":"robot$sync-bot","password":"my-token","auth":"cm9ib3Qkc3luYy1ib3Q6bXktdG9rZW4="}}}`))
 			Expect(string(teamBSecret.Data[v1.DockerConfigJsonKey])).To(Equal(`{"auths":{"my-registry-url":{"username":"robot$sync-bot","password":"my-token","auth":"cm9ib3Qkc3luYy1ib3Q6bXktdG9rZW4="}}}`))
 			Expect(SystemSecret.Data).To(BeNil())
-
-			close(done)
 		})
 	})
 
@@ -104,7 +102,7 @@ var _ = Describe("Mapping", func() {
 			test.DeleteHarborSyncConfig(k8sClient, "my-translate-cfg")
 		})
 
-		It("should create secrets in namespace", func(done Done) {
+		It("should create secrets in namespace", func() {
 			var err error
 			mapping := crdv1.ProjectMapping{
 				Type:      crdv1.MatchMappingType,
@@ -137,8 +135,6 @@ var _ = Describe("Mapping", func() {
 
 			Expect(string(teamASecret.Data[v1.DockerConfigJsonKey])).To(Equal(`{"auths":{"my-registry-url":{"username":"robot$sync-bot","password":"my-token","auth":"cm9ib3Qkc3luYy1ib3Q6bXktdG9rZW4="}}}`))
 			Expect(teamBSecret.Data).To(BeNil())
-
-			close(done)
 		})
 	})
 

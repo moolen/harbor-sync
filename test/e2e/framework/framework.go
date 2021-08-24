@@ -101,6 +101,9 @@ func (f *Framework) AfterEach() {
 
 	err := DeleteKubeNamespace(f.KubeClientSet, f.Namespace)
 	assert.Nil(ginkgo.GinkgoT(), err, "deleting namespace %v", f.Namespace)
+
+	out, err := exec.Command("kubectl", "delete", "harborsync", "harborsync-sample").CombinedOutput()
+	gomega.Expect(err).ToNot(gomega.HaveOccurred(), "stdout: %s", out)
 }
 
 // EnsureProjects creates projects if they do not exist yet

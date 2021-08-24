@@ -29,6 +29,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -44,6 +45,7 @@ import (
 type HarborSyncConfigReconciler struct {
 	client.Client
 	RotationInterval time.Duration
+	RequeueInterval  time.Duration
 	CredCache        reconciler.CredentialStore
 	Harbor           harbor.API
 }
@@ -66,8 +68,22 @@ func (r *HarborSyncConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 			return ctrl.Result{}, nil
 		}
 		log.Error(err, "unable to fetch sync config")
-		return ctrl.Result{Requeue: true, RequeueAfter: time.Second * 15}, err
+		return ctrl.Result{RequeueAfter: time.Second * 15}, err
 	}
+
+	defer func() {
+		err := r.Status().Update(context.Background(), &syncConfig)
+		if err != nil {
+			log.Errorf("unable to update status: %s", err.Error())
+		}
+	}()
+
+	// return early if cr has been updated recently
+	if !shouldReconcile(syncConfig) {
+		log.Infof("skipping reconciliation")
+		return ctrl.Result{RequeueAfter: r.RequeueInterval}, nil
+	}
+
 	// mappingFunc calls the Kubernetes-specific mapping functions
 	mappingFunc := func(
 		mapping crdv1.ProjectMapping,
@@ -83,12 +99,8 @@ func (r *HarborSyncConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		err = f(r, mapping, syncConfig, project, *credential, baseURL)
 		if err != nil {
 			c := NewSyncCondition(crdv1.HarborSyncReady, v1.ConditionFalse, "Mapping failed", err.Error())
-			SetSyncCondition(&syncConfig.Status, *c)
-			err = r.Status().Update(context.Background(), &syncConfig)
-			if err != nil {
-				log.Errorf("unable to update status mapping func: %s", err.Error())
-			}
 			log.Error(err, "mapping failed")
+			SetSyncCondition(&syncConfig.Status, *c)
 			return
 		}
 	}
@@ -97,18 +109,11 @@ func (r *HarborSyncConfigReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		log.Error(err)
 		c := NewSyncCondition(crdv1.HarborSyncReady, v1.ConditionFalse, "Error Reconciling", err.Error())
 		SetSyncCondition(&syncConfig.Status, *c)
-		err = r.Status().Update(context.Background(), &syncConfig)
-		if err != nil {
-			log.Errorf("unable to update status after reconcile error: %s", err.Error())
-		}
-		return ctrl.Result{Requeue: true, RequeueAfter: time.Second * 30}, nil
+		return ctrl.Result{RequeueAfter: time.Second * 30}, nil
 	}
 	c := NewSyncCondition(crdv1.HarborSyncReady, v1.ConditionTrue, "Successfully reconciled", "Successfully reconciled")
+	syncConfig.Status.LastReconciliation = metav1.Now()
 	SetSyncCondition(&syncConfig.Status, *c)
-	err = r.Status().Update(context.Background(), &syncConfig)
-	if err != nil {
-		log.Errorf("unable to update status after reconcile: %s", err.Error())
-	}
 	log.Info("successfully reconciled")
 	return ctrl.Result{}, nil
 }
@@ -152,6 +157,9 @@ func Reconcile(
 		string(selector.Type),
 		selector.ProjectName,
 	).Set(float64(len(matches)))
+
+	// reset projectList
+	cfg.Status.ProjectList = []crdv1.ProjectStatus{}
 
 	// reconcile robot accounts
 	for _, project := range matches {
@@ -258,4 +266,12 @@ func runWebhook(
 		return nil
 	}
 	return fmt.Errorf("webhook errors: %#v", errs)
+}
+
+func shouldReconcile(syncConfig crdv1.HarborSync) bool {
+	cmp := syncConfig.Status.LastReconciliation.Time.Add(time.Minute)
+	if cmp.After(time.Now()) {
+		return false
+	}
+	return true
 }
