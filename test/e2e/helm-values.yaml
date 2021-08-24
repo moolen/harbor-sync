@@ -3,6 +3,7 @@ expose:
   tls:
     enabled: true
     certSource: secret
+    secretName: harbor-ssl # v1.4.6 compat
     secret:
       secretName: harbor-ssl
 
