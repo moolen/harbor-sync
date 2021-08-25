@@ -74,12 +74,6 @@ vet:
 generate: bin/controller-gen
 	$(CONTROLLER_GEN) object:headerFile=./hack/boilerplate.go.txt paths="./..."
 
-# Run tests in container
-docker-test:
-	rm -rf bin
-	docker build -t test:latest -f Dockerfile.test .
-	docker run test:latest
-
 # Build the docker image
 docker-build:
 	docker build . -t ${IMG}

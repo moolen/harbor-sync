@@ -127,6 +127,9 @@ spec:
                 - type
                 type: object
               type: array
+            lastReconciliation:
+              format: date-time
+              type: string
             projectStatus:
               items:
                 properties:

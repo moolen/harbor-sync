@@ -56,6 +56,7 @@ func init() {
 	flags.Duration("harbor-poll-interval", time.Minute*5, "poll interval to update harbor projects & robot accounts")
 	flags.Duration("force-sync-interval", time.Minute*10, "set this to force reconciliation after a certain time")
 	flags.Duration("rotation-interval", time.Minute*60, "set this to rotate the credentials after the specified time")
+	flags.Duration("requeue-interval", time.Minute*5, "set this to prevent reconciling for a specified time")
 	flags.Bool("leader-elect", true, "enable leader election")
 	flags.String("namespace", "kube-system", "namespace in which harbor-sync runs (used for leader-election)")
 	viper.BindPFlags(flags)
@@ -70,6 +71,7 @@ func init() {
 	viper.BindEnv("harbor-poll-interval", "HARBOR_POLL_INTERVAL")
 	viper.BindEnv("force-sync-interval", "FORCE_SYNC_INTERVAL")
 	viper.BindEnv("rotation-interval", "ROTATION_INTERVAL")
+	viper.BindEnv("requeue-interval", "REQUEUE_INTERVAL")
 	rootCmd.AddCommand(controllerCmd)
 }
 
@@ -86,6 +88,7 @@ var controllerCmd = &cobra.Command{
 			"namespace":             viper.GetDuration("namespace"),
 			"force-sync-interval":   viper.GetDuration("force-sync-interval"),
 			"rotation-interval":     viper.GetDuration("rotation-interval"),
+			"requeue-interval":      viper.GetDuration("requeue-interval"),
 			"harbor-poll-interval":  viper.GetDuration("harbor-poll-interval"),
 			"skip-tls-verification": viper.GetDuration("skip-tls-verification"),
 			"harbor-api-debug":      viper.GetDuration("harbor-api-debug"),
@@ -156,6 +159,7 @@ var controllerCmd = &cobra.Command{
 			CredCache:        crdStore,
 			RotationInterval: viper.GetDuration("rotation-interval"),
 			Client:           mgr.GetClient(),
+			RequeueInterval:  viper.GetDuration("requeue-interval"),
 			Harbor:           harborRepo,
 		}).SetupWithManager(mgr, syncCfgChanges); err != nil {
 			log.Error(err, "unable to create controller")

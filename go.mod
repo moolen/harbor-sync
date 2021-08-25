@@ -35,18 +35,18 @@ require (
 	github.com/mittwald/goharbor-client v1.0.7
 	github.com/mittwald/goharbor-client/v3 v3.3.0
 	github.com/onsi/ginkgo v1.16.4
-	github.com/onsi/gomega v1.13.0
+	github.com/onsi/gomega v1.16.0
 	github.com/peterbourgon/diskv/v3 v3.0.0
 	github.com/prometheus/client_golang v1.11.0
 	github.com/sirupsen/logrus v1.8.1
-	github.com/spf13/cobra v1.1.3
+	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.8.1
 	github.com/stretchr/testify v1.7.0
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	k8s.io/api v0.21.2
 	k8s.io/apiextensions-apiserver v0.21.2
 	k8s.io/apimachinery v0.21.2
-	k8s.io/client-go v0.21.2
+	k8s.io/client-go v0.22.1
 	k8s.io/kubernetes v1.21.3
-	sigs.k8s.io/controller-runtime v0.9.2
+	sigs.k8s.io/controller-runtime v0.9.6
 )
