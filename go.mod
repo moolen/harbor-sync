@@ -32,10 +32,6 @@ replace (
 
 require (
 	github.com/blang/semver v3.5.1+incompatible
-	github.com/go-openapi/spec v0.19.9 // indirect
-	github.com/google/btree v1.0.1 // indirect
-	github.com/googleapis/gnostic v0.5.5 // indirect
-	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/mitchellh/hashstructure v1.1.0
 	github.com/mittwald/goharbor-client v1.0.7
 	github.com/mittwald/goharbor-client/v3 v3.3.0
@@ -54,7 +50,6 @@ require (
 	k8s.io/apiextensions-apiserver v0.22.2
 	k8s.io/apimachinery v0.22.2
 	k8s.io/client-go v0.22.2
-	k8s.io/kubernetes v1.22.2
+	k8s.io/kubernetes v1.22.3
 	sigs.k8s.io/controller-runtime v0.10.1
-	sigs.k8s.io/controller-tools v0.5.0 // indirect
 )
