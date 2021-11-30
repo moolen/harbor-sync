@@ -53,12 +53,14 @@ echo -e "Starting the e2e test pod"
 FOCUS=${FOCUS:-.*}
 export FOCUS
 
-HARBOR_VERSION=${HARBOR_VERSION:-v2.2.0}
+HARBOR_VERSION=${HARBOR_VERSION:-v2.3.1}
+HARBOR_CHART_VERSION=${HARBOR_CHART_VERSION:-v1.7.1}
 
 kubectl apply -f ./harbor-secret.yaml
 helm repo add harbor https://helm.goharbor.io || true
 helm upgrade \
   --wait \
+  --timeout 20m \
   --install harbor harbor/harbor \
   --set nginx.image.tag=${HARBOR_VERSION} \
   --set portal.image.tag=${HARBOR_VERSION} \
@@ -67,12 +69,12 @@ helm upgrade \
   --set registry.image.tag=${HARBOR_VERSION} \
   --set database.internal.image.tag=${HARBOR_VERSION} \
   --set redis.internal.image.tag=${HARBOR_VERSION} \
-  -f ./helm-values.yaml
+  -f ./helm-values.yaml \
+  --version ${HARBOR_CHART_VERSION}
 
 kubectl run --rm \
   --attach \
   --restart=Never \
-  --generator=run-pod/v1 \
   --env="FOCUS=${FOCUS}" \
   --overrides='{ "apiVersion": "v1", "spec":{"serviceAccountName": "harbor-sync-e2e"}}' \
   e2e --image=harbor-sync-e2e:dev

@@ -70,19 +70,27 @@ type CreateRobotResponseV22 struct {
 
 // GetRobotAccounts returns all robot accounts for the given project
 func (c *Client) GetRobotAccounts(project Project) ([]Robot, error) {
+
 	var robotAccounts []Robot
-	resp, err := c.newRequest("GET", fmt.Sprintf("projects/%d/robots", project.ID), nil)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	err = json.NewDecoder(bytes.NewReader(body)).Decode(&robotAccounts)
-	if err != nil {
-		return robotAccounts, err
+	next := fmt.Sprintf("projects/%d/robots", project.ID)
+
+	for {
+		var body []byte
+		var err error
+
+		body, next, err = c.paginatedRequest(next)
+		if err != nil {
+			return robotAccounts, err
+		}
+		var robotPage []Robot
+		err = json.NewDecoder(bytes.NewReader(body)).Decode(&robotPage)
+		if err != nil {
+			return robotAccounts, err
+		}
+		robotAccounts = append(robotAccounts, robotPage...)
+		if next == "" {
+			break
+		}
 	}
 
 	for _, acc := range robotAccounts {

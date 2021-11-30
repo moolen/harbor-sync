@@ -33,6 +33,7 @@ import (
 	. "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
@@ -51,6 +52,7 @@ var _ = Describe("Controller", func() {
 		hscr = &HarborSyncConfigReconciler{
 			k8sClient,
 			time.Hour * 24,
+			time.Second * 15,
 			credStore,
 			fakeHarbor,
 		}
@@ -348,5 +350,29 @@ var _ = Describe("Controller", func() {
 			Expect(fooWebhookCalled).To(BeTrue())
 			Expect(barWebhookCalled).To(BeTrue())
 		})
+	})
+})
+
+var _ = Describe("Reconciler", func() {
+	It("should not reconcile when recently changed", func() {
+		Expect(shouldReconcile(crdv1.HarborSync{
+			Status: crdv1.HarborSyncStatus{
+				LastReconciliation: metav1.Now(),
+			},
+		})).To(BeFalse())
+	})
+
+	It("should reconcile when not recently changed", func() {
+		Expect(shouldReconcile(crdv1.HarborSync{
+			Status: crdv1.HarborSyncStatus{
+				LastReconciliation: metav1.NewTime(time.Now().Add(-time.Hour)),
+			},
+		})).To(BeTrue())
+	})
+
+	It("should reconcile when status is empty", func() {
+		Expect(shouldReconcile(crdv1.HarborSync{
+			Status: crdv1.HarborSyncStatus{},
+		})).To(BeTrue())
 	})
 })

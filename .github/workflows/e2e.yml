@@ -23,12 +23,22 @@ on:
       - 'go.mod'
       - 'go.sum'
       - 'Dockerfile'
+
+env:
+  GO_VERSION: '1.16'
+
 jobs:
   test-e2e:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        harbor_version: [v2.2.0, v2.0.6]
+        include:
+        - harbor_version: v2.3.1
+          harbor_chart_version: v1.7.1
+        - harbor_version: v2.2.0
+          harbor_chart_version: v1.6.0
+        - harbor_version: v2.0.6
+          harbor_chart_version: v1.4.6
     steps:
       - name: Checkout secret-manger
         uses: actions/checkout@v2
@@ -37,13 +47,18 @@ jobs:
       - name: Create kind cluster
         uses: helm/kind-action@v1.0.0
         with:
-          version: v0.10.0
+          version: v0.11.1
           node_image: kindest/node:v1.20.2
           cluster_name: harbor-sync
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.GO_VERSION }}
       - name: Run e2e tests
         timeout-minutes: 30
         env:
           HARBOR_VERSION: ${{ matrix.harbor_version }}
+          HARBOR_CHART_VERSION: ${{ matrix.harbor_chart_version }}
           KIND_CLUSTER_NAME: harbor-sync
         run: |
           export PATH=$PATH:$(go env GOPATH)/bin

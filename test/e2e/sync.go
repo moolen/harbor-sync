@@ -125,6 +125,6 @@ var _ = ginkgo.Describe("[Sync]", func() {
 				fmt.Sprintf("proj-%s-foo", f.Namespace): {fmt.Sprintf("team-%s-foo", f.Namespace)},
 				fmt.Sprintf("proj-%s-bar", f.Namespace): {fmt.Sprintf("team-%s-bar", f.Namespace)},
 			}, hs.Status)
-		}, time.Second*15, time.Second).Should(gomega.BeTrue())
+		}, time.Minute*5, time.Second*15).Should(gomega.BeTrue())
 	})
 })

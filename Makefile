@@ -74,12 +74,6 @@ vet:
 generate: bin/controller-gen
 	$(CONTROLLER_GEN) object:headerFile=./hack/boilerplate.go.txt paths="./..."
 
-# Run tests in container
-docker-test:
-	rm -rf bin
-	docker build -t test:latest -f Dockerfile.test .
-	docker run test:latest
-
 # Build the docker image
 docker-build:
 	docker build . -t ${IMG}
@@ -106,7 +100,7 @@ bin/hugo:
 	mkdir bin; cp /tmp/hugo bin/hugo
 
 bin/kubectl:
-	curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.15.0/bin/linux/amd64/kubectl
+	curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.21.2/bin/linux/amd64/kubectl
 	chmod +x ./kubectl
 	mkdir bin; mv kubectl bin/kubectl
 

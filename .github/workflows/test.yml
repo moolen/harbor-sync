@@ -6,6 +6,12 @@ on:
     - master
   pull_request:
 
+env:
+  GO_VERSION: '1.16'
+  # list of available versions: https://storage.googleapis.com/kubebuilder-tools
+  # TODO: 1.21.2 does not shut down properly with controller-runtime 0.9.2
+  KUBEBUILDER_TOOLS_VERSION: '1.20.2'
+
 jobs:
 
   test:
@@ -14,19 +20,23 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
 
-    - name: Set up Go 1.15
+    - name: Set up Go
       uses: actions/setup-go@v1
       with:
-        go-version: 1.15
+        go-version: ${{ env.GO_VERSION }}
       id: go
 
-    - name: Install kubebuilder
-      run: |
-        os=$(go env GOOS)
-        arch=$(go env GOARCH)
-        curl -sL https://go.kubebuilder.io/dl/2.3.1/${os}/${arch} | tar -xz -C /tmp/
-        sudo mv /tmp/kubebuilder_2.3.1_${os}_${arch} /usr/local/kubebuilder
-        export PATH=$PATH:/usr/local/kubebuilder/bin
+    - name: Add envtest binaries
+      run:  |
+        curl -sSLo envtest-bins.tar.gz "https://storage.googleapis.com/kubebuilder-tools/kubebuilder-tools-${{env.KUBEBUILDER_TOOLS_VERSION}}-linux-amd64.tar.gz"
+        sudo mkdir -p /usr/local/kubebuilder
+        sudo tar -C /usr/local/kubebuilder --strip-components=1 -zvxf envtest-bins.tar.gz
+    - name: Cache envtest binaries
+      uses: actions/cache@v2.1.6
+      with:
+        path: /usr/local/kubebuilder
+        key: ${{ runner.os }}-kubebuilder-${{env.KUBEBUILDER_TOOLS_VERSION}}
+        restore-keys: ${{ runner.os }}-kubebuilder
 
     - name: Install make
       run: sudo apt-get install -y make

@@ -103,6 +103,9 @@ type WebhookUpdatePayload struct {
 // HarborSyncStatus defines the observed state of HarborSync
 type HarborSyncStatus struct {
 	// +optional
+	LastReconciliation metav1.Time `json:"lastReconciliation,omitempty"`
+
+	// +optional
 	ProjectList []ProjectStatus `json:"projectStatus,omitempty"`
 
 	// +optional

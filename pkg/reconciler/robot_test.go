@@ -70,7 +70,7 @@ var _ = Describe("Controller", func() {
 
 	Describe("Robot", func() {
 
-		It("should reconcile robot accounts", func(done Done) {
+		It("should reconcile robot accounts", func() {
 			cfg := test.EnsureHarborSyncConfigWithParams(k8sClient, "my-cfg", "my-project", &mapping, nil)
 			harborClient.GetRobotAccountsFunc = nil
 			credentials, changed, err := ReconcileRobotAccounts(
@@ -89,10 +89,9 @@ var _ = Describe("Controller", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(cacheCreds.Name).To(Equal(createdAccount.Name))
 			Expect(cacheCreds.Token).To(Equal(createdAccount.Token))
-			close(done)
 		})
 
-		It("should use robot credentials from store", func(done Done) {
+		It("should use robot credentials from store", func() {
 			cfg := test.EnsureHarborSyncConfigWithParams(k8sClient, "my-cfg", "my-project", &mapping, nil)
 			harborClient.CreateRobotAccountFunc = nil
 			credStore.Set("foo", crdv1.RobotAccountCredential{Name: "robot$sync-bot", Token: "bar"})
@@ -112,10 +111,9 @@ var _ = Describe("Controller", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(cacheCreds.Name).To(Equal("robot$sync-bot"))
 			Expect(cacheCreds.Token).To(Equal("bar"))
-			close(done)
 		})
 
-		It("should delete robot account when credentials are missing", func(done Done) {
+		It("should delete robot account when credentials are missing", func() {
 			cfg := test.EnsureHarborSyncConfigWithParams(k8sClient, "my-cfg", "my-project", &mapping, nil)
 			var deleteCalled bool
 			harborClient.DeleteRobotAccountFunc = func(project harbor.Project, robotID int) error {
@@ -139,10 +137,9 @@ var _ = Describe("Controller", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(cacheCreds.Name).To(Equal(createdAccount.Name))
 			Expect(cacheCreds.Token).To(Equal(createdAccount.Token))
-			close(done)
 		})
 
-		It("should re-create disabled account", func(done Done) {
+		It("should re-create disabled account", func() {
 			cfg := test.EnsureHarborSyncConfigWithParams(k8sClient, "my-cfg", "my-project", &mapping, nil)
 			harborClient.GetRobotAccountsFunc = func(project harbor.Project) ([]harbor.Robot, error) {
 				return []harbor.Robot{
@@ -177,10 +174,9 @@ var _ = Describe("Controller", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(cacheCreds.Name).To(Equal(createdAccount.Name))
 			Expect(cacheCreds.Token).To(Equal(createdAccount.Token))
-			close(done)
 		})
 
-		It("should re-create expiring account", func(done Done) {
+		It("should re-create expiring account", func() {
 			cfg := test.EnsureHarborSyncConfigWithParams(k8sClient, "my-cfg", "my-project", &mapping, nil)
 			harborClient.GetRobotAccountsFunc = func(project harbor.Project) ([]harbor.Robot, error) {
 				return []harbor.Robot{
@@ -214,10 +210,9 @@ var _ = Describe("Controller", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(cacheCreds.Name).To(Equal(createdAccount.Name))
 			Expect(cacheCreds.Token).To(Equal(createdAccount.Token))
-			close(done)
 		})
 
-		It("should rotate account", func(done Done) {
+		It("should rotate account", func() {
 			cfg := test.EnsureHarborSyncConfigWithParams(k8sClient, "my-cfg", "my-project", &mapping, nil)
 			harborClient.GetRobotAccountsFunc = func(project harbor.Project) ([]harbor.Robot, error) {
 				return []harbor.Robot{
@@ -251,7 +246,6 @@ var _ = Describe("Controller", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(cacheCreds.Name).To(Equal(createdAccount.Name))
 			Expect(cacheCreds.Token).To(Equal(createdAccount.Token))
-			close(done)
 		})
 	})
 })
