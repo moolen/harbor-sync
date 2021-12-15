@@ -35,7 +35,7 @@ require (
 	github.com/mitchellh/hashstructure v1.1.0
 	github.com/mittwald/goharbor-client v1.0.7
 	github.com/mittwald/goharbor-client/v3 v3.3.0
-	github.com/onsi/ginkgo v1.16.4
+	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.17.0
 	github.com/peterbourgon/diskv/v3 v3.0.1
 	github.com/prometheus/client_golang v1.11.0
@@ -46,10 +46,10 @@ require (
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	go.mongodb.org/mongo-driver v1.8.0 // indirect
 	golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2 // indirect
-	k8s.io/api v0.22.2
-	k8s.io/apiextensions-apiserver v0.22.2
-	k8s.io/apimachinery v0.22.2
-	k8s.io/client-go v0.22.2
+	k8s.io/api v0.23.0
+	k8s.io/apiextensions-apiserver v0.23.0
+	k8s.io/apimachinery v0.23.0
+	k8s.io/client-go v0.23.0
 	k8s.io/kubernetes v1.22.4
-	sigs.k8s.io/controller-runtime v0.10.3
+	sigs.k8s.io/controller-runtime v0.11.0
 )
