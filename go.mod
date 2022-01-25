@@ -36,7 +36,7 @@ require (
 	github.com/mittwald/goharbor-client v1.0.7
 	github.com/mittwald/goharbor-client/v3 v3.3.0
 	github.com/onsi/ginkgo v1.16.5
-	github.com/onsi/gomega v1.17.0
+	github.com/onsi/gomega v1.18.0
 	github.com/peterbourgon/diskv/v3 v3.0.1
 	github.com/prometheus/client_golang v1.11.0
 	github.com/sirupsen/logrus v1.8.1
